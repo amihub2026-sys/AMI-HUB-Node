@@ -1,0 +1,158 @@
+<div class="page-layout">
+<div
+  class="filter-backdrop"
+  *ngIf="isFilterOpen"
+  (click)="toggleFilter()">
+</div>
+
+<aside class="left-panel" [class.active]="isFilterOpen">
+    <div class="filter-card">
+      <button class="filter-close" type="button" (click)="toggleFilter()">×</button>
+      <h3>Filter Services</h3>
+
+      <div class="filter-group">
+        <label>Search</label>
+        <input
+          type="text"
+          [(ngModel)]="searchText"
+          (ngModelChange)="onSearchTextChange()"
+          placeholder="Search services..."
+        />
+      </div>
+
+ <div class="filter-group">
+  <label>Location</label>
+  <input
+    type="text"
+    [(ngModel)]="locationText"
+    placeholder="Search location..."
+    (input)="onLocationInputChange()"
+  />
+</div>
+      <div class="filter-group">
+        <label>Radius: {{ selectedRadiusKm }} km</label>
+        <input
+          type="range"
+          min="1"
+          max="50"
+          step="1"
+          [(ngModel)]="selectedRadiusKm"
+          (input)="applyFilters()"
+          style="width:100%;"
+        />
+        <div style="display:flex; justify-content:space-between; font-size:12px; color:#6b7280; margin-top:4px;">
+          <span>1 km</span>
+          <span>50 km</span>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label>Category</label>
+        <select [(ngModel)]="selectedCategoryId" (change)="onCategoryChange()">
+          <option [ngValue]="null">All</option>
+          <option *ngFor="let c of categoriesData" [ngValue]="c.categoryid">
+            {{ c.categoryname }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Price Range</label>
+        <div class="price-row">
+          <input type="number" [(ngModel)]="minPrice" placeholder="Min" />
+          <input type="number" [(ngModel)]="maxPrice" placeholder="Max" />
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label>Sort</label>
+        <select [(ngModel)]="sortBy">
+          <option value="Newest">Newest</option>
+          <option value="Oldest">Oldest</option>
+          <option value="Price Low">Price Low</option>
+          <option value="Price High">Price High</option>
+        </select>
+      </div>
+
+      <div class="filter-actions">
+     <button type="button" (click)="applyFilters(); toggleFilter()">Apply</button>
+  <button type="button" class="reset" (click)="resetFilters(); toggleFilter()">Reset</button>
+      </div>
+    </div>
+  </aside>
+
+  <section class="right-panel">
+    <div class="page-back-arrow" (click)="goBack()">
+  ←
+</div>
+    <button class="filter-toggle" type="button" (click)="toggleFilter()">
+  ⚙ Filters
+</button>
+    <h2 class="title">
+      {{ selectedCategoryName || 'Latest Services' }}
+    </h2>
+
+    <div
+      *ngIf="subcategories().length > 0"
+      style="display:flex; flex-wrap:wrap; gap:8px; margin:0 0 16px;"
+    >
+      <button
+        type="button"
+        (click)="showAllSubcategoryPosts()"
+        [style.background]="selectedSubcategoryId === null ? '#111827' : '#ffffff'"
+        [style.color]="selectedSubcategoryId === null ? '#ffffff' : '#111827'"
+        [style.border]="selectedSubcategoryId === null ? '1px solid #111827' : '1px solid #d1d5db'"
+        style="display:flex; align-items:center; gap:6px; padding:8px 14px; border-radius:999px; cursor:pointer; font-size:13px; font-weight:600;"
+      >
+        <span>All</span>
+      </button>
+
+      <button
+        type="button"
+        *ngFor="let sub of subcategories()"
+        (click)="selectSubcategory(sub)"
+        [style.background]="selectedSubcategoryId === sub.subcategoryid ? '#111827' : '#ffffff'"
+        [style.color]="selectedSubcategoryId === sub.subcategoryid ? '#ffffff' : '#111827'"
+        [style.border]="selectedSubcategoryId === sub.subcategoryid ? '1px solid #111827' : '1px solid #d1d5db'"
+        style="display:flex; align-items:center; gap:8px; padding:8px 14px; border-radius:999px; cursor:pointer; font-size:13px; font-weight:600;"
+      >
+        <img
+          *ngIf="sub.iconurl"
+          [src]="sub.iconurl"
+          [alt]="sub.subcategoryname"
+          style="width:18px; height:18px; object-fit:contain;"
+          (error)="sub.iconurl = null"
+        />
+        <span *ngIf="!sub.iconurl">📌</span>
+        <span>{{ sub.subcategoryname }}</span>
+      </button>
+    </div>
+
+    <div class="grid" *ngIf="filteredPosts().length > 0; else emptyState">
+      <div class="card" *ngFor="let post of filteredPosts(); trackBy: trackByPostId">
+        <div class="image-wrap">
+          <img
+            [src]="getImage(post)"
+            [alt]="post.title"
+            (error)="onImageError($event)"
+          />
+        </div>
+
+        <div class="card-body">
+          <h3>{{ post.title }}</h3>
+          <p class="price" *ngIf="post.price && post.price > 0">
+  ₹{{ post.price }}
+</p>
+          <p class="meta">{{ getShortLocation(post) }}</p>
+          <a [routerLink]="['/details', post.postid]">View Details</a>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #emptyState>
+      <div class="empty">No services found.</div>
+    </ng-template>
+
+    <div class="loading" *ngIf="isLoading()">Loading more services...</div>
+  </section>
+</div>

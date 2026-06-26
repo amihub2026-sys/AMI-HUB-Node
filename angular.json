@@ -1,0 +1,90 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "cli": {
+    "packageManager": "npm",
+    "analytics": "414cbe84-dbb2-4148-a53e-e9d68fa690a1"
+  },
+  "newProjectRoot": "projects",
+  "projects": {
+    "amihub-app": {
+      "projectType": "application",
+      "schematics": {},
+      "root": "",
+      "sourceRoot": "src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "src/main.ts",
+            "tsConfig": "tsconfig.app.json",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "src/assets",
+                "output": "/assets"
+              },
+              {
+                "glob": "**/*",
+                "input": "public",
+                "output": "/"
+              }
+            ],
+            "styles": [
+              "node_modules/@ng-select/ng-select/themes/default.theme.css",
+              "node_modules/leaflet/dist/leaflet.css",
+              "src/styles.css"
+            ],
+            
+            
+            "security": {
+              "allowedHosts": []
+            }
+           
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+               {
+  "type": "initial",
+  "maximumWarning": "2MB",
+  "maximumError": "5MB"
+},
+{
+  "type": "anyComponentStyle",
+  "maximumWarning": "100kB",
+  "maximumError": "150kB"
+}
+              ],
+              "outputHashing": "all",
+              "optimization": true,
+              "sourceMap": false
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "configurations": {
+            "production": {
+              "buildTarget": "amihub-app:build:production"
+            },
+            "development": {
+              "buildTarget": "amihub-app:build:development"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test"
+        }
+      }
+    }
+  }
+}

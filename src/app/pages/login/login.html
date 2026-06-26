@@ -1,0 +1,136 @@
+<div class="login-bg">
+  <div class="login-card">
+    <h1 class="logo">AMI HUB</h1>
+    <p class="tagline">Buy • Sell • Discover – All in One Hub.</p>
+
+    <div class="user-login-options">
+      <button
+        (click)="selectUserLogin('mobileOtp')"
+        [class.active]="userLoginMethod === 'mobileOtp'">
+        Mobile OTP
+      </button>
+
+      <button
+        (click)="selectUserLogin('username')"
+        [class.active]="userLoginMethod === 'username'">
+        Email/Password
+      </button>
+
+      <button
+        (click)="selectUserLogin('admin')"
+        [class.active]="userLoginMethod === 'admin'">
+        Admin Login
+      </button>
+    </div>
+
+    <div *ngIf="userLoginMethod === 'mobileOtp'">
+      <div class="input-group">
+        <input
+          type="tel"
+          placeholder="Enter Mobile Number"
+          maxlength="10"
+          [(ngModel)]="mobile">
+      </div>
+
+<button
+  type="button"
+  class="otp-btn"
+  (click)="sendMobileOtp()"
+  [disabled]="otpSent">        {{ otpSent ? 'OTP Sent' : 'Send OTP' }}
+      </button>
+
+      <div *ngIf="otpSent" class="otp-section">
+        <div class="input-group">
+          <input
+            type="text"
+            placeholder="Enter OTP"
+            maxlength="6"
+            [(ngModel)]="otp">
+        </div>
+
+<button
+  type="button"
+  class="submit-btn"
+  (click)="verifyMobileOtp()">          Verify OTP
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="userLoginMethod === 'username'">
+      <div class="input-group">
+        <input type="text" placeholder="Email or Username" [(ngModel)]="email">
+      </div>
+
+      <div class="input-group password-group">
+        <input
+          [type]="showPassword ? 'text' : 'password'"
+          placeholder="Password"
+          [(ngModel)]="password">
+        <span class="eye-icon" (click)="togglePassword()">
+          {{ showPassword ? '🙈' : '👁️' }}
+        </span>
+      </div>
+
+<button
+  type="button"
+  class="submit-btn"
+  (click)="loginWithEmailPassword()">
+  Login
+</button>    </div>
+
+    <div *ngIf="userLoginMethod === 'admin'">
+      <div class="input-group">
+        <input type="text" placeholder="Admin Username" [(ngModel)]="adminUsername">
+      </div>
+
+      <div class="input-group password-group">
+        <input
+          [type]="showAdminPassword ? 'text' : 'password'"
+          placeholder="Admin Password"
+          [(ngModel)]="adminPassword">
+        <span class="eye-icon" (click)="toggleAdminPassword()">
+          {{ showAdminPassword ? '🙈' : '👁️' }}
+        </span>
+      </div>
+
+<button
+  type="button"
+  class="submit-btn"
+  (click)="loginAdmin()">
+  Admin Login
+</button>    </div>
+
+    <div class="divider" *ngIf="userLoginMethod !== 'admin'">OR</div>
+
+    <button class="social google" (click)="googleLogin()" *ngIf="userLoginMethod !== 'admin'">
+      <img src="assets/icons/google.png" alt="Google">
+      Continue with Google
+    </button>
+  </div>
+
+  <div class="side-wrapper right" *ngIf="showRightAd">
+    <div class="side-ad">
+      <span class="ad-close" (click)="closeAd('right')">×</span>
+      <div class="side-poster right-poster"></div>
+
+      <div class="ad-content">
+        <h4>🔥 Grow Your Business</h4>
+        <p>Get your website, promote services, and reach more customers.</p>
+        <button>Get Started</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="side-wrapper left" *ngIf="showLeftAd">
+    <div class="side-ad green-ad">
+      <span class="ad-close" (click)="closeAd('left')">×</span>
+      <div class="side-poster left-poster"></div>
+
+      <div class="ad-content">
+        <h4>🚀 Boost Your Post</h4>
+        <p>Get more views and reach more buyers instantly!</p>
+        <button>Promote Now</button>
+      </div>
+    </div>
+  </div>
+</div>
