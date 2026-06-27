@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+
 import { AddJob } from './pages/add-job/add-job';
 import { Job } from './pages/job/job';
 import { Home } from './pages/home/home';
@@ -19,7 +20,8 @@ import { SellerProfileComponent } from './pages/seller-profile/seller-profile';
 import { PostViewComponent } from './pages/post-view/post-view';
 import { SubscriptionPlan } from './pages/subscription-plan/subscription-plan';
 import { FeaturedPlan } from './pages/featured-plan/featured-plan';
-import { AdminPage } from './pages/admin-page/admin-page';
+import { AdminLayout } from './pages/admin-layout/admin-layout';
+import { DashboardComponent } from './pages/dashboard/dashboard';
 import { AccountSetup } from './pages/account-setup/account-setup';
 import { MyPosts } from './pages/my-posts/my-posts';
 import { About } from './pages/about/about';
@@ -34,26 +36,22 @@ import { Cart } from './pages/cart/cart';
 import { Favt } from './pages/favt/favt';
 import { Payment } from './pages/payment/payment';
 import { DeleteAccount } from './pages/delete-account/delete-account';
+
 import { AdminUserBoostPlansComponent } from './pages/admin-page/admin-page/pages/admin-user-boost-plans/admin-user-boost-plans';
-function adminGuard() {
-  return () => {
-    const token = localStorage.getItem('adminToken');
-    return token === 'loggedAdmin';
-  };
-}
+
+import { AdminGuard } from './guards/admin.guard';
 
 export const routes: Routes = [
+
   { path: '', component: Home },
-{ path: 'job', component: Job },
-{ path: 'job/:id', component: Job },
-{
-  path: 'add-job',
-  component: AddJob
-},
-{
-  path: 'user-boost-plans',
-  component: AdminUserBoostPlansComponent
-},
+
+  { path: 'job', component: Job },
+  { path: 'job/:id', component: Job },
+
+  { path: 'add-job', component: AddJob },
+
+  { path: 'user-boost-plans', component: AdminUserBoostPlansComponent },
+
   { path: 'account-setup', component: AccountSetup },
   { path: 'login', component: Login },
   { path: 'register', component: Register },
@@ -64,28 +62,23 @@ export const routes: Routes = [
   { path: 'products', component: ProductList },
   { path: 'product-categories', component: ProductCategories },
 
-{ path: 'post-ad', component: PostAd },
+  { path: 'post-ad', component: PostAd },
 
-{ path: 'details/:id', component: PostViewComponent },
-{ path: 'post-view/:id', component: PostViewComponent },
-{ path: 'post-view', component: PostViewComponent },
+  { path: 'details/:id', component: PostViewComponent },
+  { path: 'post-view/:id', component: PostViewComponent },
 
-{ path: 'all-categories', component: Categories },
+  { path: 'all-categories', component: Categories },
 
-{
-  path: 'all-listings',
-  loadComponent: () =>
-    import('./pages/search-results/search-results').then(m => m.SearchResults)
-},
+  {
+    path: 'all-listings',
+    loadComponent: () =>
+      import('./pages/search-results/search-results').then(m => m.SearchResults)
+  },
 
-{ path: 'service', component: Service },
-{ path: 'service/:id', component: Service },
-{ path: 'service-list', component: ServiceList },
-{ path: 'service-categories', component: ServiceCategories },
-
-  { path: 'coustme', component: Coustme },
-  { path: 'custom-fields', component: CustomFields },
-  { path: 'service-custom', component: ServiceCustom },
+  { path: 'service', component: Service },
+  { path: 'service/:id', component: Service },
+  { path: 'service-list', component: ServiceList },
+  { path: 'service-categories', component: ServiceCategories },
 
   { path: 'seller-profile', component: SellerProfileComponent },
 
@@ -118,9 +111,13 @@ export const routes: Routes = [
   },
 
   {
-    path: 'admin-page',
-    component: AdminPage,
-    canActivate: [adminGuard]
+    path: 'admin',
+    component: AdminLayout,
+    canActivate: [AdminGuard],
+    children: [
+      { path: 'dashboard', component: DashboardComponent },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
+    ]
   },
 
   { path: '**', redirectTo: '' }

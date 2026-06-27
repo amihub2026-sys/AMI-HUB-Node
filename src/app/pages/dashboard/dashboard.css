@@ -1,0 +1,67 @@
+.dashboard {
+  padding: 20px;
+  background: #f4f6f9;
+  font-family: Arial, sans-serif;
+}
+
+h1 {
+  margin-bottom: 20px;
+}
+
+/* KPI CARDS GRID */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
+}
+
+/* CARD STYLE */
+.card {
+  padding: 20px;
+  border-radius: 12px;
+  color: white;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+  transition: 0.3s ease;
+  cursor: pointer;
+}
+
+/* HOVER ANIMATION */
+.card:hover {
+  transform: translateY(-5px);
+}
+
+/* TEXT */
+.card h3 {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.card p {
+  font-size: 26px;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+/* COLORS */
+.blue { background: linear-gradient(45deg, #3498db, #2980b9); }
+.green { background: linear-gradient(45deg, #2ecc71, #27ae60); }
+.orange { background: linear-gradient(45deg, #f39c12, #e67e22); }
+.pink { background: linear-gradient(45deg, #e91e63, #c2185b); }
+.purple { background: linear-gradient(45deg, #9b59b6, #8e44ad); }
+.dark { background: linear-gradient(45deg, #34495e, #2c3e50); }
+
+/* CHART SECTION */
+.charts {
+  margin-top: 30px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.chart-box {
+  background: white;
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
