@@ -403,42 +403,53 @@ setTimeout(async () => {
 }
 
   async loginAdmin() {
-    if (!this.adminUsername || !this.adminPassword) {
-      this.showAlert('Enter admin username and password');
+
+  if (!this.adminUsername || !this.adminPassword) {
+    this.showAlert('Enter admin username and password');
+    return;
+  }
+
+  try {
+
+    const response = await fetch(
+      'https://ami-hub-backend.onrender.com/api/auth/admin-login',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: this.adminUsername.trim(),
+          password: this.adminPassword.trim()
+        })
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      this.showAlert(result.message || 'Login Failed');
       return;
     }
 
-    const { data, error } =
-      await this.supabaseService.getAdminByUsername(this.adminUsername.trim());
-
-    if (error || !data) {
-      this.showAlert('Admin not found');
-      return;
-    }
-
-    if (data.isactive === false) {
-      this.showAlert('Admin account is inactive');
-      return;
-    }
-
-    if (data.passwordhash !== this.adminPassword.trim()) {
-      this.showAlert('Invalid admin password');
-      return;
-    }
-
-    if (this.isBrowser) {
-      localStorage.setItem('adminToken', 'loggedAdmin');
-      localStorage.removeItem('userToken');
-      localStorage.setItem('adminId', String(data.adminid || ''));
-      localStorage.setItem('adminUsername', data.adminname || this.adminUsername);
-    }
+    localStorage.setItem('adminToken', result.data.token);
+    localStorage.setItem('adminUser', JSON.stringify(result.data.user));
 
     this.showAlert('Admin Login Successful', 'success');
 
-    setTimeout(async () => {
-      await this.router.navigate(['/admin-page']);
-    }, 1200);
+    setTimeout(() => {
+      this.router.navigate(['/admin/dashboard']);
+    }, 1000);
+
+  } catch (err) {
+
+    this.showAlert('Server Error');
+
+    console.error(err);
+
   }
+
+}
 
   async sendOtp() {
     if (!this.email) {

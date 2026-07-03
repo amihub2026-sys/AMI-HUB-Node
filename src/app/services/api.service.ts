@@ -6,7 +6,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 })
 export class ApiService {
 
-  baseUrl = 'http://127.0.0.1:5000/api';
+ baseUrl = 'https://ami-hub-backend.onrender.com/api';
 
   constructor(private http: HttpClient) {}
 
@@ -41,14 +41,13 @@ export class ApiService {
   }
 
   // GROWTH
-  getUserGrowth(filter: string) {
-  return this.http.get(`/api/user-growth?filter=${filter}`);
+ getUserGrowth(filter: string) {
+  return this.http.get(`${this.baseUrl}/dashboard/user-growth?filter=${filter}`, this.getHeaders());
 }
 
 getBusinessGrowth(filter: string) {
-  return this.http.get(`/api/business-growth?filter=${filter}`);
+  return this.http.get(`${this.baseUrl}/dashboard/business-growth?filter=${filter}`, this.getHeaders());
 }
-
   // BUSINESS OWNER DASHBOARD
   getBusinessDashboard(businessId: string) {
     return this.http.get(`${this.baseUrl}/dashboard/business/${businessId}`, this.getHeaders());
