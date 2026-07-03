@@ -111,14 +111,14 @@ export const routes: Routes = [
   },
 
   {
-    path: 'admin',
-    component: AdminLayout,
-    canActivate: [AdminGuard],
-    children: [
-      { path: 'dashboard', component: DashboardComponent },
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
-    ]
-  },
+  path: 'admin',
+  component: AdminLayout,
+  canActivate: [AdminGuard],
+  children: [
+    { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+    { path: 'dashboard', component: DashboardComponent }
+  ]
+},
 
   { path: '**', redirectTo: '' }
 ];
