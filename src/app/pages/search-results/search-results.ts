@@ -5,9 +5,13 @@ import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { supabase } from '../../../supabaseClient';
 
+
 interface CategoryItem {
   categoryid: number;
   categoryname: string;
+  slug?: string | null;
+  iconurl?: string | null;
+  bannerurl?: string | null;
   category_type?: string | null;
   isactive?: boolean | null;
   sortorder?: number | null;
@@ -34,12 +38,15 @@ export class SearchResults {
   locationText = '';
   selectedRadiusKm = 5;
 selectedType: 'all' | 'product' | 'service' | 'job' = 'all';
+showCategoryDropdown = false;
+sortBy = 'Newest';
 
   selectedCategoryId: number | null = null;
   selectedSubcategoryId: number | null = null;
 
   minPrice: number | null = null;
   maxPrice: number | null = null;
+   showMobileFilters = false;
 
   isLoading = false;
 
@@ -54,6 +61,7 @@ selectedType: 'all' | 'product' | 'service' | 'job' = 'all';
      public router: Router,
     private cdr: ChangeDetectorRef,
       private location: Location
+   
   ) {}
   goBack(): void {
   this.location.back();
@@ -77,7 +85,52 @@ selectedType: 'all' | 'product' | 'service' | 'job' = 'all';
       await this.initialLoad();
     });
   }
+getSelectedCategory(){
 
+  return this.categories.find(
+    c => c.categoryid === this.selectedCategoryId
+  );
+
+}
+
+
+toggleMobileFilters(): void {
+  this.showMobileFilters = !this.showMobileFilters;
+
+  if (typeof document !== 'undefined') {
+    document.body.style.overflow =
+      this.showMobileFilters ? 'hidden' : '';
+  }
+}
+goHome(): void {
+  this.router.navigate(['/']);
+}
+closeMobileFilters(): void {
+  this.showMobileFilters = false;
+
+  if (typeof document !== 'undefined') {
+    document.body.style.overflow = '';
+  }
+}
+
+applyMobileFilters(): void {
+  this.applyFilters();
+  this.closeMobileFilters();
+}
+
+async resetMobileFilters(): Promise<void> {
+  await this.resetFilters();
+  this.closeMobileFilters();
+}
+async selectCategory(id:number|null){
+
+  this.selectedCategoryId = id;
+
+  this.showCategoryDropdown = false;
+
+  await this.onCategoryChange();
+
+}
   resetPageState() {
     this.selectedCategoryId = null;
     this.selectedSubcategoryId = null;
@@ -147,7 +200,7 @@ async selectType(type: 'all' | 'product' | 'service' | 'job') {
     try {
       let query = supabase
         .from('categories')
-        .select('categoryid, categoryname, category_type, isactive, sortorder')
+      .select('categoryid, categoryname, slug, iconurl, bannerurl, category_type, isactive, sortorder')
         .eq('isactive', true)
         .order('sortorder', { ascending: true });
 
@@ -332,6 +385,7 @@ async selectType(type: 'all' | 'product' | 'service' | 'job') {
         mainImage: this.getMainImage(item),
         displayTitle: item.title || 'Untitled',
         displayPrice: Number(item.price || 0),
+        displayCategory: item.category || 'Category',
         displayLocation: item.location || this.buildLocation(item),
         displayType: (item.adtype || 'product').toLowerCase()
       }));
@@ -379,6 +433,11 @@ async selectType(type: 'all' | 'product' | 'service' | 'job') {
 
     return null;
   }
+  getDistrict(item:any){
+  return item.district 
+      || item.location?.split(',')[3]?.trim()
+      || 'Location';
+}
 
   normalizeWord(value: string): string {
     let v = value.trim().toLowerCase();
@@ -394,6 +453,47 @@ async selectType(type: 'all' | 'product' | 'service' | 'job') {
     const cleanSearch = (this.searchText || '').trim().toLowerCase();
     const locationSearch = (this.locationText || '').trim().toLowerCase();
     let data = [...this.results];
+    this.filteredResults = data;
+    // SORT FILTER
+
+if (this.sortBy === 'Newest') {
+
+  data.sort((a,b) =>
+    new Date(b.createdon).getTime() -
+    new Date(a.createdon).getTime()
+  );
+
+}
+
+
+if (this.sortBy === 'Oldest') {
+
+  data.sort((a,b) =>
+    new Date(a.createdon).getTime() -
+    new Date(b.createdon).getTime()
+  );
+
+}
+
+
+if (this.sortBy === 'Price Low') {
+
+  data.sort((a,b) =>
+    Number(a.displayPrice) -
+    Number(b.displayPrice)
+  );
+
+}
+
+
+if (this.sortBy === 'Price High') {
+
+  data.sort((a,b) =>
+    Number(b.displayPrice) -
+    Number(a.displayPrice)
+  );
+
+}
 
     if (cleanSearch) {
       data = data.filter((item) =>
@@ -486,4 +586,7 @@ async selectType(type: 'all' | 'product' | 'service' | 'job') {
     if (!id) return;
     this.router.navigate(['/details', id]);
   }
+  goToJobs(): void {
+  this.router.navigate(['/job']);
+}
 }
