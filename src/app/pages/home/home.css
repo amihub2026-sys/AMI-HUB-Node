@@ -15,6 +15,286 @@ body {
   color: #111827;
   overflow-x: hidden;
 }
+/* =========================================================
+   CATEGORY SECTION
+========================================================= */
+
+.categories-section{
+    width:100%;
+    margin:0 !important;
+    padding:0 !important;
+
+    background:#fff;
+    border:none;
+    box-shadow:none;
+
+    overflow:hidden;
+}
+
+.category-slider-wrapper{
+    position:relative;
+
+    width:100%;
+    margin:0 !important;
+
+    padding:4px 50px 8px;
+
+    background:#fff;
+    border:none;
+    box-shadow:none;
+
+    overflow:hidden;
+    box-sizing:border-box;
+}
+
+/* =========================================================
+   CATEGORY ROW
+========================================================= */
+
+.flipkart-category-row{
+
+    display:flex;
+    align-items:flex-start;
+
+    width:100%;
+
+    margin:0;
+    padding:0;
+
+    overflow-x:auto;
+    overflow-y:hidden;
+
+    scroll-behavior:smooth;
+    scrollbar-width:none;
+
+    background:#fff;
+}
+
+.flipkart-category-row::-webkit-scrollbar{
+    display:none;
+}
+
+/* =========================================================
+   CATEGORY ITEM
+========================================================= */
+
+.flipkart-category-item{
+
+    flex:0 0 calc(100% / 13);
+    min-width:calc(100% / 13);
+    max-width:calc(100% / 13);
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-start;
+
+    gap:4px;
+
+    padding:2px 4px;
+
+    border:none;
+    background:transparent;
+
+    box-shadow:none;
+
+    cursor:pointer;
+
+    transition:.2s;
+}
+
+.flipkart-category-item:hover{
+
+    transform:translateY(-2px);
+
+}
+
+/* =========================================================
+   ICON
+========================================================= */
+
+.flipkart-category-icon{
+
+    width:34px;
+    height:34px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    background:transparent;
+    border:none;
+    box-shadow:none;
+}
+
+.flipkart-category-icon img{
+
+    width:100%;
+    height:100%;
+
+    object-fit:contain;
+
+    background:transparent;
+    border:none;
+    box-shadow:none;
+}
+
+/* =========================================================
+   LABEL
+========================================================= */
+
+.flipkart-category-label{
+
+    width:100%;
+
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+
+    text-align:center;
+
+    color:#111827;
+
+    font-size:10px;
+    font-weight:500;
+    line-height:1.25;
+}
+
+/* =========================================================
+   ARROWS
+========================================================= */
+
+.category-arrow{
+
+    position:absolute;
+    top:50%;
+
+    transform:translateY(-50%);
+
+    width:22px;
+    height:22px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    padding:0;
+    margin:0;
+
+    border:none;
+    background:transparent;
+
+    color:#2563eb;
+
+    cursor:pointer;
+
+    z-index:20;
+}
+
+.left-arrow{
+
+    left:12px;
+
+}
+
+.right-arrow{
+
+    right:12px;
+
+}
+
+.category-arrow i{
+
+    font-size:16px;
+    line-height:1;
+
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media(max-width:768px){
+
+    .categories-section{
+
+        margin-top:0 !important;
+        padding-top:0 !important;
+
+    }
+
+    .category-slider-wrapper{
+
+        padding:4px 22px 8px;
+
+    }
+
+    .flipkart-category-item{
+
+        flex:0 0 20%;
+        min-width:20%;
+        max-width:20%;
+
+        padding:2px;
+
+    }
+
+    .flipkart-category-icon{
+
+        width:28px;
+        height:28px;
+
+    }
+
+    .flipkart-category-label{
+
+        font-size:8.5px;
+
+    }
+
+    .category-arrow{
+
+        width:18px;
+        height:18px;
+
+    }
+
+    .category-arrow i{
+
+        font-size:13px;
+
+    }
+
+    .left-arrow{
+
+        left:3px;
+
+    }
+
+    .right-arrow{
+
+        right:3px;
+
+    }
+
+}
+
+/* =========================================================
+   LARGE DESKTOP
+========================================================= */
+
+@media(min-width:1600px){
+
+    .flipkart-category-item{
+
+        flex:0 0 calc(100% / 15);
+        min-width:calc(100% / 15);
+        max-width:calc(100% / 15);
+
+    }
+
+}
+
 /* ================= HERO BANNER PERFECT PADDING ================= */
 
 .top-hero{
@@ -617,7 +897,7 @@ DOTS SPACE FIX
 }
 
 /* ================= COMMON SECTION ================= */
-.categories-section,
+
 .featured-section,
 .trending,
 .featured-deals,
@@ -630,7 +910,7 @@ DOTS SPACE FIX
   margin-right: auto;
 }
 
-.categories-section,
+
 .featured-section,
 .trending,
 .featured-deals,
@@ -657,7 +937,6 @@ DOTS SPACE FIX
 .popular-services h2,
 .featured-deals h2,
 .featured-section h2,
-.categories-section h2,
 .section-title {
   font-size: 22px;
   margin: 0;
@@ -1516,7 +1795,6 @@ DOTS SPACE FIX
     width: 20px;
   }
 
-  .categories-section,
   .featured-section,
   .trending,
   .featured-deals,
@@ -1541,8 +1819,7 @@ DOTS SPACE FIX
   .trending h2,
   .popular-services h2,
   .featured-deals h2,
-  .featured-section h2,
-  .categories-section h2 {
+  .featured-section h2 {
     font-size: 20px !important;
     line-height: 1.2;
   }
@@ -1775,7 +2052,6 @@ DOTS SPACE FIX
     font-size: 14px !important;
   }
 
-  .categories-section,
   .featured-section,
   .trending,
   .featured-deals,
@@ -1789,8 +2065,7 @@ DOTS SPACE FIX
   .trending h2,
   .popular-services h2,
   .featured-deals h2,
-  .featured-section h2,
-  .categories-section h2 {
+  .featured-section h2{
     font-size: 18px !important;
   }
 
@@ -3425,19 +3700,6 @@ DOTS SPACE FIX
 
 @media (max-width: 768px) {
 
-  /* Section spacing */
-  .categories-section {
-    padding: 0 16px !important;
-    margin-top: 10px !important;
-  }
-
-  /* Grid spacing */
-  .categories-grid {
-    display: grid !important;
-    grid-template-columns: repeat(4, 1fr) !important;
-    gap: 14px 10px !important;
-  }
-
   /* Each item */
   .cat-item,
   .jd-item {
@@ -3487,13 +3749,6 @@ DOTS SPACE FIX
 /* EXTRA SMALL MOBILE */
 @media (max-width: 480px) {
 
-  .categories-section {
-    padding: 0 14px !important;
-  }
-
-  .categories-grid {
-    gap: 12px 8px !important;
-  }
 
   .cat-card,
   .jd-card {
@@ -3570,13 +3825,6 @@ DOTS SPACE FIX
     padding: 13px 16px !important;
   }
 
-  .categories-section {
-    padding: 24px 16px 10px !important;
-  }
-
-  .categories-section .section-head {
-    margin-bottom: 16px !important;
-  }
 
   .categories-grid.jd-style {
     display: grid !important;
@@ -3652,9 +3900,7 @@ DOTS SPACE FIX
     font-size: 14px !important;
   }
 
-  .categories-section {
-    padding: 22px 14px 10px !important;
-  }
+  
 
   .categories-grid.jd-style {
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
