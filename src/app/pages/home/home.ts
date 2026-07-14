@@ -5,7 +5,9 @@ import {
   AfterViewInit,
   signal,
   ChangeDetectorRef,
-  NgZone
+  NgZone,
+  ElementRef,
+  ViewChild
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -22,7 +24,8 @@ import { supabase } from '../../../supabaseClient';
   imports: [CommonModule, FormsModule, RouterModule]
 })
 export class Home implements OnInit, AfterViewInit, OnDestroy {
-
+@ViewChild('categorySlider')
+categorySlider!: ElementRef<HTMLDivElement>;
   constructor(
      public router: Router,
     private supabaseService: SupabaseService,
@@ -387,7 +390,20 @@ currentUserId = signal<string>('');
 
   this.cdr.detectChanges();
 }
-  
+  slideCategories(direction: 'left' | 'right'): void {
+  if (!this.categorySlider) {
+    return;
+  }
+
+  const slider = this.categorySlider.nativeElement;
+
+  const scrollAmount = slider.clientWidth * 0.75;
+
+  slider.scrollBy({
+    left: direction === 'right' ? scrollAmount : -scrollAmount,
+    behavior: 'smooth'
+  });
+}
 
   openCategory(category: any) {
 
@@ -427,6 +443,12 @@ currentUserId = signal<string>('');
       type: 'all'
     }
   });
+}
+
+onCategoryImageError(event: Event): void {
+  const image = event.target as HTMLImageElement;
+
+  image.src = 'assets/category-icons/default-category.png';
 }
   openProductCategory(category: any) {
     this.router.navigate(['/products'], {

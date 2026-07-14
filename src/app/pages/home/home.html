@@ -9,6 +9,68 @@
   <!-- MAIN CONTENT -->
   <div class="whole">
 
+<!-- CATEGORY SLIDER -->
+<section class="categories-section">
+
+  <div class="category-slider-wrapper">
+
+    <!-- LEFT ARROW -->
+    <button
+      type="button"
+      class="category-arrow left-arrow"
+      (click)="slideCategories('left')"
+      aria-label="Previous categories"
+    >
+      <i class="fas fa-chevron-left"></i>
+    </button>
+
+    <!-- CATEGORY ROW -->
+    <div
+      class="flipkart-category-row"
+      #categorySlider
+      *ngIf="browseCategories().length > 0"
+    >
+      <button
+        type="button"
+        class="flipkart-category-item"
+        *ngFor="let cat of browseCategories()"
+        (click)="openCategory(cat)"
+      >
+        <div class="flipkart-category-icon">
+          <img
+            [src]="getCategoryImage(cat)"
+            [alt]="cat.categoryname"
+            loading="lazy"
+          >
+        </div>
+
+        <span class="flipkart-category-label">
+          {{ cat.categoryname }}
+        </span>
+      </button>
+    </div>
+
+    <!-- RIGHT ARROW -->
+    <button
+      type="button"
+      class="category-arrow right-arrow"
+      (click)="slideCategories('right')"
+      aria-label="Next categories"
+    >
+      <i class="fas fa-chevron-right"></i>
+    </button>
+
+  </div>
+
+</section>
+
+
+
+
+
+
+
+
   <!-- TOP HERO BANNER -->
   <section class="top-hero">
     <div class="top-banner-ad">
@@ -166,7 +228,7 @@ AMI HUB creates smart, modern, and scalable digital solutions for businesses wor
   </div>
 </section>
   <!-- TABS SEARCH -->
-  <section class="search-section">
+  <!-- <section class="search-section">
     <div class="search-block">
       <h2 class="search-line">
         <span class="search-text">Search Across</span>
@@ -214,7 +276,7 @@ AMI HUB creates smart, modern, and scalable digital solutions for businesses wor
         </div>
 
         <button class="search-btn" (click)="goToPage()">Find Now</button>
-      </div>
+      </div> -->
 
       <!-- <div class="discover-actions">
         <a class="discover-btn primary" [routerLink]="['/all-listings']">
@@ -226,12 +288,12 @@ AMI HUB creates smart, modern, and scalable digital solutions for businesses wor
           <button (click)="goToServices()">View Services</button>
         </div>
       </div> -->
-    </div>
-  </section>
+    <!-- </div>
+  </section> -->
 
 
   <!-- BROWSE CATEGORIES -->
-  <section class="categories-section">
+  <!-- <section class="categories-section">
     <div class="section-head">
       <h2>Browse Categories</h2>
     </div>
@@ -265,8 +327,8 @@ AMI HUB creates smart, modern, and scalable digital solutions for businesses wor
         </div>
         <p class="jd-label">Popular Categories</p>
       </div> -->
-    </div>
-  </section>
+    <!-- </div>
+  </section> --> 
 
   <!-- FEATURED PRODUCTS -->
   <section class="featured-section">
@@ -315,7 +377,7 @@ AMI HUB creates smart, modern, and scalable digital solutions for businesses wor
     </div>
   </div>
 </div>
-
+  </section>
   <!-- BOOST CTA -->
   <section class="boost-banner">
     <div class="boost-left">

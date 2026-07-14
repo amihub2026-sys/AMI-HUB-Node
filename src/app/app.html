@@ -2,87 +2,117 @@
   <nav class="topbar"   *ngIf="!currentUrl.startsWith('/search')">
     <div class="nav-container">
 
-      <div style="display:flex; align-items:center; gap:12px;">
-       
-        <button class="menu-icon-btn" (click)="toggleMenu()">
 
-  <span></span>
-  <span></span>
-  <span></span>
 
-  <span *ngIf="chatCount > 0" class="menu-badge">
-    {{ chatCount }}
-  </span>
+       <!-- NAV BAR -->
+  <!-- THIS NAV IS FOR USER ONLY NIT FOR ADMIN -->
+ <nav
+  class="topbar"
+  *ngIf="
+    !currentUrl.includes('admin') &&
+    !currentUrl.includes('admin-page')
+  "
+>
 
-</button>
 
+
+    <div class="nav-container">
+
+      <!-- NAV BAR LOGO -->
+      <div class="logo-wrapper">
         <a class="logo" [routerLink]="['/']">
           <img src="assets/hub_logo.png" alt="AMI HUB Logo" />
         </a>
       </div>
 
-      <div class="location-search-bar">
-        <div class="location-box location-clickable" (click)="toggleLocationPicker()">
-          <span class="icon">📍</span>
-          <span class="location-text">{{ locationLabel }}</span>
-        </div>
-      </div>
 
-      <div class="desktop-menu">
-        <a [routerLink]="['/']" (click)="closeMenu()">Home</a>
+       <!-- PRODUCT SERVICE JOB  -->
+  <a routerLink="/products" class="bottom-nav-item">
+    <i class="fas fa-box"></i>
+    <span>Products</span>
+  </a>
+  <a routerLink="/services" class="bottom-nav-item">
+    <i class="fas fa-briefcase"></i>
+    <span>Services</span>
+  </a>
+  <a routerLink="/jobs" class="bottom-nav-item">
+    <i class="fas fa-user-tie"></i>
+    <span>Jobs</span>
+  </a>    
+     <!-- ADVERTISE -->
+<a  
+  (click)="postService(); closeMenu()" 
+  class="top-nav-item advertise-link">
+  <i class="fas fa-bullhorn"></i>
+  <span>ADVERTISE</span>
+</a>
+<!-- MY POSTS -->
+<a
+  class="top-nav-item my-posts-link"
+  (click)="goToMyPosts(); closeMenu()">
+  <i class="fas fa-clipboard-list"></i>
+  <span>My Posts</span>
+</a>
+  
+     <div
+  *ngIf="
+    menuOpen &&
+    !currentUrl.includes('admin') &&
+    !currentUrl.includes('admin-page')
+  "
+  (click)="closeMenu()">
+  </div>  
+  
+  
+<!-- COMMANDED FOR FUTURE USE  -->
+  
+        <!-- <a [routerLink]="['/home']" class="homee" (click)="closeMenu()">Home</a> -->
         <!-- <a [routerLink]="['/news']" (click)="closeMenu()">News</a> -->
         <!-- <button type="button" (click)="logout(); closeMenu()">Logout</button> -->
-        <!-- <a (click)="postProduct(); closeMenu()" class="post-btn">Post Product</a> -->
-        <a (click)="postService(); closeMenu()" class="post-btn service-btn">📢 ADVERTISE</a>
-        
-        <a (click)="goToMyPosts(); closeMenu()">My Posts</a>
-
-      </div>
-
-      <div class="nav-actions">
-        <a (click)="postService(); closeMenu()" class="mobile-ad-btn" aria-label="Advertise">
-          <i class="fas fa-bullhorn"></i>
-          <span class="mobile-ad-text">ADVERTISE</span>
-        </a>
-
-        <a (click)="goToMyPosts(); closeMenu()" class="nav-icon-btn mobile-my-posts-btn myposts-animate" aria-label="My Posts">
+        <!-- <a (click)="postProduct(); closeMenu()" class="post-btn">Post Product</a> -->  
+        <!-- <a (click)="goToMyPosts(); closeMenu()" class="nav-icon-btn mobile-my-posts-btn myposts-animate" aria-label="My Posts">
           <i class="fas fa-clipboard-list"></i>
-        </a>
-      
-
+        </a> -->
         <!-- <a [routerLink]="['/cart']" class="nav-icon-btn" aria-label="Cart">
           <i class="fas fa-shopping-cart"></i>
         </a> -->
+            <!-- <a (click)="postService(); closeMenu()" class="mobile-ad-btn" aria-label="Advertise">
+          <i class="fas fa-bullhorn"></i>
+          <span class="mobile-ad-text">ADVERTISE</span>
+        </a>  -->
 
+          <!-- <div class="nav-actions">
         <a (click)="goToFavorites(); closeMenu()" class="nav-icon-btn fav-animate" aria-label="Favorites">
           <i class="fas fa-heart"></i>
         </a>
-
-       <a (click)="goToChat(); closeMenu()" class="nav-icon-btn chat-animate">
-  <i class="fas fa-comments"></i>
-
-  <span *ngIf="chatCount > 0" class="badge">
-    {{ chatCount }}
-  </span>
-</a>
-
-
-
         <a (click)="goToNotifications(); closeMenu()" class="nav-icon-btn bell-animate" aria-label="Notification">
           <i class="fas fa-bell"></i>
           <span *ngIf="notificationCount > 0" class="badge">
             {{ notificationCount }}
           </span>
         </a>
-
         <a (click)="goToProfile(); closeMenu()" class="profile" aria-label="Profile">
           <i class="fas fa-user-circle"></i>
         </a>
-      </div>
-
+      </div> -->
     </div>
-  </nav>
 
+
+    <!-- SECOND NAVIGATION ROW -->
+<div class="bottom-nav">
+
+  <!-- LOCATION BUTTON -->
+   <div class="location-search-bar">
+  <div class="location-box location-clickable" (click)="toggleLocationPicker()">
+    <i class="fas fa-location-dot"></i>
+    <span class="location-text">
+      {{ locationLabel }}
+    </span>
+    <i class="fas fa-chevron-down"></i>
+  </div>
+</div>
+
+   <!-- INSIDE LOCATION VIEW -->
   <div class="location-modal" *ngIf="showLocationPicker">
     <div class="location-modal-backdrop" (click)="closeLocationPicker()"></div>
 
@@ -129,54 +159,235 @@
       </div>
     </div>
   </div>
-    <div class="menu-overlay" *ngIf="menuOpen" (click)="closeMenu()"></div>
-  <div class="side-menu" [class.active]="menuOpen">
-    <div class="menu-content">
-      <div class="menu-header">
-        <!-- <div class="logo">AMI<span>HUB</span></div> -->
-        
-        <button class="close-icon" type="button" (click)="closeMenu()"></button>
+
+    <!-- SEARCH BOX -->
+   <div class="ami-search">
+  <input 
+    type="text"
+    placeholder="Search for products, services, jobs, businesses..."
+  >
+  <button>
+    <i class="fas fa-search"></i>
+  </button>
+</div>
+
+<!-- PROFILE LOGIN / ACCOUNT DROPDOWN -->
+<div class="profile-menu-wrapper">
+
+  <button
+    type="button"
+    class="profile-login"
+    (click)="toggleProfileMenu($event)"
+  >
+    <i class="fa-regular fa-user"></i>
+
+    <span>
+      {{ isLoggedInUser ? 'My Account' : 'Login / Sign Up' }}
+    </span>
+
+    <i
+      class="fas fa-chevron-down profile-arrow"
+      [class.rotate]="showProfileMenu"
+    ></i>
+  </button>
+
+  <div
+    class="profile-dropdown"
+    *ngIf="showProfileMenu"
+    (click)="$event.stopPropagation()"
+  >
+
+    <!-- USER NOT LOGGED IN -->
+    <div class="login-dropdown-header" *ngIf="!isLoggedInUser">
+      <div>
+        <strong>Welcome to AMI HUB</strong>
+        <small>Login to access your account</small>
       </div>
 
+      <button
+        type="button"
+        class="dropdown-login-btn"
+        (click)="goToLogin()"
+      >
+        Login
+      </button>
+    </div>
+
+    <!-- TWO COLUMN MENU -->
+    <div class="profile-menu-grid">
+
+      <button
+        type="button"
+        class="profile-dropdown-item"
+        (click)="goToProfileMenu()"
+      >
+        <span class="dropdown-icon">
+          <i class="fa-regular fa-user"></i>
+        </span>
+
+        <span class="dropdown-text">
+          <strong>My Account</strong>
+          <small>View your profile</small>
+        </span>
+      </button>
+
+      <button
+        type="button"
+        class="profile-dropdown-item"
+        (click)="goToOrders()"
+      >
+        <span class="dropdown-icon">
+          <i class="fas fa-box order-icon"></i>
+        </span>
+
+        <span class="dropdown-text">
+          <strong>Orders</strong>
+          <small>Track your orders</small>
+        </span>
+      </button>
+
+      <button
+        type="button"
+        class="profile-dropdown-item"
+        (click)="goToFavorites()"
+      >
+        <span class="dropdown-icon">
+          <i class="fa-regular fa-heart"></i>
+        </span>
+
+        <span class="dropdown-text">
+          <strong>Wishlist</strong>
+          <small>Saved products</small>
+        </span>
+      </button>
+
+      <button
+        type="button"
+        class="profile-dropdown-item"
+        (click)="goToNotifications()"
+      >
+        <span class="dropdown-icon">
+          <i class="fa-regular fa-bell"></i>
+
+          <span
+            class="dropdown-count"
+            *ngIf="notificationCount > 0"
+          >
+            {{ notificationCount }}
+          </span>
+        </span>
+
+        <span class="dropdown-text">
+          <strong>Notifications</strong>
+          <small>View recent updates</small>
+        </span>
+      </button>
+
+      <!-- CHAT INSIDE DROPDOWN -->
+      <button
+        type="button"
+        class="profile-dropdown-item"
+        (click)="goToChatFromDropdown()"
+      >
+        <span class="dropdown-icon chat-dropdown-icon">
+          <i class="fas fa-comments"></i>
+
+          <span
+            class="dropdown-count"
+            *ngIf="chatCount > 0"
+          >
+            {{ chatCount }}
+          </span>
+        </span>
+
+        <span class="dropdown-text">
+          <strong>Chat</strong>
+          <small>View your messages</small>
+        </span>
+      </button>
+      <!-- MY POSTS -->
+<button
+  type="button"
+  class="profile-dropdown-item mobile-my-posts"
+  (click)="goToMyPosts()"
+>
+  <span class="dropdown-icon">
+    <i class="fas fa-clipboard-list"></i>
+  </span>
+
+  <span class="dropdown-text">
+    <strong>My Posts</strong>
+    <small>Manage your posts</small>
+  </span>
+</button>
+
+    </div>
+
+    <!-- LOGOUT -->
+    <button
+      type="button"
+      class="profile-logout"
+      *ngIf="isLoggedInUser"
+      (click)="logoutFromDropdown()"
+    >
+      <i class="fas fa-arrow-right-from-bracket"></i>
+      <span>Logout</span>
+    </button>
+
+  </div>
+
+</div>
+</div>
+<div>
+        
+</div>
+
+  </nav>
+
+
+
+
+
+
+
+<!--   
+    <div class="menu-overlay" *ngIf="menuOpen" (click)="closeMenu()"></div>
+<div
+  class="side-menu"
+  *ngIf="
+    !currentUrl.includes('admin') &&
+    !currentUrl.includes('admin-page')
+  "
+  [class.active]="menuOpen">
+    <div class="menu-content">
+      <div class="menu-header"> -->
+        <!-- <div class="logo">AMI<span>HUB</span></div> --> 
+        <!-- <button class="close-icon" type="button" (click)="closeMenu()"></button>
+      </div>
       <div class="links-container">
         <a [routerLink]="['/']" (click)="closeMenu()">Home</a>
-
-        <a (click)=" closeMenu(); goToMyPosts()">My Posts</a>
-
+        <a (click)=" closeMenu(); goToMyPosts()">My Posts</a> -->
         <!-- <a (click)="postProduct(); closeMenu()" class="special-link product">
           Post Product
         </a> -->
-
-        <a (click)=" closeMenu(); postService()" class="special-link service">
+        <!-- <a (click)=" closeMenu(); postService()" class="special-link service">
           📢 ADVERTISE
         </a>
         <a
   (click)="goToJobs(); closeMenu()"
   class="jobs-btn"
   >
-
     💼 Find My Job
-
 </a>
-
-        <!-- <a [routerLink]="['/cart']" (click)="closeMenu()">
-          🛒 Cart
-        </a> -->
-
         <a (click)=" closeMenu();goToFavorites();">
           ❤️ Favorites
         </a>
-
        <a (click)=" closeMenu(); goToChat()" class="chat-menu-item">
-
   💬 Chats
-
   <span *ngIf="chatCount > 0" class="chat-menu-badge">
     {{ chatCount }}
   </span>
-
 </a>
-
         <div class="menu-item notification-item" (click)="goToNotifications(); closeMenu()">
           <i class="fas fa-bell"></i>
           <span>Notifications</span>
@@ -184,21 +395,17 @@
             {{ notificationCount }}
           </span>
         </div>
-
         <div class="menu-item notification-item" (click)="toggleLocationPicker(); closeMenu()">
           <i class="fas fa-map-marker-alt"></i>
           <span>{{ locationLabel }}</span>
         </div>
-
-        <!-- <a [routerLink]="['/news']" (click)="closeMenu()">📰 News</a> -->
-
+        <a [routerLink]="['/news']" (click)="closeMenu()">📰 News</a>
       <div class="menu-item" (click)=" closeMenu();goToProfile()">
   <i class="fas fa-user-circle"></i>
   <span>Profile</span>
 </div>
       </div>
       <div style="margin-top:16px; display:flex; flex-direction:column; gap:12px;">
-
   <a
     *ngIf="!isLoggedInUser"
     [routerLink]="['/login']"
@@ -220,7 +427,6 @@
   >
     Login
   </a>
-
   <button
     *ngIf="isLoggedInUser"
     class="logout-btn"
@@ -229,33 +435,10 @@
   >
     Logout
   </button>
-
-</div>
-
-
-     
-    </div>
-  </div>
-
-  <!-- <div class="floating-ad" *ngIf="showAd && !shouldHideGlobalAds">
-    <button class="close-ad" (click)="showAd = false">×</button>
-
-    <div class="ad-content">
-      <h4>Boost Your Post 🚀</h4>
-      <p>Get more views & reach more buyers instantly!</p>
-      <button class="ad-btn">Promote Now</button>
-    </div>
-  </div>
-
-  <div class="top-ad" *ngIf="showTopAd && !shouldHideGlobalAds">
-    <button class="close-ad" (click)="showTopAd = false">×</button>
-
-    <div class="top-ad-content">
-      <h4>🔥 Special Offer</h4>
-      <p>Upgrade your listing and appear on top!</p>
-      <button class="top-ad-btn">Upgrade</button>
+</div>    
     </div>
   </div> -->
+<!-- FOOTER -->
 
 <main class="main-content">
   <router-outlet></router-outlet>
@@ -324,6 +507,8 @@
 
     </div>
   </div>
+
+
 <footer class="footer" *ngIf="
   !currentUrl.includes('login') &&
   !currentUrl.includes('admin') &&

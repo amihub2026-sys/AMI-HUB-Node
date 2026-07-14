@@ -10,6 +10,7 @@ import { LocationPickerComponent } from './pages/location-picker/location-picker
 import { AppLocationResult } from './services/location-search';
 import { SnackbarService } from './services/snackbar.service';
 import { SnackbarComponent } from './snackbar/snackbar';
+import { HostListener } from '@angular/core';
 
 @Component({
   selector: 'app-root',
@@ -288,6 +289,9 @@ async loadChatCount(): Promise<void> {
 
 }
   goToNotifications(): void {
+
+this.showProfileMenu = false;
+   
     this.isLoggedIn().then((loggedIn) => {
       if (!loggedIn) {
         this.redirectToLogin('notification');
@@ -305,7 +309,10 @@ async loadChatCount(): Promise<void> {
     });
   }
 
-  goToFavorites(): void {
+goToFavorites(): void {
+
+  this.showProfileMenu = false;
+
     this.isLoggedIn().then((loggedIn) => {
       if (!loggedIn) {
         this.redirectToLogin('favt');
@@ -340,7 +347,17 @@ async loadChatCount(): Promise<void> {
       this.router.navigate(['/chats']);
     });
   }
+goToChatFromDropdown(): void {
+  this.showProfileMenu = false;
+  this.closeMenu();
 
+  if (!this.isLoggedInUser) {
+    this.router.navigate(['/login']);
+    return;
+  }
+
+  this.router.navigate(['/chat']);
+}
   goToProfile(): void {
     this.isLoggedIn().then((loggedIn) => {
       if (!loggedIn) {
@@ -519,7 +536,17 @@ async loadChatCount(): Promise<void> {
   closeMenu(): void {
     this.menuOpen = false;
   }
+showProfileMenu = false;
 
+toggleProfileMenu(event: MouseEvent): void {
+  event.stopPropagation();
+  this.showProfileMenu = !this.showProfileMenu;
+}
+
+@HostListener('document:click')
+closeProfileOutside(): void {
+  this.showProfileMenu = false;
+}
   doSearch(): void {
     const query = this.searchTerm.trim();
     const category = this.searchCategory === 'All' ? '' : this.searchCategory;
@@ -665,6 +692,36 @@ async loadChatCount(): Promise<void> {
     return 'Select Location';
   }
 
+goToLogin(): void {
+  this.showProfileMenu = false;
+
+  this.router.navigate(['/login']);
+}
+
+goToProfileMenu(): void {
+  this.showProfileMenu = false;
+
+  this.goToProfile();
+}
+
+goToOrders(): void {
+  this.showProfileMenu = false;
+
+  this.isLoggedIn().then((loggedIn) => {
+    if (!loggedIn) {
+      this.redirectToLogin('orders');
+      return;
+    }
+
+    this.router.navigate(['/orders']);
+  });
+}
+
+logoutFromDropdown(): void {
+  this.showProfileMenu = false;
+
+  this.logout();
+}
   async logout(): Promise<void> {
     await this.supabaseService.signOut();
 
