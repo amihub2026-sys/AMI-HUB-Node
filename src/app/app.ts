@@ -75,10 +75,10 @@ isRouteLoading = false;
  constructor(
   private location: Location,
   public router: Router,
-  
+
   private supabaseService: SupabaseService,
   private cdr: ChangeDetectorRef,
-  private snackbar: SnackbarService,   
+  private snackbar: SnackbarService,
   @Inject(PLATFORM_ID) private platformId: Object
 ) {}
 
@@ -134,31 +134,45 @@ if (event instanceof NavigationEnd) {
   }
 
   private hasLocalUserLogin(): boolean {
-    if (!this.isBrowser()) return false;
-    return localStorage.getItem('userToken') === 'loggedUser';
+
+  if (!this.isBrowser()) {
+    return false;
   }
-  
+
+
+  return !!localStorage.getItem('token');
+
+}
+
 
   private async isLoggedIn(): Promise<boolean> {
-    if (!this.isBrowser()) return false;
 
-    try {
-      const { data, error } = await supabase.auth.getSession();
-
-      if (error) {
-        console.error('Session check error:', error);
-      }
-
-      const user = data.session?.user;
-      const isAdmin = localStorage.getItem('adminToken') === 'loggedAdmin';
-      const isLocalUser = localStorage.getItem('userToken') === 'loggedUser';
-
-      return !!user || isAdmin || isLocalUser;
-    } catch (error) {
-      console.error('isLoggedIn error:', error);
-      return this.hasLocalUserLogin();
-    }
+  if (!this.isBrowser()) {
+    return false;
   }
+
+
+  const token =
+    localStorage.getItem('token');
+
+
+  const adminToken =
+    localStorage.getItem('adminToken');
+
+
+  if (token) {
+    return true;
+  }
+
+
+  if (adminToken) {
+    return true;
+  }
+
+
+  return false;
+
+}
 
   private redirectToLogin(redirectTo: string): void {
     this.router.navigate(['/login'], {
@@ -242,7 +256,7 @@ if (event instanceof NavigationEnd) {
         .eq('isread', false);
 
       if (error) {
-        
+
         this.notificationCount = 0;
         return;
       }
@@ -250,7 +264,7 @@ if (event instanceof NavigationEnd) {
       this.notificationCount = count || 0;
       this.cdr.detectChanges();
     } catch (e) {
-     
+
       this.notificationCount = 0;
     }
   }
@@ -291,7 +305,7 @@ async loadChatCount(): Promise<void> {
   goToNotifications(): void {
 
 this.showProfileMenu = false;
-   
+
     this.isLoggedIn().then((loggedIn) => {
       if (!loggedIn) {
         this.redirectToLogin('notification');
@@ -722,29 +736,37 @@ logoutFromDropdown(): void {
 
   this.logout();
 }
-  async logout(): Promise<void> {
-    await this.supabaseService.signOut();
+ async logout(): Promise<void> {
 
-    if (this.isBrowser()) {
-      localStorage.removeItem('adminToken');
-      localStorage.removeItem('userToken');
-      localStorage.removeItem('userTypeId');
-      localStorage.removeItem('supabase_uid');
-      localStorage.removeItem('username');
-      localStorage.clear();
-    }
+  if (this.isBrowser()) {
 
-    this.closeMenu();
-    this.notificationCount = 0;
-    this.cdr.detectChanges();
-    this.router.navigate(['/login']);
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userTypeId');
+    localStorage.removeItem('adminToken');
+
+    localStorage.clear();
 
   }
+
+
+  this.closeMenu();
+
+  this.notificationCount = 0;
+
+  this.chatCount = 0;
+
+  this.cdr.detectChanges();
+
+
+  this.router.navigate(['/login']);
+
+}
   goBack(): void {
   this.location.back();
 }
 goToJobs() {
   this.router.navigate(['/job']);
 }
-  
+
 }
