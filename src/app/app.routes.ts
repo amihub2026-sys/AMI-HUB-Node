@@ -19,8 +19,6 @@ import { SellerProfileComponent } from './pages/seller-profile/seller-profile';
 import { PostViewComponent } from './pages/post-view/post-view';
 import { SubscriptionPlan } from './pages/subscription-plan/subscription-plan';
 import { FeaturedPlan } from './pages/featured-plan/featured-plan';
-import { AdminLayout } from './pages/admin-layout/admin-layout';
-import { DashboardComponent } from './pages/dashboard/dashboard';
 import { AccountSetup } from './pages/account-setup/account-setup';
 import { MyPosts } from './pages/my-posts/my-posts';
 import { About } from './pages/about/about';
@@ -35,10 +33,10 @@ import { Cart } from './pages/cart/cart';
 import { Favt } from './pages/favt/favt';
 import { Payment } from './pages/payment/payment';
 import { DeleteAccount } from './pages/delete-account/delete-account';
-
+import { AdminPage } from './pages/admin-page/admin-page';
 import { AdminUserBoostPlansComponent } from './pages/admin-page/admin-page/pages/admin-user-boost-plans/admin-user-boost-plans';
 
-import { AdminGuard } from './guards/admin.guard';
+
 
 export const routes: Routes = [
 
@@ -102,20 +100,19 @@ export const routes: Routes = [
   { path: 'chats', component: Chats },
 
   {
-    path: 'news',
-    loadComponent: () =>
-      import('./pages/news/news').then(m => m.News)
-  },
-
-  {
-  path: 'admin',
-  component: AdminLayout,
-  canActivate: [AdminGuard],
-  children: [
-    { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-    { path: 'dashboard', component: DashboardComponent }
-  ]
+  path: 'news',
+  loadComponent: () =>
+    import('./pages/news/news').then(m => m.News)
 },
 
-  { path: '**', redirectTo: '' }
+{
+  path:'admin',
+  component: AdminPage
+},
+
+{
+  path: '**',
+  redirectTo: ''
+}
 ];
+

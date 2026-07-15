@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { NgSelectModule } from '@ng-select/ng-select';
-import { SupabaseService, Post } from '../../services/supabase.service';
+import { ApiService } from '../../services/api.service';
 
 interface LocationData {
   state: string;
@@ -19,10 +19,10 @@ interface LocationData {
 })
 export class PostAd implements OnInit {
 
-  constructor(
-    private router: Router,
-    private supabaseService: SupabaseService
-  ) {}
+ constructor(
+  private router: Router,
+  private apiService: ApiService
+) {}
 
   // ---------------- Ad fields ----------------
   adTitle = '';
@@ -133,58 +133,98 @@ export class PostAd implements OnInit {
   }
 
   // ---------------- Submit Ad ----------------
-  async submitAd() {
-    try {
-      const user = await this.supabaseService.getCurrentUser();
-      if (!user) {
-        alert("Please login first");
-        return;
-      }
+  submitAd() {
 
-      // Upload main image
-      const mainImageURL = this.mainImage
-        ? await this.supabaseService.uploadFile(this.mainImage, 'main-images')
-        : null;
+  const token = localStorage.getItem('token');
 
-      // Upload additional images
-      const additionalImagesURLs: string[] = [];
-      for (const img of this.additionalImages) {
-        const url = await this.supabaseService.uploadFile(img, 'additional-images');
-        if (url) additionalImagesURLs.push(url);
-      }
-
-      // Upload video
-      const videoURL = this.video
-        ? await this.supabaseService.uploadFile(this.video, 'videos')
-        : null;
-
-      const post: Post = {
-        userid: user.id,
-        categoryid: null,
-        subcategoryid: null,
-        title: this.adTitle,
-        description: this.description,
-        price: this.price,
-        currencycode: 'INR',
-        status: 'Active',
-        isfeatured: false,
-        isactive: true,
-        cityid: null,
-        areaid: null,
-        image_url: mainImageURL ?? undefined,
-        image_urls: additionalImagesURLs,
-      video_url: videoURL ?? undefined,
-      };
-
-      await this.supabaseService.addPost(post);
-
-      alert("Ad posted successfully");
-      this.router.navigate(['/custom-fields'], { state: post });
-
-    } catch (err) {
-      console.error(err);
-      alert("Error posting ad");
-    }
+  if(!token){
+    alert("Please login first");
+    this.router.navigate(['/login']);
+    return;
   }
 
+
+  if(!this.adTitle){
+    alert("Title required");
+    return;
+  }
+
+
+  const postData = {
+
+    title:this.adTitle,
+
+    categoryId:this.category,
+
+    subcategoryId:this.subcategory || null,
+
+    listingType:"product",
+
+    description:this.description,
+
+    price:this.price || 0,
+
+
+    location:{
+      country:this.country,
+      state:this.state || "",
+      city:this.district || "",
+      address:this.area || ""
+    },
+
+
+    images:[],
+    videos:[]
+
+
+  };
+
+
+  this.apiService
+  .post(
+    '/posts',
+    postData
+  )
+  .subscribe({
+
+    next:(res:any)=>{
+
+      console.log(
+        "POST CREATED",
+        res
+      );
+
+
+      alert(
+        "Ad Posted Successfully"
+      );
+
+
+      this.router.navigate([
+        '/my-posts'
+      ]);
+
+    },
+
+
+    error:(err:any)=>{
+
+      console.error(
+        "POST ERROR",
+        err
+      );
+
+
+      alert(
+        err.error?.message ||
+        "Post failed"
+      );
+
+    }
+
+
+  });
+
+
+}
 }
