@@ -11,56 +11,107 @@
     </div>
 
     <div class="posts-grid" *ngIf="posts().length > 0">
-      <div
-        class="post-card"
-        *ngFor="let post of posts(); trackBy: trackByPostId"
-        (click)="openDetails(post)"
-      >
-        <img
-          [src]="getMainImage(post)"
-          [alt]="post.title || 'Post image'"
-          loading="lazy"
-          decoding="async"
-          (error)="onImageError($event)"
-        />
+     <div
+ class="post-card"
+ *ngFor="let post of posts(); trackBy: trackByPostId"
+>
 
-        <h3>{{ post.title || 'Untitled Post' }}</h3>
 
-        <p class="price" *ngIf="post.price && post.price > 0">
-  ₹{{ post.price }}
+<div class="card-image">
+
+<img
+[src]="getMainImage(post)"
+[alt]="post.title"
+(error)="onImageError($event)"
+>
+
+<!-- 
+<button class="fav-btn">
+<i class="far fa-heart"></i>
+</button> -->
+
+</div>
+
+
+
+<div class="card-content">
+
+
+<div class="category">
+✦ {{post.category || 'Service'}}
+</div>
+
+
+
+<h3>
+{{post.title || 'Untitled Post'}}
+</h3>
+
+
+
+<p class="description">
+{{getDescription(post)}}
 </p>
 
-        <p class="status">{{ post.status || 'Active' }}</p>
 
-        <div class="post-actions">
-          <button
-            type="button"
-            class="edit-btn"
-            (click)="editPost(post, $event)"
-          >
-                <span>Edit</span>
-          </button>
 
-        <button
-  type="button"
-  class="feature-btn"
-  (click)="featurePost(post, $event)"
-  [disabled]="isFeatured(post)"
+<div class="info-row">
+
+<span>
+⭐ 4.8
+</span>
+
+
+<span>
+<i class="fas fa-location-dot"></i>
+{{getDistrict(post)}}
+</span>
+
+
+</div>
+
+
+
+</div>
+
+
+
+<div class="post-actions">
+
+
+<button
+class="edit-btn"
+(click)="editPost(post,$event)"
 >
-  <span>
-    {{ isFeatured(post) ? 'Featured' : 'Feature' }}
-  </span>
+<i class="fas fa-pen"></i>
+Edit
 </button>
 
-          <button
-            type="button"
-            class="delete-btn"
-            (click)="removePost(post, $event)"
-          >
-               <span>delete</span>
-          </button>
-        </div>
-      </div>
-    </div>
+
+
+<button
+class="feature-btn"
+(click)="featurePost(post,$event)"
+>
+<i class="fas fa-star"></i>
+Feature
+</button>
+
+
+
+<button
+class="delete-btn"
+(click)="removePost(post,$event)"
+>
+<i class="fas fa-trash"></i>
+Delete
+</button>
+
+
+</div>
+
+
+</div>
+</div>
   </ng-container>
 </div>

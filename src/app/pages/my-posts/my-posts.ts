@@ -38,7 +38,36 @@ private showAlert(message: string, type: 'success' | 'error' | 'info' = 'info'):
     }
     return false;
   }
+getDistrict(post: any): string {
 
+  if (!post) {
+    return '';
+  }
+
+  if (post.district) {
+    return post.district;
+  }
+
+  if (post.city) {
+    return post.city;
+  }
+
+  const location =
+    post.location ||
+    post.address ||
+    '';
+
+  if (!location) {
+    return '';
+  }
+
+  const parts = location.split(',');
+
+  return parts.length >= 2
+    ? parts[parts.length - 2].trim()
+    : parts[0].trim();
+
+}
   private mergePosts(...postLists: any[][]): any[] {
     const map = new Map<any, any>();
 
@@ -53,7 +82,22 @@ private showAlert(message: string, type: 'success' | 'error' | 'info' = 'info'):
 
     return Array.from(map.values());
   }
+getDescription(post:any):string {
 
+  if(!post){
+    return 'Quality service and best products available';
+  }
+
+
+  return (
+    post.description ||
+    post.additional_description ||
+    post.details ||
+    post.about ||
+    'Quality service and best products available'
+  );
+
+}
   async loadCurrentUserPosts(): Promise<void> {
     this.isLoading.set(true);
 
@@ -94,8 +138,12 @@ private showAlert(message: string, type: 'success' | 'error' | 'info' = 'info'):
         results.push(Array.isArray(data) ? data : []);
       }
 
-      const mergedPosts = this.mergePosts(...results);
-      this.posts.set(mergedPosts);
+    const mergedPosts = this.mergePosts(...results);
+
+console.log("FINAL MY POSTS:", mergedPosts);
+console.log("FIRST DESCRIPTION:", mergedPosts[0]?.description);
+
+this.posts.set(mergedPosts);
     } catch (error) {
       console.error('Error loading my posts:', error);
       this.posts.set([]);
