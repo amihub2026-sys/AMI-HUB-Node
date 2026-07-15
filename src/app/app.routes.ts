@@ -8,7 +8,6 @@ import { Register } from './pages/register/register';
 import { PostAd } from './pages/post-ad/post-ad';
 import { ProductList } from './pages/product-list/product-list';
 import { ProductDetails } from './pages/product-details/product-details';
-import { Categories } from './pages/categories/categories';
 import { Service } from './pages/service/service';
 import { ServiceList } from './pages/service-list/service-list';
 import { Coustme } from './pages/coustme/coustme';
@@ -66,8 +65,6 @@ export const routes: Routes = [
 
   { path: 'details/:id', component: PostViewComponent },
   { path: 'post-view/:id', component: PostViewComponent },
-
-  { path: 'all-categories', component: Categories },
 
   {
     path: 'all-listings',

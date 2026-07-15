@@ -1,66 +1,248 @@
-<div class="results-page">
-  <div class="top-search-bar">
 
-  <div class="search-tabs">
-     <!-- LOGO -->
-  <div class="search-logo" (click)="goHome()">
-    <img src="assets/hub_logo.png" alt="AMI HUB">
-  </div>
 
-     <button
-      type="button"
-      [class.active]="selectedType === 'all'"
-      (click)="selectType('all')">
-      <i class="fas fa-th-large"></i>
-      <span>All</span>
-    </button>
-  
-      <button
-      type="button"
-      [class.active]="selectedType === 'product'"
-      (click)="selectType('product')">
-      <i class="fas fa-box"></i>
-      <span>Products</span>
-    </button>
-  
-    <button
-      type="button"
-      [class.active]="selectedType === 'service'"
-      (click)="goToServiceList()">
-      <i class="fas fa-briefcase"></i>
-      <span>Services</span>
-    </button>
-    <button
-  type="button"
+<!-- <div class="results-page"> -->
+<div class="service-navbar">
+
+
+  <!-- TOP NAV -->
+  <div class="main-nav">
+
+
+    <!-- LOGO -->
+    <div class="nav-logo" (click)="goHome()">
+      <img src="assets/hub_logo.png">
+    </div>
+
+<!-- active pages -->
+<!-- active pages -->
+<div class="nav-links">
+
+  <a
+    [class.active]="selectedType === 'product'"
+    (click)="selectType('product')">
+
+    <i class="fas fa-box"></i>
+    Products
+
+  </a>
+
+
+  <a
+    [class.active]="selectedType === 'service'"
+    (click)="selectType('service')">
+
+    <i class="fas fa-briefcase"></i>
+    Services
+
+  </a>
+
+
+<a
   [class.active]="selectedType === 'job'"
   (click)="goToJobs()">
 
   <i class="fas fa-user-tie"></i>
-  <span>Jobs</span>
+  Jobs
 
+</a>
+
+</div>
+
+
+   <div class="search-box">
+
+
+      <input
+
+      type="text"
+
+      [(ngModel)]="searchText"
+
+      placeholder="Search for services, businesses..."
+
+      (keyup.enter)="searchNow()"
+
+      >
+
+
+      <button (click)="searchNow()">
+
+        <i class="fas fa-search"></i>
+
+        Search
+
+      </button>
+
+
+    </div>
+<!-- PROFILE LOGIN / ACCOUNT DROPDOWN -->
+<div class="profile-menu-wrapper">
+
+  <button
+    type="button"
+    class="profile-login"
+    (click)="toggleProfileMenu($event)"
+  >
+    <i class="fa-regular fa-user"></i>
+
+    <span>
+      {{ isLoggedInUser ? 'My Account' : 'Login / Sign Up' }}
+    </span>
+
+    <i
+      class="fas fa-chevron-down profile-arrow"
+      [class.rotate]="showProfileMenu"
+    ></i>
+  </button>
+
+  <div
+    class="profile-dropdown"
+    *ngIf="showProfileMenu"
+    (click)="$event.stopPropagation()"
+  >
+
+    <!-- USER NOT LOGGED IN -->
+    <div class="login-dropdown-header" *ngIf="!isLoggedInUser">
+      <div>
+        <strong>Welcome to AMI HUB</strong>
+        <small>Login to access your account</small>
+      </div>
+
+      <button
+        type="button"
+        class="dropdown-login-btn"
+        (click)="goToLogin()"
+      >
+        Login
+      </button>
+    </div>
+
+    <!-- TWO COLUMN MENU -->
+    <div class="profile-menu-grid">
+
+      <button
+        type="button"
+        class="profile-dropdown-item"
+        (click)="goToProfileMenu()"
+      >
+        <span class="dropdown-icon">
+          <i class="fa-regular fa-user"></i>
+        </span>
+
+        <span class="dropdown-text">
+          <strong>My Account</strong>
+          <small>View your profile</small>
+        </span>
+      </button>
+
+      <button
+        type="button"
+        class="profile-dropdown-item"
+        (click)="goToOrders()"
+      >
+        <span class="dropdown-icon">
+          <i class="fas fa-box order-icon"></i>
+        </span>
+
+        <span class="dropdown-text">
+          <strong>Orders</strong>
+          <small>Track your orders</small>
+        </span>
+      </button>
+
+      <button
+        type="button"
+        class="profile-dropdown-item"
+        (click)="goToFavorites()"
+      >
+        <span class="dropdown-icon">
+          <i class="fa-regular fa-heart"></i>
+        </span>
+
+        <span class="dropdown-text">
+          <strong>Wishlist</strong>
+          <small>Saved products</small>
+        </span>
+      </button>
+
+      <button
+        type="button"
+        class="profile-dropdown-item"
+        (click)="goToNotifications()"
+      >
+        <span class="dropdown-icon">
+          <i class="fa-regular fa-bell"></i>
+
+          <span
+            class="dropdown-count"
+            *ngIf="notificationCount > 0"
+          >
+            {{ notificationCount }}
+          </span>
+        </span>
+
+        <span class="dropdown-text">
+          <strong>Notifications</strong>
+          <small>View recent updates</small>
+        </span>
+      </button>
+
+      <!-- CHAT INSIDE DROPDOWN -->
+      <button
+        type="button"
+        class="profile-dropdown-item"
+        (click)="goToChatFromDropdown()"
+      >
+        <span class="dropdown-icon chat-dropdown-icon">
+          <i class="fas fa-comments"></i>
+
+          <span
+            class="dropdown-count"
+            *ngIf="chatCount > 0"
+          >
+            {{ chatCount }}
+          </span>
+        </span>
+
+        <span class="dropdown-text">
+          <strong>Chat</strong>
+          <small>View your messages</small>
+        </span>
+      </button>
+      <!-- MY POSTS -->
+<button
+  type="button"
+  class="profile-dropdown-item mobile-my-posts"
+  (click)="goToMyPosts()"
+>
+  <span class="dropdown-icon">
+    <i class="fas fa-clipboard-list"></i>
+  </span>
+
+  <span class="dropdown-text">
+    <strong>My Posts</strong>
+    <small>Manage your posts</small>
+  </span>
 </button>
+
+    </div>
+
+    <!-- LOGOUT -->
+    <button
+      type="button"
+      class="profile-logout"
+      *ngIf="isLoggedInUser"
+      (click)="logoutFromDropdown()"
+    >
+      <i class="fas fa-arrow-right-from-bracket"></i>
+      <span>Logout</span>
+    </button>
 
   </div>
 
-
-<div class="search-input-box">
-
-  <input
-    type="text"
-    [(ngModel)]="searchText"
-    placeholder="Search products, services..."
-    (keyup.enter)="searchNow()"
-  />
-
-  <button
-    class="search-btn-inside"
-    type="button"
-    (click)="searchNow()"
-  >
-    <i class="fas fa-search"></i>
-  </button>
-
 </div>
+</div>
+
 </div>
 
 <div class="results-header">
