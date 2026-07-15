@@ -1,33 +1,54 @@
-<div class="all-categories-page">
-  <div class="categories-container">
-    <h1>All Categories</h1>
+<!-- CATEGORY SLIDER -->
+<section class="categories-section">
 
-    <div class="loading-box" *ngIf="isLoading()">Loading...</div>
+  <div class="category-slider-wrapper">
 
-    <div class="grid" *ngIf="!isLoading() && categories().length > 0">
-      <div
-        class="cat-card"
-        *ngFor="let cat of categories()"
+    <!-- LEFT ARROW -->
+    <button
+      type="button"
+      class="category-arrow left-arrow"
+      (click)="slideCategories('left')"
+      aria-label="Previous categories"
+    >
+      <i class="fas fa-chevron-left"></i>
+    </button>
+
+    <!-- CATEGORY ROW -->
+    <div
+      class="flipkart-category-row"
+      #categorySlider
+      *ngIf="browseCategories().length > 0"
+    >
+      <button
+        type="button"
+        class="flipkart-category-item"
+        *ngFor="let cat of browseCategories()"
         (click)="openCategory(cat)"
       >
-        <div
-          class="cat-image-wrap"
-          [ngClass]="{
-            'mobile-icon': cat.categoryname?.toLowerCase() === 'mobiles'
-          }"
-        >
+        <div class="flipkart-category-icon">
           <img
-            [src]="getImage(cat)"
+            [src]="getCategoryImage(cat)"
             [alt]="cat.categoryname"
-            (error)="onImageError($event)"
-          />
+            loading="lazy"
+          >
         </div>
-        <p>{{ cat.categoryname }}</p>
-      </div>
+
+        <span class="flipkart-category-label">
+          {{ cat.categoryname }}
+        </span>
+      </button>
     </div>
 
-    <div class="empty-box" *ngIf="!isLoading() && categories().length === 0">
-      No categories found.
-    </div>
+    <!-- RIGHT ARROW -->
+    <button
+      type="button"
+      class="category-arrow right-arrow"
+      (click)="slideCategories('right')"
+      aria-label="Next categories"
+    >
+      <i class="fas fa-chevron-right"></i>
+    </button>
+
   </div>
-</div>
+
+</section>

@@ -5,6 +5,7 @@ import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../services/supabase.service';
 import { supabase } from '../../../supabaseClient';
+import { Category } from '../categories/categories';
 
 interface CategoryItem {
   categoryid: number;
@@ -26,7 +27,12 @@ interface SubcategoryItem {
 @Component({
   selector: 'app-product-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+imports: [
+ CommonModule,
+ RouterModule,
+ FormsModule,
+ Category
+],
   templateUrl: './product-list.html',
   styleUrl: './product-list.css',
 })

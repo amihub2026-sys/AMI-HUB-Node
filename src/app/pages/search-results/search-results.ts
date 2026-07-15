@@ -1,9 +1,10 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectorRef, HostListener } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { supabase } from '../../../supabaseClient';
+import { SupabaseService } from '../../services/supabase.service';
 
 
 interface CategoryItem {
@@ -55,17 +56,250 @@ sortBy = 'Newest';
 
   categories: CategoryItem[] = [];
   subcategories: SubcategoryItem[] = [];
+showProfileMenu = false;
+isLoggedInUser = false;
+notificationCount = 0;
+chatCount = 0;
+
 
   constructor(
     private route: ActivatedRoute,
      public router: Router,
     private cdr: ChangeDetectorRef,
-      private location: Location
+      private location: Location,
+       private supabaseService: SupabaseService
    
   ) {}
   goBack(): void {
   this.location.back();
 }
+goToLogin(): void {
+
+  this.showProfileMenu = false;
+
+  this.router.navigate(['/login']);
+
+}
+// account dropdown
+toggleProfileMenu(event: MouseEvent): void {
+
+  event.stopPropagation();
+
+  this.showProfileMenu =
+  !this.showProfileMenu;
+
+}
+
+
+
+@HostListener('document:click')
+
+closeProfileOutside(): void {
+
+  this.showProfileMenu = false;
+
+}
+
+private async isLoggedIn(): Promise<boolean>{
+
+  try{
+
+    const user =
+    await this.supabaseService.getCurrentUser();
+
+
+    return !!user;
+
+
+  }catch(error){
+
+    return false;
+
+  }
+
+}
+
+private redirectToLogin(page:string):void{
+
+ this.router.navigate(
+  ['/login'],
+  {
+    state:{
+      redirectTo:page
+    }
+  }
+ );
+
+}
+
+goToProfileMenu():void{
+
+
+ this.showProfileMenu=false;
+
+
+ this.isLoggedIn()
+ .then(logged=>{
+
+
+  if(!logged){
+
+    this.redirectToLogin('profile');
+
+    return;
+
+  }
+
+
+  this.router.navigate(['/seller-profile']);
+
+
+ });
+
+
+}
+
+goToOrders():void{
+
+
+ this.showProfileMenu=false;
+
+
+ this.isLoggedIn()
+ .then(logged=>{
+
+
+ if(!logged){
+
+   this.redirectToLogin('orders');
+
+   return;
+
+ }
+
+
+ this.router.navigate(['/orders']);
+
+
+ });
+
+
+}
+
+goToFavorites():void{
+
+
+ this.showProfileMenu=false;
+
+
+ this.isLoggedIn()
+ .then(logged=>{
+
+
+ if(!logged){
+
+   this.redirectToLogin('wishlist');
+
+   return;
+
+ }
+
+
+ this.router.navigate(['/favt']);
+
+
+ });
+
+
+}
+
+goToNotifications():void{
+
+
+ this.showProfileMenu=false;
+
+
+ this.isLoggedIn()
+ .then(logged=>{
+
+
+ if(!logged){
+
+   this.redirectToLogin('notification');
+
+   return;
+
+ }
+
+
+ this.router.navigate(['/notification']);
+
+
+ });
+
+
+}
+
+goToChatFromDropdown():void{
+
+
+ this.showProfileMenu=false;
+
+
+ if(!this.isLoggedInUser){
+
+   this.router.navigate(['/login']);
+
+   return;
+
+ }
+
+
+ this.router.navigate(['/chat']);
+
+
+}
+goToMyPosts(): void {
+
+  this.showProfileMenu = false;
+
+  this.isLoggedIn().then((loggedIn) => {
+
+    if (!loggedIn) {
+
+      this.router.navigate(['/login'], {
+        state: {
+          redirectTo: 'my-posts'
+        }
+      });
+
+      return;
+
+    }
+
+
+    this.router.navigate(['/my-posts']);
+
+  });
+
+}
+async logoutFromDropdown():Promise<void>{
+
+
+ this.showProfileMenu=false;
+
+
+ await this.supabaseService.signOut();
+
+
+ localStorage.clear();
+
+
+ this.router.navigate(['/login']);
+
+
+}
+
 
   ngOnInit() {
     this.route.queryParams.subscribe(async (params) => {
