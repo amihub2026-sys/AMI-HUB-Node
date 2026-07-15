@@ -8,7 +8,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 export class ApiService {
 
 
-  baseUrl = 'http://localhost:5000/api';
+  baseUrl = 'https://ami-hub-backend.onrender.com/api';
 
 
   constructor(
