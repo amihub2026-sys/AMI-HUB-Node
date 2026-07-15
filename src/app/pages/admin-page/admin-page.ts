@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Service } from '../service/service';
 import { AdminUserBoostPlansComponent } from './admin-page/pages/admin-user-boost-plans/admin-user-boost-plans';
-import { AdminReports } from './pages/admin-reports/admin-reports';
+import { AdminReports } from './admin-page/pages/admin-reports/admin-reports';
 import {
   AdminSidebar,
   AdminMenuKey as SidebarAdminMenuKey,
@@ -25,7 +25,7 @@ type AdminMenuKey = SidebarAdminMenuKey | 'advertise' | 'edit-post';
 @Component({
   selector: 'app-admin-page',
   standalone: true,
-  
+
  imports: [
   CommonModule,
   FormsModule,
@@ -53,9 +53,9 @@ export class AdminPage {
   searchQuery = '';
   activeMenu: AdminMenuKey = 'dashboard';
   editingPostId: number | null = null;
-  
 
- 
+
+
 
   setActiveMenu(menu: AdminMenuKey): void {
     this.sidebarOpen = false;

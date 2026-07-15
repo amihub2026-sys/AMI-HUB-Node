@@ -219,7 +219,6 @@ constructor(
   }
 
 
-
   this.authService.login({
 
     mobile: identifier,
@@ -237,7 +236,56 @@ constructor(
       );
 
 
-      this.authService.saveSession(res);
+      // SAVE JWT TOKEN
+      localStorage.setItem(
+        'token',
+        res.token
+      );
+
+
+      // SAVE USER ID
+      if(res.user?._id){
+
+        localStorage.setItem(
+          'userId',
+          res.user._id
+        );
+
+      }
+
+
+      // SAVE USER DETAILS
+      localStorage.setItem(
+        'userName',
+        res.user?.fullName || ''
+      );
+
+
+      localStorage.setItem(
+        'userEmail',
+        res.user?.email || ''
+      );
+
+
+      localStorage.setItem(
+        'userTypeId',
+        String(
+          res.user?.usertypeid || ''
+        )
+      );
+
+
+      console.log(
+        "TOKEN SAVED:",
+        localStorage.getItem('token')
+      );
+
+
+      console.log(
+        "USER ID SAVED:",
+        localStorage.getItem('userId')
+      );
+
 
 
       this.showAlert(
@@ -246,11 +294,29 @@ constructor(
       );
 
 
+
       setTimeout(()=>{
 
-        this.router.navigate(['/']);
+        if(
+          res.user?.isOnboardingCompleted === false
+        ){
+
+          this.router.navigate([
+            '/account-setup'
+          ]);
+
+        }
+        else{
+
+          this.router.navigate([
+            '/'
+          ]);
+
+        }
+
 
       },1000);
+
 
 
     },
