@@ -325,7 +325,44 @@ currentUserId = signal<string>('');
 
     return fallback;
   }
+  
+ getDistrict(business: any): string {
 
+  if (!business) {
+    return '';
+  }
+
+  // If district is already stored
+  if (business.district) {
+    return business.district;
+  }
+
+  // If city is stored
+  if (business.city) {
+    return business.city;
+  }
+
+  // Extract from address/location
+  const location =
+    business.location ||
+    business.address ||
+    '';
+
+  if (!location) {
+    return '';
+  }
+
+  const parts = location.split(',');
+
+  // Example:
+  // "12, Anna Nagar, Madurai, Tamil Nadu"
+  // returns "Madurai"
+
+  return parts.length >= 2
+    ? parts[parts.length - 2].trim()
+    : parts[0].trim();
+
+}
   openDetails(post: any) {
     if (!post?.postid) return;
     this.router.navigate(['/details', post.postid]);

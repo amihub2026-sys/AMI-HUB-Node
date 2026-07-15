@@ -331,7 +331,7 @@ AMI HUB creates smart, modern, and scalable digital solutions for businesses wor
   </section> --> 
 
   <!-- FEATURED PRODUCTS -->
-  <section class="featured-section">
+   <section class="featured-section">
     <div class="section-head">
       <h2>Featured Ads</h2>
     </div>
@@ -345,12 +345,21 @@ AMI HUB creates smart, modern, and scalable digital solutions for businesses wor
     </div>
 
     <div class="featured-grid" *ngIf="featuredBusinesses().length > 0">
+     
   <div
-    class="featured-card"
-    *ngFor="let business of featuredBusinesses()"
-    (click)="openDetails(business)"
-  >
-    <div class="card-badge">Featured</div>
+  class="featured-card featured-ad-card"
+  *ngFor="let business of featuredBusinesses()"
+  (click)="openDetails(business)"
+> 
+ <!-- <span class="featured-badge">
+      Featured
+    </span> -->
+  
+
+  <!-- IMAGE -->
+  <div class="card-image">
+
+
 
     <div
       class="fav-btn"
@@ -360,23 +369,66 @@ AMI HUB creates smart, modern, and scalable digital solutions for businesses wor
       {{ business.isFavourite ? '♥' : '♡' }}
     </div>
 
-    <img [src]="getFeaturedImage(business)" [alt]="business.title">
+    <img
+      [src]="getFeaturedImage(business)"
+      [alt]="business.title"
+    />
 
-    <div class="card-body">
-      <h4>{{ business.title }}</h4>
-
-      <p class="price-text" *ngIf="business.price && business.price > 0">
-        ₹{{ business.price }}
-      </p>
-
-      <p class="location-text">
-        📍 {{ business.location || business.address || 'Location not available' }}
-      </p>
-
-      <a class="card-link">View Details ›</a>
-    </div>
   </div>
+
+  <!-- CARD BODY -->
+  <div class="card-body">
+
+    <!-- CATEGORY -->
+    <p class="category">
+      ✦ {{ business.category || business.categoryname || 'Featured Ad' }}
+    </p>
+
+    <!-- TITLE -->
+    <h4>
+      {{ business.title }}
+    </h4>
+
+    <!-- DESCRIPTION -->
+    <p class="description">
+      {{ business.description || 'Quality products and professional services available' }}
+    </p>
+
+    <!-- RATING AND LOCATION -->
+    <div class="info-row">
+
+      <span>
+        ⭐ 4.8
+      </span>
+
+      <span>
+  <i class="fas fa-location-dot"></i>
+  {{ getDistrict(business) || 'Location not available' }}
+</span>
+    </div>
+
+    <!-- PRICE AND BUTTON -->
+    <div class="bottom-row">
+
+      <div class="price-box">
+
+        <strong *ngIf="business.price && business.price > 0">
+          ₹{{ business.price }}
+        </strong>
+
+      </div>
+
+      <a class="card-link">
+        View Details
+      </a>
+
+    </div>
+
+  </div>
+
 </div>
+</div>
+
   </section>
   <!-- BOOST CTA -->
   <section class="boost-banner">
@@ -392,11 +444,11 @@ AMI HUB creates smart, modern, and scalable digital solutions for businesses wor
   </section>
 
   <!-- TRENDING NEAR YOU -->
-  <section class="trending">
+   <section class="trending">
     <div class="section-head">
       <h2>Service</h2>
       <a class="section-link" (click)="goToServices()">
-  View All Deals →
+  View All Deals 
 </a>
     </div>
 
@@ -416,48 +468,94 @@ AMI HUB creates smart, modern, and scalable digital solutions for businesses wor
     >
       <div class="trending-row">
         <div
-           class="featured-card trending-card"
-          *ngFor="let post of getVisibleTrendingPosts()"
-          (click)="openDetails(post)"
-        >
-        <!-- <div
-  class="deal-tag"
-  [class.my-ad-tag]="isMyPost(post)"
+  class="featured-card trending-card"
+*ngFor="let post of getVisibleTrendingPosts().slice(0,4)"
+  (click)="openDetails(post)"
 >
-  {{ isMyPost(post) ? 'My Ads' : 'Hot' }}
-</div> -->
-  <div
-  class="fav-btn"
-  [class.active]="post.isFavourite"
-  (click)="toggleFavourite(post, $event)">
-  {{ post.isFavourite ? '♥' : '♡' }}
-</div>
 
-          <img
-            [src]="getTrendingImage(post)"
-            [alt]="post.title"
-            loading="lazy"
-            decoding="async"
-          >
+  <!-- IMAGE -->
+  <div class="card-image">
 
-          <div class="card-body">
-            <h3>{{ post.title }}</h3>
-            <p class="price" *ngIf="post.price && post.price > 0">
-  ₹{{ post.price }}
-</p>
-            <p class="location-text">📍 {{ post.location || post.address || 'Location not available' }}</p>
-          </div>
-        </div>
+
+    <div
+      class="fav-btn"
+      [class.active]="post.isFavourite"
+      (click)="toggleFavourite(post, $event)"
+    >
+      {{ post.isFavourite ? '♥' : '♡' }}
+    </div>
+
+    <img
+      [src]="getTrendingImage(post)"
+      [alt]="post.title"
+      loading="lazy"
+      decoding="async"
+    >
+
+  </div>
+
+  <!-- BODY -->
+  <div class="card-body">
+
+    <!-- CATEGORY -->
+    <p class="category">
+      ✦ {{ post.category || post.categoryname || 'Trending Ad' }}
+    </p>
+
+    <!-- TITLE -->
+    <h4>
+      {{ post.title }}
+    </h4>
+
+    <!-- DESCRIPTION -->
+    <p class="description">
+      {{ post.description || 'Quality products and professional services available.' }}
+    </p>
+
+    <!-- RATING + LOCATION -->
+    <div class="info-row">
+
+      <span>
+        ⭐ 4.8
+      </span>
+<span>
+  <i class="fas fa-location-dot"></i>
+  {{ getDistrict(post) || 'Location not available' }}
+</span>
+
+    </div>
+
+    <!-- PRICE + BUTTON -->
+    <div class="bottom-row">
+
+      <div class="price-box">
+
+        <strong *ngIf="post.price && post.price > 0">
+          ₹{{ post.price }}
+        </strong>
+
       </div>
+
+      <a class="card-link">
+        View Details
+      </a>
+
+    </div>
+
+  </div>
+
+</div>
+</div>
     </div>
   </section>
+
 
   <!-- NEW PRODUCTS -->
   <section class="featured-deals">
     <div class="section-head">
       <h2> Products</h2>
      <a class="section-link" (click)="goToProduct()">
-  View All Deals →
+  View All Deals 
 </a>
     </div>
 
@@ -470,28 +568,86 @@ AMI HUB creates smart, modern, and scalable digital solutions for businesses wor
     </div>
 
     <div class="deals-grid" *ngIf="latestProducts().length > 0">
-      <div class="featured-card" *ngFor="let post of latestProducts()" (click)="openDetails(post)">
+      <div class="featured-card"   *ngFor="let post of latestProducts().slice(0,4)" (click)="openDetails(post)">
         <div class="deal-tag">New</div>
- <div
-  class="fav-btn"
-  [class.active]="post.isFavourite"
-  (click)="toggleFavourite(post, $event)">
-  {{ post.isFavourite ? '♥' : '♡' }}
-</div>
-        <img [src]="getLatestProductImage(post)" [alt]="post.title">
-        <div class="card-body">
-          <h4>{{ post.title }}</h4>
-          <p class="price" *ngIf="post.price && post.price > 0">
-  ₹{{ post.price }}
-</p>
-          <p class="location-text">📍 {{ post.location || post.address || 'Location not available' }}</p>
-        </div>
+  <!-- IMAGE -->
+  <div class="card-image">
+
+
+    <div
+      class="fav-btn"
+      [class.active]="post.isFavourite"
+      (click)="toggleFavourite(post, $event)"
+    >
+      {{ post.isFavourite ? '♥' : '♡' }}
+    </div>
+
+    <img
+      [src]="getTrendingImage(post)"
+      [alt]="post.title"
+      loading="lazy"
+      decoding="async"
+    >
+
+  </div>
+
+  <!-- BODY -->
+  <div class="card-body">
+
+    <!-- CATEGORY -->
+    <p class="category">
+      ✦ {{ post.category || post.categoryname || 'Trending Ad' }}
+    </p>
+
+    <!-- TITLE -->
+    <h4>
+      {{ post.title }}
+    </h4>
+
+    <!-- DESCRIPTION -->
+    <p class="description">
+      {{ post.description || 'Quality products and professional services available.' }}
+    </p>
+
+    <!-- RATING + LOCATION -->
+    <div class="info-row">
+
+      <span>
+        ⭐ 4.8
+      </span>
+<span>
+  <i class="fas fa-location-dot"></i>
+  {{ getDistrict(post) || 'Location not available' }}
+</span>
+    </div>
+
+    <!-- PRICE + BUTTON -->
+    <div class="bottom-row">
+
+      <div class="price-box">
+
+        <strong *ngIf="post.price && post.price > 0">
+          ₹{{ post.price }}
+        </strong>
+
       </div>
+
+      <a class="card-link">
+        View Details
+      </a>
+
+    </div>
+
+  </div>
+
+</div>
+
     </div>
   </section>
 
-<!-- STATS SECTION -->
-<section class="achievements-section">
+ 
+ <!-- STATS SECTION -->
+ <section class="achievements-section">
   <div class="achievements-shell">
     <div class="achievements-intro">
       <span class="section-badge">Our Growth</span>
@@ -574,6 +730,6 @@ AMI HUB creates smart, modern, and scalable digital solutions for businesses wor
         <span class="achievement-desc">Verified business growth</span>
       </div>
     </div>
-  </div>
-</section>
+   </div>
+  </section>
 
