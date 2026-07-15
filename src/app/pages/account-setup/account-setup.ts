@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { SupabaseService } from '../../services/supabase.service';
+import { ApiService } from '../../services/api.service';
 
 @Component({
   selector: 'app-account-setup',
@@ -22,36 +22,20 @@ export class AccountSetup implements OnInit {
   currentUser: any = null;
 
   constructor(
-    private router: Router,
-    private supabaseService: SupabaseService
-  ) {}
+  private router: Router,
+  private apiService: ApiService
+) {}
 
-  async ngOnInit() {
-    const userId = localStorage.getItem('userId');
+  ngOnInit() {
 
-    if (!userId) {
-      this.router.navigate(['/login']);
-      return;
-    }
+  const token = localStorage.getItem('token');
 
-    const { data, error } = await this.supabaseService.getUserById(Number(userId));
-
-    if (error || !data) {
-      alert('User not found');
-      this.router.navigate(['/login']);
-      return;
-    }
-
-    this.currentUser = data;
-
-    if (data.isonboardingcompleted === true) {
-      this.router.navigate(['/']);
-      return;
-    }
-
-    this.userType = this.mapUserTypeFromDb(data.usertypeid);
-    this.listingType = data.listingtype || '';
+  if (!token) {
+    this.router.navigate(['/login']);
+    return;
   }
+
+}
 
   private mapUserTypeFromDb(usertypeid: any): '' | 'buyer' | 'seller' | 'both' {
     const id = Number(usertypeid);
@@ -71,49 +55,108 @@ export class AccountSetup implements OnInit {
     return 1;
   }
 
-  async submitSetup() {
-    if (this.isSubmitting) return;
+   submitSetup() {
 
-    if (!this.userType) {
-      alert('Please select user type');
-      return;
-    }
+  if (this.isSubmitting) return;
 
-    if (this.password && this.password !== this.confirmPassword) {
-      alert('Password and confirm password do not match');
-      return;
-    }
 
-    const userId = localStorage.getItem('userId');
-    if (!userId) {
-      this.router.navigate(['/login']);
-      return;
-    }
+  if (!this.userType) {
 
-    this.isSubmitting = true;
+    alert('Please select user type');
+    return;
 
-    try {
-      const payload: any = {
-        userid: Number(userId),
-        usertypeid: this.mapUserTypeToDb(this.userType),
-        listingtype: this.listingType || null,
-        isonboardingcompleted: true
-      };
+  }
 
-      if (this.password) {
-        payload.password = this.password;
+
+  if (
+    this.password &&
+    this.password !== this.confirmPassword
+  ) {
+
+    alert(
+      'Password and confirm password do not match'
+    );
+
+    return;
+
+  }
+
+
+  this.isSubmitting = true;
+
+
+  const payload = {
+
+    usertypeid:
+      this.mapUserTypeToDb(this.userType),
+
+    listingtype:
+      this.listingType || null
+
+  };
+
+
+  this.apiService
+    .put(
+      '/user/onboarding',
+      payload
+    )
+    .subscribe({
+
+      next:(res:any)=>{
+
+        console.log(
+          "ONBOARDING SUCCESS",
+          res
+        );
+
+
+        localStorage.setItem(
+          'userTypeId',
+          String(payload.usertypeid)
+        );
+
+
+        localStorage.setItem(
+          'isOnboardingCompleted',
+          'true'
+        );
+
+
+        alert(
+          'Account setup completed'
+        );
+
+
+        this.router.navigate(['/']);
+
+      },
+
+
+      error:(err:any)=>{
+
+        console.error(
+          "ONBOARDING ERROR",
+          err
+        );
+
+
+        alert(
+          err.error?.message ||
+          'Failed to save account setup'
+        );
+
+
+      },
+
+
+      complete:()=>{
+
+        this.isSubmitting = false;
+
       }
 
-      const updatedUser = await this.supabaseService.updateUserOnboarding(payload);
+    });
 
-      localStorage.setItem('userTypeId', String(updatedUser.usertypeid || ''));
-      alert('Account setup completed');
-      this.router.navigate(['/']);
-    } catch (error) {
-      console.error('Error saving onboarding:', error);
-      alert('Failed to save account setup');
-    } finally {
-      this.isSubmitting = false;
-    }
-  }
+}
 }

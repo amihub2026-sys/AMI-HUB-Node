@@ -1,6 +1,7 @@
 import { Component, Inject, OnInit, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { AuthService } from '../../services/auth.service';
 import { SupabaseService } from '../../services/supabase.service';
 import { SnackbarService } from '../../services/snackbar.service';
 
@@ -38,13 +39,15 @@ export class Login implements OnInit {
   showRightAd = true;
   showLeftAd = true;
 
-  constructor(
+constructor(
   private router: Router,
+  private authService: AuthService,
   private supabaseService: SupabaseService,
   private snackbar: SnackbarService,
   private cdr: ChangeDetectorRef,
   @Inject(PLATFORM_ID) private platformId: Object
-) {
+)
+ {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
 
@@ -199,39 +202,82 @@ export class Login implements OnInit {
     return { data, error };
   }
 
-  async loginWithEmailPassword() {
-  const identifier = this.email.trim().toLowerCase();
-    const enteredPassword = this.password.trim();
+ async loginWithEmailPassword() {
 
-    if (!identifier || !enteredPassword) {
-      this.showAlert('Enter email/username and password');
-      return;
-    }
+  const identifier = this.email.trim();
+  const password = this.password.trim();
 
-    const { data, error } = await this.getUserForPasswordLogin(identifier);
 
-    if (error || !data) {
-      this.showAlert('User not found');
-      return;
-    }
+  if (!identifier || !password) {
 
-    if (!data.isactive) {
-      this.showAlert('User account is inactive');
-      return;
-    }
+    this.showAlert(
+      'Enter email/username and password',
+      'error'
+    );
 
-    if ((data.password || '').trim() !== enteredPassword) {
-      this.showAlert('Invalid password');
-      return;
-    }
-
-    this.storeUserSession(data);
-    this.showAlert('Login Successful', 'success');
-
-    setTimeout(async () => {
-      await this.redirectAfterLogin(data);
-    }, 1200);
+    return;
   }
+
+
+
+  this.authService.login({
+
+    mobile: identifier,
+    password: password
+
+  })
+  .subscribe({
+
+    next:(res:any)=>{
+
+
+      console.log(
+        "LOGIN RESPONSE",
+        res
+      );
+
+
+      this.authService.saveSession(res);
+
+
+      this.showAlert(
+        'Login Successful',
+        'success'
+      );
+
+
+      setTimeout(()=>{
+
+        this.router.navigate(['/']);
+
+      },1000);
+
+
+    },
+
+
+    error:(err:any)=>{
+
+
+      console.error(
+        "LOGIN ERROR",
+        err
+      );
+
+
+      this.showAlert(
+        err.error?.message ||
+        'Login failed',
+        'error'
+      );
+
+
+    }
+
+
+  });
+
+}
 
   async sendMobileOtp() {
   const phone = this.mobile.trim();
