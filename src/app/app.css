@@ -3238,7 +3238,7 @@ router-outlet {
 .main-content {
   position: relative;
   z-index: 1;
-  padding-top: 20px;
+  /* padding-top: 20px; */
 }
 /* HIDE MOBILE NAV ICONS */
 
