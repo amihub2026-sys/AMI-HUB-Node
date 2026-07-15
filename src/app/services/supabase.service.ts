@@ -1058,17 +1058,7 @@ async getServicePosts(page: number = 0, pageSize: number = 12) {
 
     const { data, error } = await this.supabase
       .from('post')
-      .select(`
-        postid,
-        userid,
-        title,
-        price,
-        createdon,
-        image_url,
-        isactive,
-        status,
-        adtype
-      `)
+      .select('*')
       .eq('userid', userid)
       .order('createdon', { ascending: false })
       .range(from, to);

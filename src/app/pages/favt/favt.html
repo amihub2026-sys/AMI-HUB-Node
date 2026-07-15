@@ -36,14 +36,20 @@
   *ngIf="item.price && item.price > 0">
   ₹{{ item.price }}
 </p>
-          <p class="favorite-location">📍 {{ item.location }}</p>
+        <div class="favorite-location">
+  <i class="fas fa-location-dot"></i>
+  <span>
+    {{item.location}}
+  </span>
+</div>
 
           <div class="favorite-actions">
             <button type="button" class="view-btn" (click)="viewDetails(item)">
-              View Details
+          
+      👁 View Details
             </button>
             <button type="button" class="remove-btn" (click)="removeItem(item)">
-              Remove
+                    🗑 Remove
             </button>
           </div>
         </div>
