@@ -946,12 +946,64 @@ DOTS SPACE FIX
 }
 
 .section-link {
-  text-decoration: none;
-  color: #4169e1;
-  font-weight: 700;
-  font-size: 15px;
+
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+
+    color:#2563eb;
+
+    font-size:14px;
+    font-weight:700;
+
+    text-decoration:none;
+
+    cursor:pointer;
+
+    padding:8px 14px;
+
+    border-radius:20px;
+
+    background:#eff6ff;
+
+    transition:all .3s ease;
+
 }
 
+
+.section-link:hover {
+
+    color:#ffffff;
+
+    background:#2563eb;
+
+    transform:translateX(3px);
+
+}
+
+
+.section-link::after {
+
+    content:"";
+
+    width:6px;
+    height:6px;
+
+    border-right:2px solid currentColor;
+    border-top:2px solid currentColor;
+
+    transform:rotate(45deg);
+
+    transition:.3s ease;
+
+}
+
+
+.section-link:hover::after {
+
+    transform:rotate(45deg) translate(3px,-3px);
+
+}
 /* ================= CATEGORIES ================= */
 .categories-grid,
 .services-grid,
@@ -960,7 +1012,9 @@ DOTS SPACE FIX
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 18px;
 }
-
+.services-grid .featured-card:nth-child(n+5){
+  display:none;
+}
 .categories-grid {
   grid-template-columns: repeat(6, minmax(0, 1fr));
 }
@@ -970,7 +1024,8 @@ DOTS SPACE FIX
 }
 
 .services-grid {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 22px;
 }
 
 .cat-card,
@@ -1011,7 +1066,10 @@ DOTS SPACE FIX
   font-size: 16px;
 }
 
-/* ================= FEATURED / DEAL / PRODUCT CARDS ================= */
+
+/* 
+
+================= FEATURED / DEAL / PRODUCT CARDS ================= */
 .featured-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1296,7 +1354,7 @@ DOTS SPACE FIX
 
 /* HOT ADS PERFECT DESKTOP */
 
-.trending-row{
+/* .trending-row{
 
   display:grid;
 
@@ -1304,8 +1362,8 @@ DOTS SPACE FIX
 
   gap:22px;
 
-  align-items:stretch;
-}
+  align-items:stretch; */
+
 
 /* REMOVE OLD FIXED WIDTH */
 
@@ -1858,7 +1916,7 @@ DOTS SPACE FIX
   .services-grid,
   .featured-grid,
   .deals-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
     gap: 12px !important;
   }
 
@@ -4537,6 +4595,484 @@ DOTS SPACE FIX
   color: #ff2d55;
   background: #fff0f3;
   transform: scale(1.1);
+}
+
+
+/* =====================================
+   CARD BODY
+===================================== */
+
+.featured-card .card-body {
+  min-height: 200px;
+  padding: 12px 14px 14px;
+
+  display: flex;
+  flex-direction: column;
+  
+}
+
+
+/* =====================================
+   CATEGORY
+===================================== */
+
+.featured-card .category {
+  margin: 0 0 5px;
+
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 700;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* =====================================
+   TITLE
+===================================== */
+
+.featured-card .card-body h4 {
+  min-height: 23px;
+  margin: 0 0 7px;
+
+  color: #172033;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.35;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* =====================================
+   DESCRIPTION
+===================================== */
+
+.featured-card .description {
+  min-height: 38px;
+  margin: 0 0 9px;
+
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.45;
+
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+
+/* =====================================
+   RATING AND LOCATION
+===================================== */
+
+.featured-card .info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: -12px;      /* Increase this value as needed */
+  margin-bottom: 1px;
+
+  padding: 8px 0 10px;
+
+  border-bottom: 1px solid #e5e9ef;
+}
+
+.featured-card .info-row span {
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  color: #536078;
+  font-size: 12px;
+}
+
+.featured-card .info-row span:first-child {
+  flex-shrink: 0;
+}
+
+.featured-card .info-row span:last-child {
+  max-width: 68%;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.featured-card .info-row i {
+  color: #2563eb;
+}
+
+
+/* =====================================
+   BOTTOM ROW
+===================================== */
+
+.featured-card .bottom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  margin-top: auto;
+}
+
+.featured-card .price-box {
+  min-width: 0;
+}
+
+.featured-card .price-box strong {
+  color: #111827;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+
+/* =====================================
+   VIEW DETAILS BUTTON
+===================================== */
+
+.featured-card .card-link {
+  min-width: 108px;
+  height: 36px;
+  padding: 0 14px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1.5px solid #2563eb;
+  border-radius: 9px;
+
+  background: #ffffff;
+  color: #2563eb !important;
+
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+
+  transition:
+    background 0.25s ease,
+    color 0.25s ease,
+    transform 0.25s ease;
+}
+
+.featured-card .card-link:hover {
+  background: #2563eb;
+  color: #ffffff !important;
+  transform: translateY(-1px);
+}
+
+/* =====================================
+   FEATURED AND TYPE BADGES
+===================================== */
+
+.card-image {
+    position: relative !important;
+    width:100%;
+    height:210px;
+    overflow:hidden;
+}
+
+
+.featured-card .featured-badge {
+
+    position:absolute !important;
+
+    right:12px !important;
+    bottom:12px !important;
+
+    top:auto !important;
+    left:auto !important;
+
+    padding:6px 14px !important;
+
+    background:#2f6df6 !important;
+    color:white !important;
+
+    border-radius:18px !important;
+
+    font-size:12px !important;
+    font-weight:700 !important;
+
+    display:flex !important;
+    align-items:center;
+    justify-content:center;
+
+    width:max-content !important;
+    height:auto !important;
+
+    z-index:20 !important;
+}
+/* =====================================
+   MOBILE 2 COLUMN MARKETPLACE CARD
+===================================== */
+
+@media (max-width:576px){
+
+
+.deals-grid,
+.trending-row,
+.services-grid {
+
+    display:grid !important;
+
+    grid-template-columns:repeat(2,1fr) !important;
+
+    gap:10px !important;
+
+    padding:0 10px !important;
+
+}
+
+
+
+/* CARD */
+
+.featured-card {
+
+    border-radius:14px !important;
+
+    overflow:hidden !important;
+
+    box-shadow:0 5px 15px rgba(0,0,0,.08);
+
+}
+
+
+
+/* IMAGE */
+
+.featured-card .card-image {
+
+    height:135px !important;
+
+}
+
+
+
+.featured-card .card-image img {
+
+    object-fit:cover !important;
+
+}
+
+
+
+/* BADGE */
+
+.featured-card .type-badge,
+.featured-card .featured-badge,
+.featured-card .card-badge {
+
+    right:8px !important;
+
+    bottom:8px !important;
+
+    padding:5px 10px !important;
+
+    font-size:11px !important;
+
+}
+
+
+
+/* HEART */
+
+.featured-card .fav-btn {
+
+    width:36px !important;
+
+    height:36px !important;
+
+    top:8px !important;
+
+    right:8px !important;
+
+    font-size:18px !important;
+
+}
+
+
+
+/* BODY */
+
+.featured-card .card-body {
+
+    padding:10px !important;
+
+    min-height:145px !important;
+
+}
+
+
+
+/* CATEGORY */
+
+.featured-card .category {
+
+    font-size:11px !important;
+
+    margin-bottom:5px !important;
+
+}
+
+
+
+/* TITLE */
+
+.featured-card h4 {
+
+    font-size:12px !important;
+
+    line-height:1.3 !important;
+
+    margin:0 0 8px !important;
+
+    white-space:nowrap;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
+}
+
+
+
+/* DESCRIPTION */
+
+.featured-card .description {
+
+    font-size:10px !important;
+
+    line-height:1.3 !important;
+
+    height: 10px !important;
+
+    margin-bottom:8px !important;
+
+    white-space:nowrap;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
+}
+
+
+
+/* RATING LOCATION */
+
+.featured-card .info-row {
+
+    padding-bottom:7px !important;
+
+
+}
+
+@media(max-width:576px){
+
+  .featured-card .card-body {
+
+    min-height:120px !important;
+
+    padding:8px 10px !important;
+
+  }
+
+
+  .featured-card .category {
+
+    margin-bottom:3px !important;
+
+  }
+
+
+  .featured-card h4 {
+
+    margin-bottom:4px !important;
+
+  }
+
+
+  .featured-card .description {
+
+    margin-bottom:4px !important;
+
+    height:auto !important;
+
+  }
+
+
+  .featured-card .info-row {
+
+    margin-top:-25px !important;
+
+    margin-bottom:5px !important;
+
+    padding-bottom:5px !important;
+
+  }
+
+
+  .featured-card .bottom-row {
+
+    margin-top:0 !important;
+
+  }
+
+}
+
+.featured-card .info-row span {
+
+    font-size:8px !important;
+    
+
+}
+
+
+
+/* PRICE BUTTON */
+
+.featured-card .bottom-row {
+
+    gap:5px !important;
+
+}
+
+
+
+.featured-card .price-box strong {
+
+    font-size:10px !important;
+
+}
+
+
+
+.featured-card .card-link {
+
+    min-width:70px !important;
+
+    height:25px !important;
+
+    padding:0 8px !important;
+
+    font-size:8px !important;
+
+    border-radius:8px !important;
+
+}
+
+
 }
 
 
