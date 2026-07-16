@@ -3395,3 +3395,85 @@ body app-root {
   margin-bottom: 0 !important;
 }
 
+.footer-app-mini{
+
+    margin-top:20px;
+
+    padding-top:18px;
+
+    border-top:1px solid rgba(255,255,255,.15);
+
+    text-align:center;
+
+}
+
+.mini-app-text{
+
+    display:block;
+
+    margin-bottom:12px;
+
+    font-size:13px;
+
+    font-weight:700;
+
+    letter-spacing:.4px;
+
+    background:linear-gradient(
+        90deg,
+        #ffffff 0%,
+        #ffe066 25%,
+        #ffffff 50%,
+        #ffd43b 75%,
+        #ffffff 100%
+    );
+
+    background-size:200% auto;
+
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    background-clip:text;
+
+    animation:shineText 3s linear infinite;
+}
+
+@keyframes shineText{
+
+    from{
+        background-position:-200% center;
+    }
+
+    to{
+        background-position:200% center;
+    }
+
+}
+/* Only glow behind the button */
+.google-play-mini{
+
+    width:140px;
+
+    height:auto;
+
+    display:block;
+
+    margin:0 auto;
+
+    border-radius:8px;
+
+    box-shadow:
+        0 0 12px rgba(59,130,246,.35),
+        0 0 30px rgba(59,130,246,.18);
+
+    transition:.3s;
+}
+
+.google-play-mini:hover{
+
+    transform:translateY(-2px);
+
+    box-shadow:
+        0 0 18px rgba(59,130,246,.6),
+        0 0 40px rgba(59,130,246,.3);
+
+}
