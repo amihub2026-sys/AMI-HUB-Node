@@ -37,6 +37,7 @@ selectMedia(type: 'image' | 'video', url: string) {
       this.reviewText = '';
       this.reviewImages = [];
       this.reviewVideo = null;
+      
     }
   }
 
@@ -88,7 +89,7 @@ closeVideoPopup() {
   reviews = signal<any[]>([]);
   isReviewSubmitting = signal(false);
   isReviewsLoading = signal(false);
-
+loadFailed = signal(false);
   postId = '';
   postData = signal<any | null>(null);
   isLoading = signal(false);
@@ -103,9 +104,11 @@ closeVideoPopup() {
   reviewText = '';
   reviewImages: string[] = [];
   reviewVideo: string | null = null;
-
+reviewsToShow = 2;
+showAllReviews = false;
   showReportForm = signal(false);
   reportText = '';
+  showFullDescription = false;
 
  constructor(
   private route: ActivatedRoute,
@@ -194,6 +197,12 @@ isMyPost(): boolean {
 
   return String(post?.userid || '') === String(this.currentUserId() || '');
 }
+toggleReviews(): void {
+  this.showAllReviews = !this.showAllReviews;
+}
+toggleDescription(): void {
+  this.showFullDescription = !this.showFullDescription;
+}
   async loadReviews() {
     const post = this.postData();
 
@@ -226,75 +235,113 @@ isMyPost(): boolean {
     }
   }
 
-  async loadPost() {
-    this.isLoading.set(true);
+  async loadPost(): Promise<void> {
 
-    try {
-      const data = await this.supabaseService.getPostById(this.postId);
+  this.isLoading.set(true);
+  this.loadFailed.set(false);
+  this.postData.set(null);
 
+  try {
 
-      const imageList: string[] = Array.isArray(data?.image_urls)
-        ? data.image_urls.filter((x: any) => typeof x === 'string' && x)
-        : [];
+    const data = await this.supabaseService.getPostById(this.postId);
 
-      if (data?.image_url && !imageList.includes(data.image_url)) {
-        imageList.unshift(data.image_url);
-      }
+    console.log('POST ID:', this.postId);
+    console.log('POST RESPONSE:', data);
 
-      const videoList: string[] = Array.isArray(data?.video_urls)
-        ? data.video_urls.filter((x: any) => typeof x === 'string' && x)
-        : [];
-
-      if (data?.video_url && !videoList.includes(data.video_url)) {
-        videoList.unshift(data.video_url);
-      }
-
-      const catalogItems = this.getNormalizedCatalog(data?.catalog);
-
-      const mappedPost = {
-        ...data,
-        images: imageList,
-        videos: videoList,
-        catalogItems,
-        sellerName: data?.contactname || 'Seller',
-        sellerImage: 'assets/icons/user.png',
-        sellerPhone: data?.contactphone || '',
-        sellerEmail: data?.contactemail || '',
-        whatsappNumber: data?.whatsappnumber || data?.contactphone || '',
-        location: this.buildLocation(data),
-        displayAddress: this.buildDisplayAddress(data),
-        categoryText: this.buildCategoryText(data),
-        detailItems: this.buildDetailItems(data),
-        latitude: this.toNumberOrNull(data?.latitude),
-        longitude: this.toNumberOrNull(data?.longitude)
-      };
-
-      this.postData.set(mappedPost);
-      await this.loadReviews();
-
-      if (mappedPost.images.length > 0) {
-        this.selectedMedia.set({
-          type: 'image',
-          url: mappedPost.images[0]
-        });
-      } else if (mappedPost.videos.length > 0) {
-        this.selectedMedia.set({
-          type: 'video',
-          url: mappedPost.videos[0]
-        });
-      } else {
-        this.selectedMedia.set({
-          type: 'image',
-        url: 'assets/icons/user.png'
-        });
-      }
-    } catch (error) {
-      console.error('Error loading post details:', error);
-      this.postData.set(null);
-    } finally {
-      this.isLoading.set(false);
+    if (!data) {
+      this.loadFailed.set(true);
+      return;
     }
+
+    const imageList: string[] = Array.isArray(data?.image_urls)
+      ? data.image_urls.filter(
+          (x: any) => typeof x === 'string' && x
+        )
+      : [];
+
+    if (data?.image_url && !imageList.includes(data.image_url)) {
+      imageList.unshift(data.image_url);
+    }
+
+    const videoList: string[] = Array.isArray(data?.video_urls)
+      ? data.video_urls.filter(
+          (x: any) => typeof x === 'string' && x
+        )
+      : [];
+
+    if (data?.video_url && !videoList.includes(data.video_url)) {
+      videoList.unshift(data.video_url);
+    }
+
+    const catalogItems = this.getNormalizedCatalog(data?.catalog);
+
+    const mappedPost = {
+      ...data,
+
+      images: imageList,
+      videos: videoList,
+      catalogItems,
+
+      sellerName: data?.contactname || 'Seller',
+      sellerImage: 'assets/icons/user.png',
+      sellerPhone: data?.contactphone || '',
+      sellerEmail: data?.contactemail || '',
+
+      whatsappNumber:
+        data?.whatsappnumber ||
+        data?.contactphone ||
+        '',
+
+      location: this.buildLocation(data),
+      displayAddress: this.buildDisplayAddress(data),
+      categoryText: this.buildCategoryText(data),
+      detailItems: this.buildDetailItems(data),
+
+      latitude: this.toNumberOrNull(data?.latitude),
+      longitude: this.toNumberOrNull(data?.longitude)
+    };
+
+    this.postData.set(mappedPost);
+    this.loadFailed.set(false);
+
+    await this.loadReviews();
+
+    if (mappedPost.images.length > 0) {
+
+      this.selectedMedia.set({
+        type: 'image',
+        url: mappedPost.images[0]
+      });
+
+    } else if (mappedPost.videos.length > 0) {
+
+      this.selectedMedia.set({
+        type: 'video',
+        url: mappedPost.videos[0]
+      });
+
+    } else {
+
+      this.selectedMedia.set({
+        type: 'image',
+        url: 'assets/icons/user.png'
+      });
+
+    }
+
+  } catch (error) {
+
+    console.error('Error loading post details:', error);
+
+    this.postData.set(null);
+    this.loadFailed.set(true);
+
+  } finally {
+
+    this.isLoading.set(false);
+
   }
+}
 
   buildLocation(data: any): string {
     const location = String(data?.location || '').trim();
