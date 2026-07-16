@@ -46,7 +46,7 @@ categorySlider!: ElementRef<HTMLDivElement>;
   goToSubscriptionPlan() {
     this.router.navigateByUrl('/subscription-plan');
   }
-
+  jobs:any[] = [];
   currentSlide = 0;
   totalSlides = 3;
   autoSlideInterval: any;
@@ -86,7 +86,7 @@ currentUserId = signal<string>('');
 
   latestProducts = signal<any[]>([]);
   isLatestLoading = signal(false);
-
+   latestJobs:any[] = [];
   trendingOffset = signal(0);
   private trendingInterval: any;
   readonly visibleTrendingCount = 5;
@@ -94,7 +94,8 @@ currentUserId = signal<string>('');
  async ngOnInit() {
   const user = await this.supabaseService.getCurrentUser();
   this.currentUserId.set(user?.id || '');
-
+ this.loadLatestJobs();
+ 
   this.startAutoSlide();
 
   await this.loadBrowseCategories();
@@ -114,6 +115,71 @@ currentUserId = signal<string>('');
   }
   
 
+async loadLatestJobs(){
+
+  try{
+
+    const { data, error } = await supabase
+      .from('job_vacancies')
+      .select(`
+        id,
+        job_title,
+        company_name,
+        location,
+        salary,
+        experience,
+        vacancies,
+        skills,
+        description,
+        contact_email,
+        contact_phone,
+        job_type,
+        work_mode
+      `)
+      .order('created_at', {
+        ascending:false
+      })
+      .limit(5);
+
+
+    if(error){
+
+      console.error(
+        "Jobs loading error:",
+        error
+      );
+
+      return;
+
+    }
+
+
+    this.latestJobs = data || [];
+
+
+  }
+  catch(error){
+
+    console.error(
+      "Latest jobs error:",
+      error
+    );
+
+  }
+
+}
+
+openJobDetails(job:any): void {
+
+  console.log("Selected Job:", job);
+
+  // navigate to job details page
+  this.router.navigate([
+    '/job-details',
+    job.id
+  ]);
+
+}
   async loadBrowseCategories() {
     this.isCategoriesLoading.set(true);
 

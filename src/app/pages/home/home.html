@@ -645,6 +645,142 @@ AMI HUB creates smart, modern, and scalable digital solutions for businesses wor
     </div>
   </section>
 
+
+<!-- ==========================
+     LATEST JOBS SECTION
+=========================== -->
+
+<section class="home-jobs">
+
+
+  <!-- HEADER -->
+
+  <div class="section-header">
+
+    <div>
+
+      <h2>
+        Latest Jobs
+      </h2>
+
+      <p>
+        Find your next career opportunity
+      </p>
+
+    </div>
+
+
+    <a [routerLink]="['/job']" class="view-all">
+  View All Jobs →
+</a>
+
+  </div>
+
+
+
+
+  <!-- JOB GRID -->
+
+  <div class="home-jobs-grid">
+
+
+
+    <!-- JOB CARD -->
+
+    <div 
+    class="home-job-card"
+    *ngFor="let job of latestJobs">
+
+
+
+      <!-- TOP ICON -->
+<div class="job-card-top">
+
+
+<div class="company-circle">
+
+{{ job.company_name?.charAt(0) | uppercase }}
+
+</div>
+
+
+<i class="far fa-bookmark"></i>
+
+
+</div>
+
+
+
+
+      <!-- TITLE -->
+
+      <h3>
+        {{job.job_title}}
+      </h3>
+
+
+
+      <!-- COMPANY -->
+
+      <p class="company-name">
+
+        {{job.company_name}}
+
+      </p>
+
+
+
+
+      <!-- LOCATION -->
+
+      <p class="job-location">
+
+        <i class="fas fa-location-dot"></i>
+
+        {{job.location}}
+
+      </p>
+
+
+
+
+
+      <!-- BOTTOM -->
+<div class="job-bottom">
+
+  <div class="job-salary">
+    <i class="fas fa-wallet"></i>
+    <span>
+      ₹ {{job.salary}}
+    </span>
+  </div>
+
+<a class="apply"
+
+  [href]="'tel:' + job.contact_phone">
+
+  <i class="fas fa-paper-plane"></i>
+  Apply Now
+
+</a>
+
+</div>
+
+
+
+    </div>
+
+
+  </div>
+
+
+</section>
+
+
+
+
+
+
  
  <!-- STATS SECTION -->
  <section class="achievements-section">
