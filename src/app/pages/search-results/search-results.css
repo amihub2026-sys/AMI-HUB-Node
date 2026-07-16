@@ -35,7 +35,7 @@ color:white;
 
 .main-nav{
 
-height:88px;
+height:68px;
 
 display:flex;
 
@@ -111,70 +111,64 @@ font-size:15px;
 
 
 
-/* SEARCH ROW */
-
-
-.search-row{
-
-background:#0737a8;
-
-padding:18px 60px 22px;
-
-display:flex;
-
-gap:25px;
-
+/* ==========================
+   SEARCH ROW
+========================== */
+.search-row {
+  background: #0737a8;       /* Dark blue row background */
+  padding: 18px 60px 22px;   /* Desktop padding */
+  display: flex;
+  gap: 25px;
+  align-items: center;
 }
 
-
-
-.search-box{
-
-background:white;
-
-border-radius:20px;
-
-height:55px;
-
-display:flex;
-
-flex:1;
-
-overflow:hidden;
-
+/* ==========================
+   SEARCH BOX
+========================== */
+.search-box {
+  background: white;
+  border-radius: 20px;
+  height: 45px;
+  display: flex;
+  flex: 1;                   /* Fill remaining space */
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-
-.search-box input{
-
-border:none;
-
-outline:none;
-
-flex:1;
-
-padding:0 25px;
-
-font-size:16px;
-
+/* SEARCH INPUT */
+.search-box input {
+  border: none;
+  outline: none;
+  flex: 1;
+  padding: 0 25px;
+  font-size: 16px;
+  color: #17203c;
 }
 
-
-
-.search-box button{
-
-width:160px;
-
-border:none;
-
-background:#ffd900;
-
-font-weight:700;
-
-font-size:16px;
-
+/* SEARCH BUTTON */
+.search-box button {
+  width: 140px;             /* Slightly smaller than before */
+  border: none;
+  background: #ffd900;      /* Bright yellow */
+  font-weight: 700;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
 }
 
+.search-box button i {
+  margin-right: 6px;        /* Small gap for icon */
+}
+
+/* SEARCH BUTTON HOVER */
+.search-box button:hover {
+  background: #ffc107;      /* Slightly brighter yellow */
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(255, 193, 7, 0.3);
+}
   .profile-menu-wrapper {
      grid-column: 11 / 13;
   grid-row: 1;
