@@ -1,16 +1,55 @@
-import { Component, Input, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  Input,
+  OnInit,
+  inject
+} from '@angular/core';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { SupabaseService } from '../../../../../services/supabase.service';
+import { ApiService } from '../../../../../services/api.service';
+
+interface CategoryApiItem {
+  _id: string;
+  categoryName: string;
+  slug?: string;
+  type?: string;
+  isActive?: boolean;
+}
+
+interface SubcategoryApiItem {
+  _id: string;
+
+  categoryId:
+    | string
+    | {
+        _id: string;
+        categoryName: string;
+        slug?: string;
+        type?: string;
+      };
+
+  subcategoryName: string;
+  slug: string;
+  icon?: string;
+  image?: string;
+  description?: string;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 interface AdminSubcategoryItem {
-  subcategoryid: number;
-  categoryid: number;
+  subcategoryid: string;
+  categoryid: string;
   categoryname: string;
   subcategoryname: string;
   slug: string;
   iconurl: string;
   image: string;
+  description: string;
   sortorder: number;
   isactive: boolean;
   createdon: string | null;
@@ -18,9 +57,15 @@ interface AdminSubcategoryItem {
 }
 
 interface CategoryOption {
-  categoryid: number;
+  categoryid: string;
   categoryname: string;
   isactive: boolean;
+}
+
+interface ApiResponse<T> {
+  success: boolean;
+  message?: string;
+  data: T;
 }
 
 type SubcategoryStatusFilter = 'all' | 'active' | 'inactive';
@@ -30,18 +75,20 @@ type SubcategoryStatusFilter = 'all' | 'active' | 'inactive';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './admin-subcategories.html',
-  styleUrls: ['./admin-subcategories.css'],
+  styleUrls: ['./admin-subcategories.css']
 })
 export class AdminSubcategories implements OnInit {
-  private supabaseService = inject(SupabaseService);
+  private api = inject(ApiService);
   private cdr = inject(ChangeDetectorRef);
-  currentPage = 1;
-itemsPerPage = 5;
 
   @Input() searchQuery = '';
 
+  currentPage = 1;
+  itemsPerPage = 5;
+
   isLoading = false;
   isSaving = false;
+
   errorMessage = '';
   successMessage = '';
 
@@ -51,158 +98,165 @@ itemsPerPage = 5;
   categories: CategoryOption[] = [];
 
   showForm = false;
-  editingSubcategoryId: number | null = null;
-
-  readonly mediaBucket = 'subcategory-media';
-
-  selectedIconFile: File | null = null;
-  selectedImageFile: File | null = null;
+  editingSubcategoryId: string | null = null;
 
   form = {
-    categoryid: null as number | null,
+    categoryid: null as string | null,
     subcategoryname: '',
     slug: '',
     iconurl: '',
     image: '',
+    description: '',
     sortorder: 1,
-    isactive: true,
+    isactive: true
   };
-get totalPages(): number {
-  return Math.ceil(this.filteredSubcategories.length / this.itemsPerPage) || 1;
-}
 
-get paginatedSubcategories(): AdminSubcategoryItem[] {
-  const start = (this.currentPage - 1) * this.itemsPerPage;
-
-  return this.filteredSubcategories.slice(
-    start,
-    start + this.itemsPerPage
-  );
-}
-
-goToPage(page: number): void {
-  if (page < 1 || page > this.totalPages) return;
-
-  this.currentPage = page;
-}
-  async ngOnInit(): Promise<void> {
-    await Promise.all([this.loadCategories(), this.loadSubcategories()]);
+  ngOnInit(): void {
+    this.loadCategories();
+    this.loadSubcategories();
   }
 
-  async loadCategories(): Promise<void> {
-    try {
-      const { data, error } = await this.supabaseService.supabase
-        .from('categories')
-        .select('categoryid, categoryname, isactive')
-        .order('sortorder', { ascending: true })
-        .order('categoryname', { ascending: true });
+  // =====================================================
+  // LOAD CATEGORIES FROM NODE API
+  // GET /api/categories
+  // =====================================================
 
-      if (error) {
-        console.error('Load categories error:', error);
-        this.cdr.detectChanges();
-        return;
-      }
+  loadCategories(): void {
+    this.api
+      .get('/categories')
+      .subscribe({
+        next: (response: any) => {
+          const rows: CategoryApiItem[] = Array.isArray(response)
+            ? response
+            : response?.data || [];
 
-      this.categories = (data || []).map((row: any) => ({
-        categoryid: Number(row.categoryid),
-        categoryname: row.categoryname || '',
-        isactive: !!row.isactive,
-      }));
+          this.categories = rows.map((category) => ({
+            categoryid: category._id,
+            categoryname: category.categoryName || '',
+            isactive: category.isActive !== false
+          }));
 
-      this.cdr.detectChanges();
-    } catch (error) {
-      console.error('Load categories exception:', error);
-      this.cdr.detectChanges();
-    }
+          this.cdr.detectChanges();
+        },
+
+        error: (error) => {
+          console.error('Load categories error:', error);
+
+          this.errorMessage =
+            error?.error?.message || 'Failed to load categories.';
+
+          this.categories = [];
+          this.cdr.detectChanges();
+        }
+      });
   }
 
-  async loadSubcategories(): Promise<void> {
+  // =====================================================
+  // LOAD SUBCATEGORIES FROM NODE API
+  // GET /api/subcategories
+  // =====================================================
+
+  loadSubcategories(): void {
     this.isLoading = true;
     this.errorMessage = '';
-    this.cdr.detectChanges();
 
-    try {
-      const { data, error } = await this.supabaseService.supabase
-        .from('subcategories')
-        .select(`
-          subcategoryid,
-          categoryid,
-          subcategoryname,
-          slug,
-          iconurl,
-          isactive,
-          createdon,
-          image,
-          sortorder,
-          categories (
-            categoryname
-          )
-        `)
-        .order('sortorder', { ascending: true })
-        .order('createdon', { ascending: false });
+    this.api
+      .get('/subcategories')
+      .subscribe({
+        next: (response: any) => {
+          const rows = response?.data || [];
 
-      if (error) {
-        console.error('Load subcategories error:', error);
-        this.errorMessage = error.message || 'Failed to load subcategories.';
-        this.allSubcategories = [];
-        this.cdr.detectChanges();
-        return;
-      }
+          this.allSubcategories = rows.map((row: SubcategoryApiItem) => {
+            const populatedCategory =
+              typeof row.categoryId === 'object'
+                ? row.categoryId
+                : null;
 
-      this.allSubcategories = (data || []).map((row: any) => ({
-        subcategoryid: Number(row.subcategoryid),
-        categoryid: Number(row.categoryid),
-        categoryname: row.categories?.categoryname || '-',
-        subcategoryname: row.subcategoryname || '',
-        slug: row.slug || '',
-        iconurl: row.iconurl || '',
-        image: row.image || '',
-        sortorder: Number(row.sortorder || 0),
-        isactive: !!row.isactive,
-        createdon: row.createdon || null,
-        createdLabel: this.formatDate(row.createdon),
-      }));
+            return {
+              subcategoryid: row._id,
 
-      this.cdr.detectChanges();
-    } catch (error) {
-      console.error('Subcategories page error:', error);
-      this.errorMessage = 'Something went wrong while loading subcategories.';
-      this.allSubcategories = [];
-      this.cdr.detectChanges();
-    } finally {
-      this.isLoading = false;
-      this.cdr.detectChanges();
-    }
+              categoryid:
+                populatedCategory?._id ||
+                (typeof row.categoryId === 'string'
+                  ? row.categoryId
+                  : ''),
+
+              categoryname:
+                populatedCategory?.categoryName || '-',
+
+              subcategoryname: row.subcategoryName || '',
+              slug: row.slug || '',
+              iconurl: row.icon || '',
+              image: row.image || '',
+              description: row.description || '',
+              sortorder: Number(row.sortOrder || 0),
+              isactive: row.isActive !== false,
+              createdon: row.createdAt || null,
+              createdLabel: this.formatDate(row.createdAt)
+            };
+          });
+
+          if (this.currentPage > this.totalPages) {
+            this.currentPage = this.totalPages;
+          }
+
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        },
+
+        error: (error) => {
+          console.error('Load subcategories error:', error);
+
+          this.errorMessage =
+            error?.error?.message ||
+            'Failed to load subcategories.';
+
+          this.allSubcategories = [];
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        }
+      });
   }
+
+  // =====================================================
+  // OPEN CREATE FORM
+  // =====================================================
 
   openCreateForm(): void {
     this.showForm = true;
     this.editingSubcategoryId = null;
+
     this.errorMessage = '';
     this.successMessage = '';
-    this.selectedIconFile = null;
-    this.selectedImageFile = null;
+
+    const firstActiveCategory =
+      this.categories.find((category) => category.isactive) ||
+      this.categories[0];
 
     this.form = {
-      categoryid: this.categories.length ? this.categories[0].categoryid : null,
+      categoryid: firstActiveCategory?.categoryid || null,
       subcategoryname: '',
       slug: '',
       iconurl: '',
       image: '',
+      description: '',
       sortorder: this.allSubcategories.length + 1,
-      isactive: true,
+      isactive: true
     };
 
     this.cdr.detectChanges();
   }
 
+  // =====================================================
+  // OPEN EDIT FORM
+  // =====================================================
+
   editSubcategory(subcategory: AdminSubcategoryItem): void {
     this.showForm = true;
     this.editingSubcategoryId = subcategory.subcategoryid;
+
     this.errorMessage = '';
     this.successMessage = '';
-    this.selectedIconFile = null;
-    this.selectedImageFile = null;
 
     this.form = {
       categoryid: subcategory.categoryid,
@@ -210,342 +264,388 @@ goToPage(page: number): void {
       slug: subcategory.slug,
       iconurl: subcategory.iconurl,
       image: subcategory.image,
+      description: subcategory.description,
       sortorder: subcategory.sortorder,
-      isactive: subcategory.isactive,
+      isactive: subcategory.isactive
     };
 
     this.cdr.detectChanges();
   }
 
+  // =====================================================
+  // CANCEL FORM
+  // =====================================================
+
   cancelForm(): void {
     this.showForm = false;
     this.editingSubcategoryId = null;
-    this.selectedIconFile = null;
-    this.selectedImageFile = null;
+
     this.errorMessage = '';
+
     this.cdr.detectChanges();
   }
+
+  // =====================================================
+  // CREATE SLUG
+  // =====================================================
 
   onSubcategoryNameChange(): void {
-    if (!this.editingSubcategoryId) {
-      this.form.slug = this.makeSlug(this.form.subcategoryname);
-      this.cdr.detectChanges();
-    }
+    this.form.slug = this.makeSlug(this.form.subcategoryname);
   }
+onIconFileSelected(event: Event): void {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
 
-  onIconFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0] || null;
-    this.selectedIconFile = file;
+  if (!file) return;
 
-    if (!file) {
-      this.cdr.detectChanges();
+  this.form.iconurl = URL.createObjectURL(file);
+  this.cdr.detectChanges();
+}
+
+onImageFileSelected(event: Event): void {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+
+  if (!file) return;
+
+  this.form.image = URL.createObjectURL(file);
+  this.cdr.detectChanges();
+}
+  // =====================================================
+  // SAVE CREATE / UPDATE
+  // =====================================================
+
+  saveSubcategory(): void {
+    if (this.isSaving) {
       return;
     }
-
-    const readerUrl = URL.createObjectURL(file);
-    this.form.iconurl = readerUrl;
-    this.cdr.detectChanges();
-  }
-
-  onImageFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0] || null;
-    this.selectedImageFile = file;
-
-    if (!file) {
-      this.cdr.detectChanges();
-      return;
-    }
-
-    const readerUrl = URL.createObjectURL(file);
-    this.form.image = readerUrl;
-    this.cdr.detectChanges();
-  }
-
-  async saveSubcategory(): Promise<void> {
-    if (this.isSaving) return;
 
     this.errorMessage = '';
     this.successMessage = '';
 
     if (!this.form.categoryid) {
       this.errorMessage = 'Category is required.';
-      this.cdr.detectChanges();
       return;
     }
 
     if (!this.form.subcategoryname.trim()) {
       this.errorMessage = 'Subcategory name is required.';
-      this.cdr.detectChanges();
-      return;
-    }
-
-    if (!this.form.slug.trim()) {
-      this.errorMessage = 'Slug is required.';
-      this.cdr.detectChanges();
       return;
     }
 
     this.isSaving = true;
-    this.cdr.detectChanges();
 
-    try {
-      let iconurl = this.form.iconurl;
-      let image = this.form.image;
+    const payload = {
+      categoryId: this.form.categoryid,
+      subcategoryName: this.form.subcategoryname.trim(),
 
-      if (this.selectedIconFile) {
-        iconurl = await this.uploadFile(
-          this.selectedIconFile,
-          this.mediaBucket,
-          'icon'
-        );
-      }
+      /*
+       The backend automatically creates the slug from
+       subcategoryName, so slug does not need to be sent.
+      */
 
-      if (this.selectedImageFile) {
-        image = await this.uploadFile(
-          this.selectedImageFile,
-          this.mediaBucket,
-          'image'
-        );
-      }
+      icon: this.form.iconurl.trim(),
+      image: this.form.image.trim(),
+      description: this.form.description.trim(),
+      sortOrder: Number(this.form.sortorder || 0),
+      isActive: this.form.isactive
+    };
 
-      const payload = {
-        categoryid: Number(this.form.categoryid),
-        subcategoryname: this.form.subcategoryname.trim(),
-        slug: this.form.slug.trim(),
-        iconurl: iconurl?.trim() || null,
-        image: image?.trim() || null,
-        sortorder: Number(this.form.sortorder || 0),
-        isactive: this.form.isactive,
-        createdon: this.editingSubcategoryId ? undefined : new Date().toISOString(),
-      };
-
-      if (this.editingSubcategoryId) {
-        const updatePayload = {
-          categoryid: payload.categoryid,
-          subcategoryname: payload.subcategoryname,
-          slug: payload.slug,
-          iconurl: payload.iconurl,
-          image: payload.image,
-          sortorder: payload.sortorder,
-          isactive: payload.isactive,
-        };
-
-        const { error } = await this.supabaseService.supabase
-          .from('subcategories')
-          .update(updatePayload)
-          .eq('subcategoryid', this.editingSubcategoryId);
-
-        if (error) {
-          console.error('Update subcategory error:', error);
-          this.errorMessage = error.message || 'Failed to update subcategory.';
-          this.isSaving = false;
-          this.cdr.detectChanges();
-          return;
-        }
-
-        this.successMessage = 'Subcategory updated successfully.';
-      } else {
-        const insertPayload = {
-          categoryid: payload.categoryid,
-          subcategoryname: payload.subcategoryname,
-          slug: payload.slug,
-          iconurl: payload.iconurl,
-          image: payload.image,
-          sortorder: payload.sortorder,
-          isactive: payload.isactive,
-          createdon: payload.createdon,
-        };
-
-        const { error } = await this.supabaseService.supabase
-          .from('subcategories')
-          .insert([insertPayload]);
-
-        if (error) {
-          console.error('Create subcategory error:', error);
-          this.errorMessage = error.message || 'Failed to create subcategory.';
-          this.isSaving = false;
-          this.cdr.detectChanges();
-          return;
-        }
-
-        this.successMessage = 'Subcategory created successfully.';
-      }
-
-      this.isSaving = false;
-      this.cdr.detectChanges();
-      this.cancelForm();
-      await this.loadSubcategories();
-    } catch (error: any) {
-      console.error('Save subcategory exception:', error);
-      this.errorMessage = error?.message || 'Failed to save subcategory.';
-      this.isSaving = false;
-      this.cdr.detectChanges();
+    if (this.editingSubcategoryId) {
+      this.updateSubcategory(
+        this.editingSubcategoryId,
+        payload
+      );
+    } else {
+      this.createSubcategory(payload);
     }
   }
 
-  setSubcategoryStatusFilter(filter: SubcategoryStatusFilter): void {
+  // =====================================================
+  // CREATE
+  // POST /api/subcategories
+  // =====================================================
+
+  private createSubcategory(payload: any): void {
+    this.api
+      .post('/subcategories', payload)
+      .subscribe({
+        next: (response: any) => {
+          this.successMessage =
+            response?.message ||
+            'Subcategory created successfully.';
+
+          this.isSaving = false;
+          this.showForm = false;
+          this.editingSubcategoryId = null;
+
+          this.loadSubcategories();
+        },
+
+        error: (error) => {
+          console.error('Create subcategory error:', error);
+
+          this.errorMessage =
+            error?.error?.message ||
+            'Failed to create subcategory.';
+
+          this.isSaving = false;
+          this.cdr.detectChanges();
+        }
+      });
+  }
+
+  // =====================================================
+  // UPDATE
+  // PUT /api/subcategories/:id
+  // =====================================================
+
+  private updateSubcategory(
+    id: string,
+    payload: any
+  ): void {
+    this.api
+      .put(`/subcategories/${id}`, payload)
+      .subscribe({
+        next: (response: any) => {
+          this.successMessage =
+            response?.message ||
+            'Subcategory updated successfully.';
+
+          this.isSaving = false;
+          this.showForm = false;
+          this.editingSubcategoryId = null;
+
+          this.loadSubcategories();
+        },
+
+        error: (error) => {
+          console.error('Update subcategory error:', error);
+
+          this.errorMessage =
+            error?.error?.message ||
+            'Failed to update subcategory.';
+
+          this.isSaving = false;
+          this.cdr.detectChanges();
+        }
+      });
+  }
+
+  // =====================================================
+  // TOGGLE ACTIVE STATUS
+  // =====================================================
+
+  toggleSubcategoryStatus(
+    subcategory: AdminSubcategoryItem
+  ): void {
+    const nextValue = !subcategory.isactive;
+
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    const payload = {
+      isActive: nextValue
+    };
+
+    this.api
+      .put(
+        `/subcategories/${subcategory.subcategoryid}`,
+        payload
+      )
+      .subscribe({
+        next: () => {
+          subcategory.isactive = nextValue;
+
+          this.successMessage = nextValue
+            ? 'Subcategory activated successfully.'
+            : 'Subcategory deactivated successfully.';
+
+          this.cdr.detectChanges();
+        },
+
+        error: (error) => {
+          console.error(
+            'Toggle subcategory status error:',
+            error
+          );
+
+          this.errorMessage =
+            error?.error?.message ||
+            'Failed to update subcategory status.';
+
+          this.cdr.detectChanges();
+        }
+      });
+  }
+
+  // =====================================================
+  // DELETE
+  // DELETE /api/subcategories/:id
+  // =====================================================
+
+  deleteSubcategory(
+    subcategory: AdminSubcategoryItem
+  ): void {
+    const confirmed = window.confirm(
+      `Do you want to delete subcategory "${subcategory.subcategoryname}"?`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.api
+      .delete(`/subcategories/${subcategory.subcategoryid}`)
+      .subscribe({
+        next: (response: any) => {
+          this.successMessage =
+            response?.message ||
+            'Subcategory deleted successfully.';
+
+          this.loadSubcategories();
+        },
+
+        error: (error) => {
+          console.error('Delete subcategory error:', error);
+
+          this.errorMessage =
+            error?.error?.message ||
+            'Failed to delete subcategory.';
+
+          this.cdr.detectChanges();
+        }
+      });
+  }
+
+  // =====================================================
+  // FILTER
+  // =====================================================
+
+  setSubcategoryStatusFilter(
+    filter: SubcategoryStatusFilter
+  ): void {
     this.subcategoryStatusFilter = filter;
-    this.cdr.detectChanges();
+    this.currentPage = 1;
   }
 
   get filteredSubcategories(): AdminSubcategoryItem[] {
-    const q = this.searchQuery.trim().toLowerCase();
+    const query = this.searchQuery
+      .trim()
+      .toLowerCase();
 
     return this.allSubcategories.filter((subcategory) => {
       const matchesSearch =
-        !q ||
-        String(subcategory.subcategoryid).includes(q) ||
-        String(subcategory.categoryid).includes(q) ||
-        String(subcategory.subcategoryname || '').toLowerCase().includes(q) ||
-        String(subcategory.categoryname || '').toLowerCase().includes(q) ||
-        String(subcategory.slug || '').toLowerCase().includes(q) ||
-        String(subcategory.sortorder).includes(q) ||
-        (subcategory.isactive ? 'active' : 'inactive').includes(q);
+        !query ||
+        subcategory.subcategoryname
+          .toLowerCase()
+          .includes(query) ||
+        subcategory.categoryname
+          .toLowerCase()
+          .includes(query) ||
+        subcategory.slug
+          .toLowerCase()
+          .includes(query) ||
+        String(subcategory.sortorder).includes(query) ||
+        (subcategory.isactive
+          ? 'active'
+          : 'inactive'
+        ).includes(query);
 
-      const matchesFilter =
+      const matchesStatus =
         this.subcategoryStatusFilter === 'all' ||
-        (this.subcategoryStatusFilter === 'active' && subcategory.isactive) ||
-        (this.subcategoryStatusFilter === 'inactive' && !subcategory.isactive);
+        (
+          this.subcategoryStatusFilter === 'active' &&
+          subcategory.isactive
+        ) ||
+        (
+          this.subcategoryStatusFilter === 'inactive' &&
+          !subcategory.isactive
+        );
 
-      return matchesSearch && matchesFilter;
+      return matchesSearch && matchesStatus;
     });
   }
+
+  // =====================================================
+  // PAGINATION
+  // =====================================================
+
+  get totalPages(): number {
+    return (
+      Math.ceil(
+        this.filteredSubcategories.length /
+          this.itemsPerPage
+      ) || 1
+    );
+  }
+
+  get paginatedSubcategories(): AdminSubcategoryItem[] {
+    const start =
+      (this.currentPage - 1) *
+      this.itemsPerPage;
+
+    return this.filteredSubcategories.slice(
+      start,
+      start + this.itemsPerPage
+    );
+  }
+
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages) {
+      return;
+    }
+
+    this.currentPage = page;
+  }
+
+  // =====================================================
+  // COUNTS
+  // =====================================================
 
   get totalSubcategoriesCount(): number {
     return this.allSubcategories.length;
   }
 
   get activeSubcategoriesCount(): number {
-    return this.allSubcategories.filter((item) => item.isactive).length;
+    return this.allSubcategories.filter(
+      (item) => item.isactive
+    ).length;
   }
 
   get inactiveSubcategoriesCount(): number {
-    return this.allSubcategories.filter((item) => !item.isactive).length;
+    return this.allSubcategories.filter(
+      (item) => !item.isactive
+    ).length;
   }
 
   get totalCategoriesLinkedCount(): number {
-    const uniqueCategoryIds = new Set(
-      this.allSubcategories.map((item) => item.categoryid)
+    const categoryIds = new Set(
+      this.allSubcategories.map(
+        (item) => item.categoryid
+      )
     );
-    return uniqueCategoryIds.size;
+
+    return categoryIds.size;
   }
 
-  async toggleSubcategoryStatus(
+  // =====================================================
+  // TRACK BY
+  // =====================================================
+
+  trackBySubcategory(
+    index: number,
     subcategory: AdminSubcategoryItem
-  ): Promise<void> {
-    const nextValue = !subcategory.isactive;
-
-    this.errorMessage = '';
-    this.successMessage = '';
-    this.cdr.detectChanges();
-
-    try {
-      const { error } = await this.supabaseService.supabase
-        .from('subcategories')
-        .update({ isactive: nextValue })
-        .eq('subcategoryid', subcategory.subcategoryid);
-
-      if (error) {
-        console.error('Toggle subcategory status error:', error);
-        this.errorMessage =
-          error.message || 'Failed to update subcategory status.';
-        this.cdr.detectChanges();
-        return;
-      }
-
-      subcategory.isactive = nextValue;
-      this.successMessage = `Subcategory ${
-        nextValue ? 'activated' : 'deactivated'
-      } successfully.`;
-
-      this.cdr.detectChanges();
-      await this.loadSubcategories();
-    } catch (error) {
-      console.error('Toggle subcategory status exception:', error);
-      this.errorMessage = 'Failed to update subcategory status.';
-      this.cdr.detectChanges();
-    }
-  }
-
-  async deleteSubcategory(subcategory: AdminSubcategoryItem): Promise<void> {
-    const confirmed = window.confirm(
-      `Do you want to delete subcategory "${subcategory.subcategoryname}"?`
-    );
-
-    if (!confirmed) return;
-
-    this.errorMessage = '';
-    this.successMessage = '';
-    this.cdr.detectChanges();
-
-    try {
-      const { error } = await this.supabaseService.supabase
-        .from('subcategories')
-        .delete()
-        .eq('subcategoryid', subcategory.subcategoryid);
-
-      if (error) {
-        console.error('Delete subcategory error:', error);
-        this.errorMessage = error.message || 'Failed to delete subcategory.';
-        this.cdr.detectChanges();
-        return;
-      }
-
-      this.successMessage = 'Subcategory deleted successfully.';
-      this.cdr.detectChanges();
-      await this.loadSubcategories();
-    } catch (error) {
-      console.error('Delete subcategory exception:', error);
-      this.errorMessage = 'Failed to delete subcategory.';
-      this.cdr.detectChanges();
-    }
-  }
-
-  trackBySubcategory(index: number, subcategory: AdminSubcategoryItem): number {
+  ): string {
     return subcategory.subcategoryid;
   }
 
-  private async uploadFile(
-    file: File,
-    bucket: string,
-    prefix: string
-  ): Promise<string> {
-    if (!file) {
-      throw new Error('No file selected.');
-    }
-
-    const extension = file.name.split('.').pop()?.toLowerCase() || 'png';
-    const safePrefix = prefix.replace(/[^a-z0-9-_]/gi, '').toLowerCase();
-    const fileName = `${safePrefix}-${Date.now()}-${Math.random()
-      .toString(36)
-      .slice(2)}.${extension}`;
-
-    const { data: uploadData, error: uploadError } =
-      await this.supabaseService.supabase.storage
-        .from(bucket)
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: true,
-        });
-
-    if (uploadError) {
-      throw new Error(
-        uploadError.message || `Failed to upload file to ${bucket}.`
-      );
-    }
-
-    const { data: publicUrlData } = this.supabaseService.supabase.storage
-      .from(bucket)
-      .getPublicUrl(uploadData.path);
-
-    if (!publicUrlData?.publicUrl) {
-      throw new Error(`Failed to get public URL from ${bucket}.`);
-    }
-
-    return publicUrlData.publicUrl;
-  }
+  // =====================================================
+  // HELPERS
+  // =====================================================
 
   private makeSlug(value: string): string {
     return value
@@ -556,15 +656,20 @@ goToPage(page: number): void {
       .replace(/-+/g, '-');
   }
 
-  private formatDate(value: string | null | undefined): string {
-    if (!value) return '-';
+  private formatDate(
+    value: string | null | undefined
+  ): string {
+    if (!value) {
+      return '-';
+    }
 
-    const date = new Date(value);
-
-    return date.toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
+    return new Date(value).toLocaleDateString(
+      'en-IN',
+      {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      }
+    );
   }
 }
