@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, signal } from '@angular/core';
+import { Component, OnInit, HostListener,ChangeDetectorRef, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
@@ -6,6 +6,44 @@ import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../services/supabase.service';
 import { supabase } from '../../../supabaseClient';
 import { Category } from '../categories/categories';
+import { Router } from '@angular/router';
+import {
+  Filters,
+  FilterState
+} from '../filters/filters';
+
+
+
+interface ProductCardItem {
+  postid: number;
+
+  title?: string | null;
+  description?: string | null;
+  price?: number | string | null;
+  location?: string | null;
+
+  areaid?: number | null;
+  cityid?: number | null;
+
+  image_url?: string | null;
+  image_urls?: string[] | null;
+
+  category?: string | null;
+  categoryid?: number | null;
+  subcategoryid?: number | null;
+
+  adtype?: string | null;
+  createdon?: string | null;
+
+  mainImage: string;
+  displayTitle: string;
+  displayPrice: number;
+  displayCategory: string;
+  displayLocation: string;
+  displayType: string;
+
+  district?: string | null;
+}
 
 interface CategoryItem {
   categoryid: number;
@@ -31,7 +69,8 @@ imports: [
  CommonModule,
  RouterModule,
  FormsModule,
- Category
+ Category,
+  Filters
 ],
   templateUrl: './product-list.html',
   styleUrl: './product-list.css',
@@ -47,7 +86,9 @@ export class ProductList implements OnInit {
   subcategories = signal<SubcategoryItem[]>([]);
   categoriesData: CategoryItem[] = [];
   allSubcategories: SubcategoryItem[] = [];
+results: ProductCardItem[] = [];
 
+filteredResults: ProductCardItem[] = [];
   private page = 0;
   private readonly pageSize = 100;
 
@@ -67,8 +108,10 @@ export class ProductList implements OnInit {
 constructor(
   private supabaseService: SupabaseService,
   private route: ActivatedRoute,
-  private location: Location
+  private location: Location, private router: Router,
+  private cdr: ChangeDetectorRef
 ) {}
+
 
   async ngOnInit(): Promise<void> {
     const user = await this.supabaseService.getCurrentUser();
@@ -76,6 +119,7 @@ this.currentUserId.set(user?.id || '');
     this.loadSelectedLocationAndRadius();
     await this.loadCategories();
     await this.loadAllSubcategories();
+    await this.loadResults();
 
     this.route.queryParams.subscribe(async (params) => {
       this.selectedCategoryId = params['category']
@@ -112,6 +156,109 @@ this.currentUserId.set(user?.id || '');
       }
     });
   }
+
+
+ async loadResults(): Promise<void> {
+  this.isLoading.set(true);
+  this.cdr.detectChanges();
+
+  try {
+    const { data, error } = await supabase
+      .from('post')
+      .select(`
+        postid,
+        title,
+        description,
+        price,
+        location,
+        areaid,
+        cityid,
+        image_url,
+        image_urls,
+        category,
+        categoryid,
+        subcategoryid,
+        adtype,
+        isactive,
+        status,
+        createdon
+      `)
+      .eq('isactive', true)
+      .eq('status', 'Active')
+      .eq('adtype', 'product')
+      .order('createdon', { ascending: false })
+      .limit(60);
+
+    if (error) {
+      throw error;
+    }
+
+    const mapped: ProductCardItem[] = (data || []).map((item: any) => ({
+      ...item,
+      mainImage: this.getMainImage(item),
+      displayTitle: item.title || 'Untitled',
+      displayPrice: Number(item.price || 0),
+      displayCategory: item.category || 'Category',
+      displayLocation: item.location || this.buildLocation(item),
+      displayType: (item.adtype || 'product').toLowerCase()
+    }));
+
+    this.results = mapped;
+    this.filteredResults = [...mapped];
+
+  } catch (error) {
+    console.error('Error loading product cards:', error);
+
+    this.results = [];
+    this.filteredResults = [];
+
+  } finally {
+    this.isLoading.set(false);
+    this.cdr.detectChanges();
+  }
+}
+
+buildLocation(item: any): string {
+  if (item?.location) {
+    return item.location;
+  }
+
+  const parts: string[] = [];
+
+  if (item?.areaid) {
+    parts.push(`Area ${item.areaid}`);
+  }
+
+  if (item?.cityid) {
+    parts.push(`City ${item.cityid}`);
+  }
+
+  return parts.length
+    ? parts.join(', ')
+    : 'Location not available';
+}
+getDistrict(item: any): string {
+  return (
+    item?.district ||
+    item?.location
+      ?.split(',')[3]
+      ?.trim() ||
+    item?.displayLocation ||
+    'Location'
+  );
+}
+openDetails(item: ProductCardItem): void {
+  const id = item?.postid;
+
+  if (!id) {
+    return;
+  }
+
+  this.router.navigate([
+    '/details',
+    id
+  ]);
+}
 
   private loadSelectedLocationAndRadius(): void {
     if (typeof window === 'undefined') return;
@@ -167,7 +314,17 @@ this.currentUserId.set(user?.id || '');
       this.categoriesData = [];
     }
   }
+onFiltersApplied(filters: FilterState): void {
+  console.log('Applied filters:', filters);
 
+  // Call your API or filter the product list here.
+}
+
+onFiltersReset(): void {
+  console.log('Filters reset');
+
+  // Reload all products here.
+}
   async loadAllSubcategories(): Promise<void> {
     try {
       const { data, error } = await supabase
