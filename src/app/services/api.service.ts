@@ -27,21 +27,24 @@ export class ApiService {
 
 
 
-  getHeaders(){
+getHeaders(){
 
-    return {
+ const token = this.getToken();
 
-      headers:new HttpHeaders({
+ if(token){
 
-        Authorization:
-        `Bearer ${this.getToken()}`
+  return {
+    headers:new HttpHeaders({
+      Authorization:`Bearer ${token}`
+    })
+  };
 
-      })
+ }
 
-    };
 
-  }
+ return {};
 
+}
 
 
   // ======================
@@ -105,7 +108,18 @@ export class ApiService {
   }
 
 
+// ======================
+// COMMON DELETE
+// ======================
 
+delete(url:string){
+
+  return this.http.delete(
+    `${this.baseUrl}${url}`,
+    this.getHeaders()
+  );
+
+}
   // ======================
   // DASHBOARD
   // ======================
