@@ -1,315 +1,523 @@
-<div class="loading-state" *ngIf="isLoading()">
-  Loading product details...
+<!-- LOADING -->
+<div class="page-state" *ngIf="isLoading()">
+  Loading post details...
 </div>
 
-<div class="empty-state" *ngIf="!isLoading() && !postData()">
+<!-- NOT FOUND -->
+<div class="page-state" *ngIf="!isLoading() && loadFailed()">
   Product not found.
 </div>
 
-<div class="post-view-container" *ngIf="!isLoading() && postData()">
-<button
-  type="button"
-  class="back-arrow"
-  (click)="goBack()">
-  <span>❮</span>
-</button>
+<!-- MAIN PAGE -->
+<div
+  class="post-page"
+  *ngIf="!isLoading() && postData()"
+>
 
-  <div class="media-section">
-  <div class="image-wrapper">
+ 
+ 
 
-    <!-- LEFT SLIDE BUTTON -->
-    <button
-      type="button"
-      class="nav-btn left"
-      *ngIf="getAllMedia().length > 1"
-      (click)="prevMedia()">
-      ❮
-    </button>
+  <!-- TOP SECTION -->
+  <div class="post-content-grid">
 
-    <!-- MAIN IMAGE -->
-    <img
-      *ngIf="selectedMedia().type === 'image'"
-      [src]="selectedMedia().url"
-      class="main-img"
-    >
+  <!-- LEFT SIDE -->
+  <div class="left-column">
 
-    <!-- MAIN VIDEO -->
-    <div
-      class="video-wrapper"
-      *ngIf="selectedMedia().type === 'video'">
+    <!-- YOUR EXISTING GALLERY -->
+    <div class="gallery-area">
 
-      <video
-        #videoPlayer
-        [src]="selectedMedia().url"
-        class="main-video"
-        controls>
-      </video>
+      <!-- vertical thumbnails -->
+      <div class="vertical-thumbnails">
 
-      <button
-        *ngIf="showVideoPlayButton()"
-        type="button"
-        class="video-play-overlay"
-        (click)="playMainVideo(videoPlayer)">
-        ▶
-      </button>
-    </div>
+        <img
+          *ngFor="let img of postData()?.images"
+          [src]="img"
+          class="thumbnail"
+          [class.active]="selectedMedia().url === img"
+          (click)="selectMedia('image', img)"
+        >
 
-    <!-- RIGHT SLIDE BUTTON -->
-    <button
-      type="button"
-      class="nav-btn right"
-      *ngIf="getAllMedia().length > 1"
-      (click)="nextMedia()">
-      ❯
-    </button>
+        <div
+          *ngFor="let video of postData()?.videos"
+          class="video-thumbnail"
+          [class.active]="selectedMedia().url === video"
+          (click)="selectMedia('video', video)"
+        >
+          <video [src]="video" muted></video>
 
-    <!-- THUMBNAILS -->
-    <div class="thumb-row">
-      <img
-        *ngFor="let img of postData()?.images"
-        [src]="img"
-        class="thumb-img"
-        [class.active]="selectedMedia().url === img"
-        (click)="selectMedia('image', img)"
-      >
+          <span class="thumbnail-play">
+            <i class="fas fa-play"></i>
+          </span>
+        </div>
 
-      <div
-        *ngFor="let video of postData()?.videos"
-        class="thumb-video"
-        [class.active]="selectedMedia().url === video"
-        (click)="selectMedia('video', video)"
-      >
-        <video [src]="video" muted preload="metadata"></video>
-        <span class="play-icon">▶</span>
       </div>
+
+      <!-- MAIN IMAGE -->
+      <div class="main-media">
+
+        <button
+          type="button"
+          class="slide-arrow left-arrow"
+          *ngIf="getAllMedia().length > 1"
+          (click)="prevMedia()"
+        >
+          <i class="fas fa-chevron-left"></i>
+        </button>
+
+        <img
+          *ngIf="selectedMedia().type === 'image'"
+          [src]="selectedMedia().url"
+          class="main-image"
+        >
+
+        <div
+          class="main-video-wrapper"
+          *ngIf="selectedMedia().type === 'video'"
+        >
+          <video
+            #videoPlayer
+            [src]="selectedMedia().url"
+            class="main-video"
+            controls
+          ></video>
+        </div>
+
+        <button
+          type="button"
+          class="slide-arrow right-arrow"
+          *ngIf="getAllMedia().length > 1"
+          (click)="nextMedia()"
+        >
+          <i class="fas fa-chevron-right"></i>
+        </button>
+
+      </div>
+
     </div>
 
+    <!-- DESCRIPTION MUST BE HERE -->
+   <section class="content-card">
+
+  <div class="section-heading">
+    <h2>Description</h2>
   </div>
 
+  <p
+    class="description-text"
+    [class.expanded]="showFullDescription"
+  >
+    {{ postData()?.description || 'No description available.' }}
+  </p>
 
-    <!-- SERVICE CATALOG -->
-    <div class="service-catalog-section" *ngIf="isServicePost()">
-      <h3>Services Offered</h3>
+  <button
+    *ngIf="postData()?.description?.length > 120"
+    class="description-toggle"
+    (click)="toggleDescription()"
+  >
+    {{ showFullDescription ? 'View Less' : 'View More...' }}
+  </button>
 
-      <div class="review-empty" *ngIf="!hasCatalog()">
-        No services found
+</section>
+
+    <!-- REPORT MUST ALSO BE HERE -->
+    <section
+      class="report-area"
+      *ngIf="!isMyPost()"
+    >
+      <button
+        type="button"
+        class="report-button"
+        (click)="toggleReportForm()"
+      >
+        <i class="fas fa-flag"></i>
+        Report this ad
+      </button>
+
+      <div
+        class="report-form"
+        *ngIf="showReportForm()"
+      >
+        <textarea
+          [(ngModel)]="reportText"
+          name="reportText"
+          rows="3"
+          placeholder="Describe the issue..."
+        ></textarea>
+
+        <button
+          type="button"
+          (click)="submitReport()"
+        >
+          Submit Report
+        </button>
+      </div>
+    </section>
+
+  <!-- REVIEWS -->
+    <section class="content-card reviews-card">
+
+      <div class="section-heading">
+        <h2>Customer Reviews</h2>
+
+        <button
+          type="button"
+          class="write-review-button"
+          (click)="toggleReviewForm()"
+        >
+          Write Review
+        </button>
       </div>
 
-      <div class="catalog-grid" *ngIf="hasCatalog()">
-        <div class="catalog-card" *ngFor="let item of postData()?.catalogItems">
-          <img
-            *ngIf="item.imageUrl"
-            [src]="item.imageUrl"
-            [alt]="item.title || 'Service image'"
-            class="catalog-img"
-          >
-          <div class="catalog-body">
-            <h4>{{ item.title || 'Service' }}</h4>
-           <p *ngIf="item.price && item.price > 0">
-  ₹ {{ item.price }}
-</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="reviews-section">
-      <h6 (click)="toggleReviewForm()" class="write-review-tab">
-        Write a Review
-        <span *ngIf="!showReviewForm()">▼</span>
-        <span *ngIf="showReviewForm()">▲</span>
-      </h6>
-
-      <form *ngIf="showReviewForm()" (ngSubmit)="submitReview()" class="review-form">
+      <!-- REVIEW FORM -->
+      <form
+        class="review-form"
+        *ngIf="showReviewForm()"
+        (ngSubmit)="submitReview()"
+      >
 
         <div class="star-select">
           <span
             *ngFor="let star of [1,2,3,4,5]"
+            [class.active]="star <= (hoverRating || selectedRating)"
             (click)="setRating(star)"
             (mouseenter)="setHoverRating(star)"
             (mouseleave)="clearHoverRating()"
-            [class.active]="star <= (hoverRating || selectedRating)"
           >
             ★
           </span>
         </div>
 
-        <div class="selected-rating-text">
-          Selected Rating: {{ selectedRating }}/5
-        </div>
+        <textarea
+          [(ngModel)]="reviewText"
+          name="reviewText"
+          placeholder="Write your review..."
+          rows="3"
+        ></textarea>
 
-        <div class="review-input-wrapper">
-          <textarea
-            [(ngModel)]="reviewText"
-            name="reviewText"
-            placeholder="Write your review here..."
-            required
-            rows="3"
-          ></textarea>
-        </div>
-
-        <div class="preview-images">
-          <img *ngFor="let img of reviewImages" [src]="img">
-        </div>
-
-        <div class="preview-video" *ngIf="reviewVideo">
-          <video [src]="reviewVideo" controls></video>
-        </div>
-
-        <button type="submit" [disabled]="!reviewText || selectedRating === 0 || isReviewSubmitting()">
+        <button
+          type="submit"
+          class="submit-review"
+          [disabled]="
+            !reviewText ||
+            selectedRating === 0 ||
+            isReviewSubmitting()
+          "
+        >
           {{ isReviewSubmitting() ? 'Submitting...' : 'Submit Review' }}
         </button>
+
       </form>
-    </div>
 
-    <div class="reviews-display">
-      <h3>User Reviews</h3>
-
-      <div *ngIf="isReviewsLoading()" class="review-loading">
-        Loading reviews...
-      </div>
-
-      <div *ngIf="!isReviewsLoading() && reviews().length === 0" class="review-empty">
+      <div
+        class="empty-content"
+        *ngIf="!isReviewsLoading() && reviews().length === 0"
+      >
         No reviews yet
       </div>
 
-      <div class="review-list" *ngIf="reviews().length > 0">
-        <div class="review-card" *ngFor="let r of reviews()">
+  <div class="review-list">
 
-          <div class="stars">
-            <span *ngFor="let s of [1,2,3,4,5]" [class.filled]="s <= (r.rating || 0)">
-              ★
+  <article
+    class="review-item"
+    *ngFor="
+      let review of (
+        showAllReviews
+          ? reviews()
+          : reviews().slice(0, reviewsToShow)
+      )
+    "
+  >
+
+
+          <div class="review-avatar">
+            {{ review.reviewtext?.charAt(0)?.toUpperCase() || 'U' }}
+          </div>
+
+          <div class="review-content">
+
+            <div class="review-header">
+              <strong>User Review</strong>
+
+              <span>
+                {{ review.createdat | date:'mediumDate' }}
+              </span>
+            </div>
+
+            <div class="review-stars">
+              <span
+                *ngFor="let star of [1,2,3,4,5]"
+                [class.active]="star <= (review.rating || 0)"
+              >
+                ★
+              </span>
+
+              <small>{{ review.rating }}/5</small>
+            </div>
+
+            <p>{{ review.reviewtext }}</p>
+
+            <div
+              class="review-images"
+              *ngIf="review.reviewimages?.length"
+            >
+              <img
+                *ngFor="let image of review.reviewimages"
+                [src]="image"
+                alt="Review image"
+              >
+            </div>
+
+          </div>
+
+        </article>
+
+      </div>
+<div
+  class="reviews-more-wrap"
+  *ngIf="reviews().length > reviewsToShow"
+>
+  <button
+    type="button"
+    class="reviews-more-btn"
+    (click)="toggleReviews()"
+  >
+    {{ showAllReviews ? 'View Less' : 'View More Reviews' }}
+
+    <i
+      class="fas"
+      [class.fa-chevron-down]="!showAllReviews"
+      [class.fa-chevron-up]="showAllReviews"
+    ></i>
+  </button>
+</div>
+    </section>
+  </div>
+
+    <!-- RIGHT DETAILS -->
+    <aside class="details-panel">
+
+      <div class="title-row">
+        <div>
+<span
+  class="featured-label"
+  [class.service-badge]="isServicePost()"
+  [class.product-badge]="!isServicePost()"
+>
+  <i
+    class="fas"
+    [class.fa-tools]="isServicePost()"
+    [class.fa-box]="!isServicePost()"
+  ></i>
+
+  {{ isServicePost() ? 'Service' : 'Product' }}
+</span>
+          <h1>{{ postData()?.title }}</h1>
+        </div>
+
+        <button
+          type="button"
+          class="share-icon-button"
+          (click)="sharePost()"
+        >
+          <i class="fas fa-share-alt"></i>
+        </button>
+      </div>
+
+      <!-- RATING -->
+      <div class="rating-row">
+
+        <span class="rating-badge">
+          {{ averageRating() }}
+          <i class="fas fa-star"></i>
+        </span>
+
+        <span class="rating-text">
+          ({{ reviews().length }} Reviews)
+        </span>
+
+      </div>
+
+      <!-- PRICE -->
+      <div
+        class="price-block"
+        *ngIf="postData()?.price && postData()?.price > 0"
+      >
+        <div class="price">
+          ₹ {{ postData()?.price | number }}
+        </div>
+
+        <span>Inclusive of all taxes</span>
+      </div>
+
+      <!-- PRIMARY ACTIONS -->
+      <div
+        class="primary-actions"
+        *ngIf="!isMyPost()"
+      >
+
+        <button
+          type="button"
+          class="call-action"
+          (click)="callSeller()"
+        >
+          <i class="fas fa-phone-alt"></i>
+          Call Seller
+        </button>
+
+        <button
+          type="button"
+          class="whatsapp-action"
+          (click)="whatsappSeller()"
+        >
+          <i class="fab fa-whatsapp"></i>
+          WhatsApp
+        </button>
+
+      </div>
+
+      <!-- SECONDARY ACTIONS -->
+      <div
+        class="secondary-actions"
+        *ngIf="!isMyPost()"
+      >
+
+        <button
+          type="button"
+          (click)="addToFavorites()"
+        >
+          <i class="far fa-heart"></i>
+          Save
+        </button>
+
+        <button
+          type="button"
+          (click)="chatSeller()"
+        >
+          <i class="far fa-comment-dots"></i>
+          Chat
+        </button>
+
+        <button
+          type="button"
+          (click)="sharePost()"
+        >
+          <i class="fas fa-share-alt"></i>
+          Share
+        </button>
+
+      </div>
+
+      <!-- OWNER DELETE -->
+      <button
+        type="button"
+        class="delete-button"
+        *ngIf="isMyPost()"
+        (click)="removePost()"
+      >
+        <i class="fas fa-trash"></i>
+        Remove Post
+      </button>
+
+      <!-- SELLER -->
+      <div class="seller-card">
+
+        <img
+          [src]="postData()?.sellerImage"
+          alt="Seller"
+        >
+
+        <div class="seller-details">
+          <span class="small-label">
+            Seller
+          </span>
+
+          <div class="seller-name-row">
+            <h3>{{ postData()?.sellerName }}</h3>
+
+            <span class="trusted-badge">
+              <i class="fas fa-shield-alt"></i>
+              Trusted Seller
             </span>
           </div>
 
-          <p class="review-text">{{ r.reviewtext }}</p>
-
-          <div class="review-images" *ngIf="r.reviewimages?.length">
-            <img *ngFor="let img of r.reviewimages" [src]="img">
-          </div>
-
-          <div *ngIf="r.reviewvideo">
-            <video [src]="r.reviewvideo" controls></video>
-          </div>
-
-          <span class="review-date">
-            {{ r.createdat | date:'medium' }}
-          </span>
+          <p>
+            {{ postData()?.displayAddress || postData()?.location }}
+          </p>
         </div>
-      </div>
-    </div>
 
-    <div *ngIf="!isMyPost()" class="report-section">
-  <button class="report-btn" (click)="toggleReportForm()">
-    Report Ad
-  </button>
+        <i class="fas fa-chevron-right seller-arrow"></i>
 
-  <div *ngIf="showReportForm()" class="report-form">
-    <textarea
-      [(ngModel)]="reportText"
-      name="reportText"
-      placeholder="Describe the issue with this ad..."
-      rows="3"
-    ></textarea>
-
-    <button type="button" (click)="submitReport()">
-      Submit Report
-    </button>
-  </div>
-</div>
-
-  </div>
-
-  <div class="details-section">
-
-    <h2>{{ postData()?.title }}</h2>
-
-   <p
-  class="price"
-  *ngIf="postData()?.price && postData()?.price > 0">
-  ₹ {{ postData()?.price }}
-</p>
-    <div class="ratings">
-      <span class="stars">
-        <span *ngFor="let s of [1,2,3,4,5]" [class.filled]="s <= averageRating()">
-          ★
-        </span>
-      </span>
-      <span>{{ averageRating() }}/5 ({{ reviews().length }} Reviews)</span>
-    </div>
-<div *ngIf="!isMyPost()" class="actions">
-  <button (click)="callSeller()">Call</button>
-  <button (click)="whatsappSeller()">WhatsApp</button>
-  <button type="button" (click)="sharePost()">Share</button>
-</div>
-
-<div *ngIf="!isMyPost()" class="quick-actions">
-  <button class="quick-btn favorite-btn" (click)="addToFavorites()">❤ Favorite</button>
-  <button class="quick-btn chat-btn" (click)="chatSeller()">💬 Chat Seller</button>
-</div>
-
-<div *ngIf="isMyPost()" class="quick-actions">
-  <button class="quick-btn delete-btn" type="button" (click)="removePost()">
-    Remove Post
-  </button>
-</div>
-
-    <div class="seller-card">
-      <img [src]="postData()?.sellerImage" alt="Seller image">
-
-      <div>
-        <h4>{{ postData()?.sellerName }}</h4>
-        <p>{{ postData()?.location }}</p>
       </div>
 
-      <!-- <button type="button">Follow</button> -->
-    </div>
+      <!-- INFORMATION -->
+      <div class="information-card">
 
-    <div class="highlights">
-      <ul *ngIf="postData()?.detailItems?.length">
-        <li *ngFor="let item of postData()?.detailItems">
-          <strong>{{ item.label }}:</strong> {{ item.value }}
-        </li>
-      </ul>
+        <div
+          class="information-row"
+          *ngFor="let item of postData()?.detailItems"
+        >
+          <div class="information-label">
+            <i class="fas fa-check-circle"></i>
+            <strong>{{ item.label }}</strong>
+          </div>
 
-      <p>{{ postData()?.description || 'No description available.' }}</p>
-    </div>
+          <span>{{ item.value }}</span>
+        </div>
 
-    <!-- NEW ADDRESS SECTION -->
-    <div class="posted-location-card" *ngIf="postData()?.displayAddress || postData()?.location">
-      <h3>Posted in</h3>
-
-      <div class="posted-location-text">
-        <span class="location-pin">📍</span>
-        <span>{{ postData()?.displayAddress || postData()?.location }}</span>
       </div>
 
-      <div class="posted-map-wrap" *ngIf="hasCoordinates()">
-        <iframe
-          class="posted-map"
-          [src]="mapEmbedUrl()"
-          width="100%"
-          height="220"
-          style="border:0;"
-          loading="lazy"
-          referrerpolicy="no-referrer-when-downgrade">
-        </iframe>
+      <!-- LOCATION -->
+      <div
+        class="location-card"
+        *ngIf="postData()?.displayAddress || postData()?.location"
+      >
+
+        <h3>Posted in</h3>
+
+        <p>
+          <i class="fas fa-map-marker-alt"></i>
+          {{ postData()?.displayAddress || postData()?.location }}
+        </p>
+
+        <div
+          class="map-wrapper"
+          *ngIf="hasCoordinates()"
+        >
+          <iframe
+            [src]="mapEmbedUrl()"
+            class="posted-map"
+            loading="lazy"
+          ></iframe>
+        </div>
+
+        <button
+          type="button"
+          class="map-button"
+          (click)="openMap()"
+        >
+          <i class="fas fa-map-marked-alt"></i>
+          View on Google Map
+        </button>
+
       </div>
 
-      <button
-  type="button"
-  class="view-map-btn google-map-btn"
-  (click)="openMap()"
->
-  View on Google Map
-</button>
-    </div>
-
-    <div class="map-icon">
-      <img src="assets/icons/map.jpg" alt="Map">
-      <span>{{ postData()?.displayAddress || postData()?.location }}</span>
-    </div>
+    </aside>
 
   </div>
 
+     <!-- LOWER SECTION -->
+    <div class="lower-layout">
+
+     <!-- LEFT LOWER -->
+     <div class="lower-left">
+
+      
+      <!-- DESCRIPTION -->
+        
+        </div>
+
+  
+  </div>
+
+      
 </div>
