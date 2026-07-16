@@ -61,64 +61,34 @@ getHeaders(){
   }
 
 
-
-  // ======================
-  // COMMON GET
-  // ======================
-
-  get(url:string){
-
-    return this.http.get(
-      `${this.baseUrl}${url}`,
-      this.getHeaders()
-    );
-
-  }
-
-
-
-  // ======================
-  // COMMON POST
-  // ======================
-
-  post(url:string,data:any){
-
-    return this.http.post(
-      `${this.baseUrl}${url}`,
-      data,
-      this.getHeaders()
-    );
-
-  }
-
-
-
-  // ======================
-  // COMMON PUT
-  // ======================
-
-  put(url:string,data:any){
-
-    return this.http.put(
-      `${this.baseUrl}${url}`,
-      data,
-      this.getHeaders()
-    );
-
-  }
-
-
-// ======================
-// COMMON DELETE
-// ======================
-
-delete(url:string){
-
-  return this.http.delete(
+get<T = any>(url: string) {
+  return this.http.get<T>(
     `${this.baseUrl}${url}`,
     this.getHeaders()
   );
+}
 
+post<T = any>(url: string, data: any) {
+  return this.http.post<T>(
+    `${this.baseUrl}${url}`,
+    data,
+    this.getHeaders()
+  );
+}
+
+put<T = any>(url: string, data: any) {
+  return this.http.put<T>(
+    `${this.baseUrl}${url}`,
+    data,
+    this.getHeaders()
+  );
+}
+
+delete<T = any>(url: string) {
+  return this.http.delete<T>(
+    `${this.baseUrl}${url}`,
+    this.getHeaders()
+  );
 }
   // ======================
   // DASHBOARD
