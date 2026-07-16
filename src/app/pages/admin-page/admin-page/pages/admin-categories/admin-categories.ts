@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, Input, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../../../services/api.service';
-
+import { firstValueFrom } from 'rxjs';
 interface AdminCategoryItem {
   categoryid: string;
   categoryname: string;
@@ -38,7 +38,8 @@ export class AdminCategoriesComponent implements OnInit {
   categories: AdminCategoryItem[] = [];
   showForm = false;
   editingCategoryId: string | null = null;
-
+  selectedIconFile: File | null = null;
+selectedBannerFile: File | null = null;
   form = {
     categoryname: '',
     slug: '',
@@ -125,129 +126,193 @@ export class AdminCategoriesComponent implements OnInit {
     return this.categories.filter((c) => c.category_type === 'product').length;
   }
 
-  openCreateForm(): void {
-    this.showForm = true;
-    this.editingCategoryId = null;
-    this.successMessage = '';
-    this.errorMessage = '';
+openCreateForm(): void {
+  this.showForm = true;
+  this.editingCategoryId = null;
 
-    this.form = {
-      categoryname: '',
-      slug: '',
-      iconurl: '',
-      bannerurl: '',
-      sortorder: this.categories.length + 1,
-      isactive: true,
-      category_type: 'product',
-    };
+  this.selectedIconFile = null;
+  this.selectedBannerFile = null;
 
-    this.cdr.detectChanges();
-  }
+  this.successMessage = '';
+  this.errorMessage = '';
 
-  editCategory(item: AdminCategoryItem): void {
-    this.showForm = true;
-    this.editingCategoryId = item.categoryid;
-    this.successMessage = '';
-    this.errorMessage = '';
+  this.form = {
+    categoryname: '',
+    slug: '',
+    iconurl: '',
+    bannerurl: '',
+    sortorder: this.categories.length + 1,
+    isactive: true,
+    category_type: 'product',
+  };
 
-    this.form = {
-      categoryname: item.categoryname,
-      slug: item.slug,
-      iconurl: item.iconurl,
-      bannerurl: item.bannerurl,
-      sortorder: item.sortorder,
-      isactive: item.isactive,
-      category_type: item.category_type || 'product',
-    };
+  this.cdr.detectChanges();
+}
+editCategory(item: AdminCategoryItem): void {
+  this.showForm = true;
+  this.editingCategoryId = item.categoryid;
 
-    this.cdr.detectChanges();
-  }
+  this.selectedIconFile = null;
+  this.selectedBannerFile = null;
 
-  cancelForm(): void {
-    this.showForm = false;
-    this.editingCategoryId = null;
-    this.cdr.detectChanges();
-  }
+  this.successMessage = '';
+  this.errorMessage = '';
 
+  this.form = {
+    categoryname: item.categoryname,
+    slug: item.slug,
+    iconurl: item.iconurl,
+    bannerurl: item.bannerurl,
+    sortorder: item.sortorder,
+    isactive: item.isactive,
+    category_type: item.category_type || 'product',
+  };
+
+  this.cdr.detectChanges();
+}
+cancelForm(): void {
+  this.showForm = false;
+  this.editingCategoryId = null;
+
+  this.selectedIconFile = null;
+  this.selectedBannerFile = null;
+
+  this.errorMessage = '';
+
+  this.cdr.detectChanges();
+}
   onCategoryNameChange(): void {
     if (!this.editingCategoryId) {
       this.form.slug = this.makeSlug(this.form.categoryname);
       this.cdr.detectChanges();
     }
   }
-
-async onIconFileSelected(event: Event) {
+onIconFileSelected(event: Event): void {
   const input = event.target as HTMLInputElement;
-  const file = input.files?.[0];
+  const file = input.files?.[0] || null;
+
+  this.selectedIconFile = file;
+
   if (!file) return;
 
-  // Directly generate a local URL for preview
   this.form.iconurl = URL.createObjectURL(file);
   this.cdr.detectChanges();
 }
-async onBannerFileSelected(event: Event) {
+
+onBannerFileSelected(event: Event): void {
   const input = event.target as HTMLInputElement;
-  const file = input.files?.[0];
+  const file = input.files?.[0] || null;
+
+  this.selectedBannerFile = file;
+
   if (!file) return;
 
-  // Directly generate a local URL for preview
   this.form.bannerurl = URL.createObjectURL(file);
   this.cdr.detectChanges();
 }
-  async saveCategory(): Promise<void> {
-    if (this.isSaving) return;
+private async uploadToR2(
+  file: File,
+  folder: string
+): Promise<string> {
+  const response: any = await firstValueFrom(
+    this.api.uploadImage(file, folder)
+  );
 
-    this.errorMessage = '';
-    this.successMessage = '';
-    this.isSaving = true;
-    this.cdr.detectChanges();
+  const uploadedUrl = response?.publicUrl;
 
-    if (!this.form.categoryname.trim()) {
-      this.errorMessage = 'Category name is required.';
-      this.isSaving = false;
-      return;
+  if (!uploadedUrl) {
+    throw new Error('Cloudflare R2 upload failed.');
+  }
+
+  return uploadedUrl;
+}
+async saveCategory(): Promise<void> {
+  if (this.isSaving) return;
+
+  this.errorMessage = '';
+  this.successMessage = '';
+
+  if (!this.form.categoryname.trim()) {
+    this.errorMessage = 'Category name is required.';
+    return;
+  }
+
+  if (!this.form.slug.trim()) {
+    this.errorMessage = 'Slug is required.';
+    return;
+  }
+
+  if (!this.form.category_type.trim()) {
+    this.errorMessage = 'Category type is required.';
+    return;
+  }
+
+  this.isSaving = true;
+  this.cdr.detectChanges();
+
+  try {
+    let iconUrl = this.form.iconurl;
+    let bannerUrl = this.form.bannerurl;
+
+    if (this.selectedIconFile) {
+      iconUrl = await this.uploadToR2(
+        this.selectedIconFile,
+        'categories/icons'
+      );
     }
 
-    if (!this.form.slug.trim()) {
-      this.errorMessage = 'Slug is required.';
-      this.isSaving = false;
-      return;
-    }
-
-    if (!this.form.category_type.trim()) {
-      this.errorMessage = 'Category type is required.';
-      this.isSaving = false;
-      return;
+    if (this.selectedBannerFile) {
+      bannerUrl = await this.uploadToR2(
+        this.selectedBannerFile,
+        'categories/banners'
+      );
     }
 
     const payload = {
       categoryName: this.form.categoryname.trim(),
       type: this.form.category_type.trim(),
-      icon: this.form.iconurl,
-      image: this.form.bannerurl || '',
+      icon: iconUrl || '',
+      image: bannerUrl || '',
       sortOrder: Number(this.form.sortorder || 0),
-      isActive: this.form.isactive,
+      isActive: this.form.isactive
     };
 
-    try {
-      if (this.editingCategoryId) {
-        await this.api.put('/categories/' + this.editingCategoryId, payload).toPromise();
-        this.successMessage = 'Category updated successfully';
-      } else {
-        await this.api.post('/categories', payload).toPromise();
-        this.successMessage = 'Category created successfully';
-      }
-      this.cancelForm();
-      await this.loadCategories();
-    } catch (err) {
-      console.error('Save category error:', err);
-      this.errorMessage = 'Failed to save category.';
-    } finally {
-      this.isSaving = false;
-      this.cdr.detectChanges();
-    }
-  }
+    if (this.editingCategoryId) {
+      await firstValueFrom(
+        this.api.put(
+          `/categories/${this.editingCategoryId}`,
+          payload
+        )
+      );
 
+      this.successMessage = 'Category updated successfully';
+    } else {
+      await firstValueFrom(
+        this.api.post('/categories', payload)
+      );
+
+      this.successMessage = 'Category created successfully';
+    }
+
+    this.showForm = false;
+    this.editingCategoryId = null;
+
+    this.selectedIconFile = null;
+    this.selectedBannerFile = null;
+
+    await this.loadCategories();
+  } catch (error: any) {
+    console.error('Save category error:', error);
+
+    this.errorMessage =
+      error?.error?.message ||
+      error?.message ||
+      'Failed to save category.';
+  } finally {
+    this.isSaving = false;
+    this.cdr.detectChanges();
+  }
+}
   async toggleCategoryStatus(item: AdminCategoryItem) {
     try {
       await this.api.put('/categories/' + item.categoryid, { isActive: !item.isactive }).toPromise();
