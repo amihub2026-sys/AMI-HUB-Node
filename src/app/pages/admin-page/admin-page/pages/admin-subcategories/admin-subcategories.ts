@@ -9,7 +9,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../../../services/api.service';
-
+import { firstValueFrom } from 'rxjs';
 interface CategoryApiItem {
   _id: string;
   categoryName: string;
@@ -99,7 +99,8 @@ export class AdminSubcategories implements OnInit {
 
   showForm = false;
   editingSubcategoryId: string | null = null;
-
+  selectedIconFile: File | null = null;
+selectedImageFile: File | null = null;
   form = {
     categoryid: null as string | null,
     subcategoryname: '',
@@ -222,69 +223,74 @@ export class AdminSubcategories implements OnInit {
   // OPEN CREATE FORM
   // =====================================================
 
-  openCreateForm(): void {
-    this.showForm = true;
-    this.editingSubcategoryId = null;
+openCreateForm(): void {
+  this.showForm = true;
+  this.editingSubcategoryId = null;
 
-    this.errorMessage = '';
-    this.successMessage = '';
+  this.selectedIconFile = null;
+  this.selectedImageFile = null;
 
-    const firstActiveCategory =
-      this.categories.find((category) => category.isactive) ||
-      this.categories[0];
+  this.errorMessage = '';
+  this.successMessage = '';
 
-    this.form = {
-      categoryid: firstActiveCategory?.categoryid || null,
-      subcategoryname: '',
-      slug: '',
-      iconurl: '',
-      image: '',
-      description: '',
-      sortorder: this.allSubcategories.length + 1,
-      isactive: true
-    };
+  const firstActiveCategory =
+    this.categories.find((category) => category.isactive) ||
+    this.categories[0];
 
-    this.cdr.detectChanges();
-  }
+  this.form = {
+    categoryid: firstActiveCategory?.categoryid || null,
+    subcategoryname: '',
+    slug: '',
+    iconurl: '',
+    image: '',
+    description: '',
+    sortorder: this.allSubcategories.length + 1,
+    isactive: true
+  };
 
+  this.cdr.detectChanges();
+}
   // =====================================================
   // OPEN EDIT FORM
   // =====================================================
 
-  editSubcategory(subcategory: AdminSubcategoryItem): void {
-    this.showForm = true;
-    this.editingSubcategoryId = subcategory.subcategoryid;
+editSubcategory(subcategory: AdminSubcategoryItem): void {
+  this.showForm = true;
+  this.editingSubcategoryId = subcategory.subcategoryid;
 
-    this.errorMessage = '';
-    this.successMessage = '';
+  this.selectedIconFile = null;
+  this.selectedImageFile = null;
 
-    this.form = {
-      categoryid: subcategory.categoryid,
-      subcategoryname: subcategory.subcategoryname,
-      slug: subcategory.slug,
-      iconurl: subcategory.iconurl,
-      image: subcategory.image,
-      description: subcategory.description,
-      sortorder: subcategory.sortorder,
-      isactive: subcategory.isactive
-    };
+  this.errorMessage = '';
+  this.successMessage = '';
 
-    this.cdr.detectChanges();
-  }
+  this.form = {
+    categoryid: subcategory.categoryid,
+    subcategoryname: subcategory.subcategoryname,
+    slug: subcategory.slug,
+    iconurl: subcategory.iconurl,
+    image: subcategory.image,
+    description: subcategory.description,
+    sortorder: subcategory.sortorder,
+    isactive: subcategory.isactive
+  };
 
+  this.cdr.detectChanges();
+}
   // =====================================================
   // CANCEL FORM
   // =====================================================
+cancelForm(): void {
+  this.showForm = false;
+  this.editingSubcategoryId = null;
 
-  cancelForm(): void {
-    this.showForm = false;
-    this.editingSubcategoryId = null;
+  this.selectedIconFile = null;
+  this.selectedImageFile = null;
 
-    this.errorMessage = '';
+  this.errorMessage = '';
 
-    this.cdr.detectChanges();
-  }
-
+  this.cdr.detectChanges();
+}
   // =====================================================
   // CREATE SLUG
   // =====================================================
@@ -294,7 +300,9 @@ export class AdminSubcategories implements OnInit {
   }
 onIconFileSelected(event: Event): void {
   const input = event.target as HTMLInputElement;
-  const file = input.files?.[0];
+  const file = input.files?.[0] || null;
+
+  this.selectedIconFile = file;
 
   if (!file) return;
 
@@ -304,133 +312,120 @@ onIconFileSelected(event: Event): void {
 
 onImageFileSelected(event: Event): void {
   const input = event.target as HTMLInputElement;
-  const file = input.files?.[0];
+  const file = input.files?.[0] || null;
+
+  this.selectedImageFile = file;
 
   if (!file) return;
 
   this.form.image = URL.createObjectURL(file);
   this.cdr.detectChanges();
 }
+private async uploadToR2(
+  file: File,
+  folder: string
+): Promise<string> {
+  const response: any = await firstValueFrom(
+    this.api.uploadImage(file, folder)
+  );
+
+  const uploadedUrl = response?.publicUrl;
+
+  if (!uploadedUrl) {
+    throw new Error('Cloudflare R2 upload failed.');
+  }
+
+  return uploadedUrl;
+}
   // =====================================================
   // SAVE CREATE / UPDATE
   // =====================================================
 
-  saveSubcategory(): void {
-    if (this.isSaving) {
-      return;
+async saveSubcategory(): Promise<void> {
+  if (this.isSaving) return;
+
+  this.errorMessage = '';
+  this.successMessage = '';
+
+  if (!this.form.categoryid) {
+    this.errorMessage = 'Category is required.';
+    return;
+  }
+
+  if (!this.form.subcategoryname.trim()) {
+    this.errorMessage = 'Subcategory name is required.';
+    return;
+  }
+
+  this.isSaving = true;
+  this.cdr.detectChanges();
+
+  try {
+    let iconUrl = this.form.iconurl;
+    let imageUrl = this.form.image;
+
+    if (this.selectedIconFile) {
+      iconUrl = await this.uploadToR2(
+        this.selectedIconFile,
+        'subcategories/icons'
+      );
     }
 
-    this.errorMessage = '';
-    this.successMessage = '';
-
-    if (!this.form.categoryid) {
-      this.errorMessage = 'Category is required.';
-      return;
+    if (this.selectedImageFile) {
+      imageUrl = await this.uploadToR2(
+        this.selectedImageFile,
+        'subcategories/images'
+      );
     }
-
-    if (!this.form.subcategoryname.trim()) {
-      this.errorMessage = 'Subcategory name is required.';
-      return;
-    }
-
-    this.isSaving = true;
 
     const payload = {
       categoryId: this.form.categoryid,
       subcategoryName: this.form.subcategoryname.trim(),
-
-      /*
-       The backend automatically creates the slug from
-       subcategoryName, so slug does not need to be sent.
-      */
-
-      icon: this.form.iconurl.trim(),
-      image: this.form.image.trim(),
+      icon: iconUrl || '',
+      image: imageUrl || '',
       description: this.form.description.trim(),
       sortOrder: Number(this.form.sortorder || 0),
       isActive: this.form.isactive
     };
 
     if (this.editingSubcategoryId) {
-      this.updateSubcategory(
-        this.editingSubcategoryId,
-        payload
+      await firstValueFrom(
+        this.api.put(
+          `/subcategories/${this.editingSubcategoryId}`,
+          payload
+        )
       );
+
+      this.successMessage =
+        'Subcategory updated successfully.';
     } else {
-      this.createSubcategory(payload);
+      await firstValueFrom(
+        this.api.post('/subcategories', payload)
+      );
+
+      this.successMessage =
+        'Subcategory created successfully.';
     }
+
+    this.showForm = false;
+    this.editingSubcategoryId = null;
+
+    this.selectedIconFile = null;
+    this.selectedImageFile = null;
+
+    this.loadSubcategories();
+  } catch (error: any) {
+    console.error('Save subcategory error:', error);
+
+    this.errorMessage =
+      error?.error?.message ||
+      error?.message ||
+      'Failed to save subcategory.';
+  } finally {
+    this.isSaving = false;
+    this.cdr.detectChanges();
   }
-
-  // =====================================================
-  // CREATE
-  // POST /api/subcategories
-  // =====================================================
-
-  private createSubcategory(payload: any): void {
-    this.api
-      .post('/subcategories', payload)
-      .subscribe({
-        next: (response: any) => {
-          this.successMessage =
-            response?.message ||
-            'Subcategory created successfully.';
-
-          this.isSaving = false;
-          this.showForm = false;
-          this.editingSubcategoryId = null;
-
-          this.loadSubcategories();
-        },
-
-        error: (error) => {
-          console.error('Create subcategory error:', error);
-
-          this.errorMessage =
-            error?.error?.message ||
-            'Failed to create subcategory.';
-
-          this.isSaving = false;
-          this.cdr.detectChanges();
-        }
-      });
-  }
-
-  // =====================================================
-  // UPDATE
-  // PUT /api/subcategories/:id
-  // =====================================================
-
-  private updateSubcategory(
-    id: string,
-    payload: any
-  ): void {
-    this.api
-      .put(`/subcategories/${id}`, payload)
-      .subscribe({
-        next: (response: any) => {
-          this.successMessage =
-            response?.message ||
-            'Subcategory updated successfully.';
-
-          this.isSaving = false;
-          this.showForm = false;
-          this.editingSubcategoryId = null;
-
-          this.loadSubcategories();
-        },
-
-        error: (error) => {
-          console.error('Update subcategory error:', error);
-
-          this.errorMessage =
-            error?.error?.message ||
-            'Failed to update subcategory.';
-
-          this.isSaving = false;
-          this.cdr.detectChanges();
-        }
-      });
-  }
+}
 
   // =====================================================
   // TOGGLE ACTIVE STATUS

@@ -8,7 +8,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 export class ApiService {
 
 
-  baseUrl = 'https://ami-hub-backend.onrender.com/api';
+  baseUrl = 'http://localhost:5000/api';
 
 
   constructor(
@@ -152,6 +152,16 @@ delete<T = any>(url: string) {
     );
 
   }
+uploadImage(file: File, folder: string) {
+  const formData = new FormData();
 
+  formData.append('file', file);
+  formData.append('folder', folder);
 
+  return this.http.post<any>(
+    `${this.baseUrl}/uploads/r2`,
+    formData,
+    this.getHeaders()
+  );
+}
 }
