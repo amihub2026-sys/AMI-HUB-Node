@@ -64,6 +64,7 @@ chatCount = 0;
 
   constructor(
     private route: ActivatedRoute,
+    
      public router: Router,
     private cdr: ChangeDetectorRef,
       private location: Location,

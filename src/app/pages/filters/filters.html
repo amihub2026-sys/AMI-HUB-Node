@@ -1,0 +1,228 @@
+<aside class="filter-panel">
+
+  <div class="filter-header">
+    <span class="filter-icon">🔍</span>
+    <h2>Filters</h2>
+  </div>
+
+  <!-- SEARCH -->
+  <section class="filter-section">
+    <button
+      type="button"
+      class="filter-section-header"
+      (click)="toggleSection('search')"
+    >
+      <span>Search</span>
+
+      <span
+        class="arrow"
+        [class.rotate]="isSectionOpen('search')"
+      >
+        ˅
+      </span>
+    </button>
+
+    <div
+      class="filter-section-content"
+      [class.open]="isSectionOpen('search')"
+    >
+      <input
+        type="text"
+        class="filter-input"
+        [(ngModel)]="filters.searchText"
+        placeholder="Search products..."
+      />
+    </div>
+  </section>
+
+  <!-- CATEGORY -->
+  <section class="filter-section">
+    <button
+      type="button"
+      class="filter-section-header"
+      (click)="toggleSection('category')"
+    >
+      <span>Category</span>
+
+      <span
+        class="arrow"
+        [class.rotate]="isSectionOpen('category')"
+      >
+        ˅
+      </span>
+    </button>
+
+    <div
+      class="filter-section-content"
+      [class.open]="isSectionOpen('category')"
+    >
+      <select
+        class="filter-input"
+        [(ngModel)]="filters.selectedCategoryId"
+      >
+        <option value="">All Categories</option>
+
+        <option
+          *ngFor="let category of categories"
+          [value]="category.id"
+        >
+          {{ category.name }}
+        </option>
+      </select>
+    </div>
+  </section>
+
+  <!-- LOCATION -->
+  <section class="filter-section">
+    <button
+      type="button"
+      class="filter-section-header"
+      (click)="toggleSection('location')"
+    >
+      <span>Location</span>
+
+      <span
+        class="arrow"
+        [class.rotate]="isSectionOpen('location')"
+      >
+        ˅
+      </span>
+    </button>
+
+    <div
+      class="filter-section-content"
+      [class.open]="isSectionOpen('location')"
+    >
+      <input
+        type="text"
+        class="filter-input"
+        [(ngModel)]="filters.locationText"
+        placeholder="Enter location"
+      />
+    </div>
+  </section>
+
+  <!-- RADIUS -->
+  <section class="filter-section">
+    <button
+      type="button"
+      class="filter-section-header"
+      (click)="toggleSection('radius')"
+    >
+      <span>Radius</span>
+
+      <span
+        class="arrow"
+        [class.rotate]="isSectionOpen('radius')"
+      >
+        ˅
+      </span>
+    </button>
+
+    <div
+      class="filter-section-content"
+      [class.open]="isSectionOpen('radius')"
+    >
+      <select
+        class="filter-input"
+        [(ngModel)]="filters.selectedRadiusKm"
+      >
+        <option [ngValue]="5">Within 5 km</option>
+        <option [ngValue]="10">Within 10 km</option>
+        <option [ngValue]="20">Within 20 km</option>
+        <option [ngValue]="30">Within 30 km</option>
+        <option [ngValue]="50">Within 50 km</option>
+      </select>
+    </div>
+  </section>
+
+  <!-- PRICE -->
+  <section class="filter-section">
+    <button
+      type="button"
+      class="filter-section-header"
+      (click)="toggleSection('price')"
+    >
+      <span>Price Range</span>
+
+      <span
+        class="arrow"
+        [class.rotate]="isSectionOpen('price')"
+      >
+        ˅
+      </span>
+    </button>
+
+    <div
+      class="filter-section-content"
+      [class.open]="isSectionOpen('price')"
+    >
+      <div class="price-inputs">
+        <input
+          type="number"
+          class="filter-input"
+          [(ngModel)]="filters.minPrice"
+          placeholder="Min"
+        />
+
+        <input
+          type="number"
+          class="filter-input"
+          [(ngModel)]="filters.maxPrice"
+          placeholder="Max"
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- SORT -->
+  <section class="filter-section">
+    <button
+      type="button"
+      class="filter-section-header"
+      (click)="toggleSection('sort')"
+    >
+      <span>Sort By</span>
+
+      <span
+        class="arrow"
+        [class.rotate]="isSectionOpen('sort')"
+      >
+        ˅
+      </span>
+    </button>
+
+    <div
+      class="filter-section-content"
+      [class.open]="isSectionOpen('sort')"
+    >
+      <select
+        class="filter-input"
+        [(ngModel)]="filters.sortBy"
+      >
+        <option value="newest">Newest First</option>
+        <option value="price-low">Price: Low to High</option>
+        <option value="price-high">Price: High to Low</option>
+      </select>
+    </div>
+  </section>
+
+  <div class="filter-actions">
+    <button
+      type="button"
+      class="apply-filter-btn"
+      (click)="applyFilters()"
+    >
+      Apply Filters
+    </button>
+
+    <button
+      type="button"
+      class="reset-filter-btn"
+      (click)="resetFilters()"
+    >
+      Reset Filters
+    </button>
+  </div>
+
+</aside>
