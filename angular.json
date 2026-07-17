@@ -86,7 +86,7 @@
               "buildTarget": "amihub-app:build:development"
             }
           },
-          "defaultConfiguration": "production"
+          "defaultConfiguration": "development"
         },
         "test": {
           "builder": "@angular/build:unit-test"

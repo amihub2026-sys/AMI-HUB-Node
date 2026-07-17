@@ -1,10 +1,10 @@
 import { Component, Input, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { SupabaseService } from '../../../../../services/supabase.service';
+import { ApiService } from '../../../../../services/api.service';
 
 interface AdminBoostPlanItem {
-  boostid: number;
+  boostid: string;
   userid: number | null;
   postid: number | null;
   boost_plan_id: string;
@@ -39,12 +39,12 @@ export class AdminBoostPlansComponent implements OnInit {
   allBoostPlans: AdminBoostPlanItem[] = [];
   loading = false;
   saving = false;
-  deletingId: number | null = null;
+
 
   showForm = false;
   isEditMode = false;
-  editingId: number | null = null;
-
+  editingId:string|null=null;
+deletingId:string|null=null;
   formModel = {
     userid: null as number | null,
     postid: null as number | null,
@@ -57,19 +57,14 @@ export class AdminBoostPlansComponent implements OnInit {
     isactive: true,
   };
 
-  constructor(
-    private supabaseService: SupabaseService,
-    private cdr: ChangeDetectorRef
-  ) {}
+constructor(
+ private api: ApiService,
+ private cdr: ChangeDetectorRef
+) {}
 
   ngOnInit(): void {
     this.fetchBoostPlans();
   }
-
-  get supabase() {
-    return this.supabaseService.supabase;
-  }
-
   private getStatusLabel(item: {
     isactive: boolean;
     enddate: string | null;
@@ -115,7 +110,7 @@ export class AdminBoostPlansComponent implements OnInit {
 
   private mapBoostPlan(item: any): AdminBoostPlanItem {
     return {
-      boostid: Number(item.boostid ?? 0),
+      boostid: item._id,
       userid:
         item.userid !== null && item.userid !== undefined
           ? Number(item.userid)
@@ -124,10 +119,12 @@ export class AdminBoostPlansComponent implements OnInit {
         item.postid !== null && item.postid !== undefined
           ? Number(item.postid)
           : null,
-      boost_plan_id: item.boost_plan_id ?? '',
-      boost_name: item.boost_name ?? '',
+     boost_plan_id: item.boostPlanId ?? '',
+boost_name: item.boostName ?? '',
+
       price: Number(item.price ?? 0),
-      duration_days: Number(item.duration_days ?? 0),
+     duration_days: Number(item.durationDays ?? 0),
+
       startdate: item.startdate ?? null,
       enddate: item.enddate ?? null,
       isactive: !!item.isactive,
@@ -141,37 +138,78 @@ export class AdminBoostPlansComponent implements OnInit {
       }),
     };
   }
+fetchBoostPlans(): void {
 
-  async fetchBoostPlans(): Promise<void> {
-    this.loading = true;
-    this.cdr.detectChanges();
+ this.loading = true;
 
-    try {
-      const { data, error } = await this.supabase
-        .from('post_boosts')
-        .select('*')
-        .order('boostid', { ascending: false });
 
-      if (error) {
-        console.error('Fetch boost plans error:', error);
-        alert(error.message || 'Failed to load boost plans.');
-        this.cdr.detectChanges();
-        return;
-      }
+ this.api.get('/boost-plans')
+ .subscribe({
 
-      this.allBoostPlans = (data || []).map((item: any) =>
-        this.mapBoostPlan(item)
-      );
-      this.cdr.detectChanges();
-    } catch (err) {
-      console.error('Fetch boost plans exception:', err);
-      alert('Something went wrong while loading boost plans.');
-      this.cdr.detectChanges();
-    } finally {
-      this.loading = false;
-      this.cdr.detectChanges();
-    }
-  }
+ next:(res:any)=>{
+
+
+ this.allBoostPlans =
+ (res.data || []).map((item:any)=>({
+
+ boostid:item._id,
+
+ userid:null,
+
+ postid:null,
+
+ boost_plan_id:item.boostPlanId,
+
+ boost_name:item.boostName,
+
+ price:item.price,
+
+ duration_days:item.durationDays,
+
+ startdate:null,
+
+ enddate:null,
+
+ isactive:item.isActive,
+
+ createdon:item.createdAt,
+
+
+ startLabel:'-',
+ endLabel:'-',
+ createdLabel:this.formatDate(item.createdAt),
+
+ statusLabel:item.isActive
+ ? 'Active'
+ : 'Inactive'
+
+
+ }));
+
+
+ this.loading=false;
+
+ this.cdr.detectChanges();
+
+
+ },
+
+
+ error:(err)=>{
+
+ console.error(
+ "LOAD BOOST ERROR",
+ err
+ );
+
+ this.loading=false;
+
+ }
+
+
+ });
+
+}
 
   setBoostStatusFilter(filter: BoostStatusFilter): void {
     this.boostStatusFilter = filter;
@@ -318,32 +356,34 @@ export class AdminBoostPlansComponent implements OnInit {
     this.saving = true;
     this.cdr.detectChanges();
 
-    const payload = {
-      userid: this.formModel.userid,
-      postid: this.formModel.postid,
-      boost_plan_id: this.formModel.boost_plan_id.trim(),
-      boost_name: this.formModel.boost_name.trim(),
-      price: Number(this.formModel.price || 0),
-      duration_days: Number(this.formModel.duration_days || 0),
-      startdate: new Date(this.formModel.startdate).toISOString(),
-      enddate: new Date(this.formModel.enddate).toISOString(),
-      isactive: !!this.formModel.isactive,
-    };
+const payload = {
 
+  boostPlanId: this.formModel.boost_plan_id.trim(),
+
+  boostName: this.formModel.boost_name.trim(),
+
+  price: Number(this.formModel.price || 0),
+
+  durationDays: Number(
+    this.formModel.duration_days || 1
+  ),
+
+  isActive: !!this.formModel.isactive
+
+};
     try {
       if (this.isEditMode && this.editingId) {
-        const { error } = await this.supabase
-          .from('post_boosts')
-          .update(payload)
-          .eq('boostid', this.editingId);
+this.api.put(
+'/boost-plans/'+this.editingId,
+payload
+)
+.subscribe(()=>{
 
-        if (error) {
-          console.error('Update boost plan error:', error);
-          alert(error.message || 'Failed to update boost plan.');
-          this.cdr.detectChanges();
-          return;
-        }
+alert("Boost updated");
 
+this.fetchBoostPlans();
+
+});
         alert('Boost plan updated successfully.');
       } else {
         const insertPayload = {
@@ -351,17 +391,19 @@ export class AdminBoostPlansComponent implements OnInit {
           createdon: new Date().toISOString(),
         };
 
-        const { error } = await this.supabase
-          .from('post_boosts')
-          .insert([insertPayload]);
+this.api.post(
+'/boost-plans',
+insertPayload
+)
+.subscribe(()=>{
 
-        if (error) {
-          console.error('Create boost plan error:', error);
-          alert(error.message || 'Failed to create boost plan.');
-          this.cdr.detectChanges();
-          return;
-        }
+alert("Boost created");
 
+this.closeForm();
+
+this.fetchBoostPlans();
+
+});
         alert('Boost plan created successfully.');
       }
 
@@ -376,84 +418,44 @@ export class AdminBoostPlansComponent implements OnInit {
       this.cdr.detectChanges();
     }
   }
+async toggleBoostStatus(item: AdminBoostPlanItem){
 
-  async toggleBoostStatus(item: AdminBoostPlanItem): Promise<void> {
-    const nextValue = !item.isactive;
+this.api.put(
+'/boost-plans/'+item.boostid,
+{
+ isActive: !item.isactive
+}
+)
+.subscribe(()=>{
 
-    try {
-      const { error } = await this.supabase
-        .from('post_boosts')
-        .update({
-          isactive: nextValue,
-        })
-        .eq('boostid', item.boostid);
+this.fetchBoostPlans();
 
-      if (error) {
-        console.error('Toggle boost status error:', error);
-        alert(error.message || 'Failed to update status.');
-        this.cdr.detectChanges();
-        return;
-      }
+});
 
-      item.isactive = nextValue;
-      item.statusLabel = this.getStatusLabel({
-        isactive: item.isactive,
-        enddate: item.enddate,
-      });
-      this.cdr.detectChanges();
-    } catch (err) {
-      console.error('Toggle boost status exception:', err);
-      alert('Something went wrong while updating status.');
-      this.cdr.detectChanges();
-    }
-  }
+}
+async deleteBoostPlan(item: AdminBoostPlanItem){
 
-  async deleteBoostPlan(item: AdminBoostPlanItem): Promise<void> {
-    if (!item?.boostid) {
-      alert('Invalid boost record.');
-      this.cdr.detectChanges();
-      return;
-    }
+if(!confirm("Delete this boost?")) return;
 
-    const confirmed = window.confirm(
-      `Are you sure you want to delete boost #${item.boostid}?\nThis action cannot be undone.`
-    );
 
-    if (!confirmed) return;
+this.api.delete(
+'/boost-plans/'+item.boostid
+)
+.subscribe(()=>{
 
-    this.deletingId = item.boostid;
-    this.cdr.detectChanges();
+alert("Deleted");
 
-    try {
-      const { error } = await this.supabase
-        .from('post_boosts')
-        .delete()
-        .eq('boostid', item.boostid);
+this.fetchBoostPlans();
 
-      if (error) {
-        console.error('Delete boost plan error:', error);
-        alert(error.message || 'Failed to delete boost plan.');
-        this.cdr.detectChanges();
-        return;
-      }
+});
 
-      this.allBoostPlans = this.allBoostPlans.filter(
-        (row) => row.boostid !== item.boostid
-      );
+}
+trackByBoostPlan(
+index:number,
+item:AdminBoostPlanItem
+):string {
 
-      alert('Boost plan deleted successfully.');
-      this.cdr.detectChanges();
-    } catch (err) {
-      console.error('Delete boost plan exception:', err);
-      alert('Something went wrong while deleting boost plan.');
-      this.cdr.detectChanges();
-    } finally {
-      this.deletingId = null;
-      this.cdr.detectChanges();
-    }
-  }
+return item.boostid;
 
-  trackByBoostPlan(index: number, item: AdminBoostPlanItem): number {
-    return item.boostid;
-  }
+}
 }
