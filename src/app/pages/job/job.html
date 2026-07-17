@@ -11,7 +11,7 @@
     <button type="button" [class.active]="selectedType === 'Internship'" (click)="selectedType='Internship'">Internship</button>
   </div>
 
-  <div class="job-card" *ngFor="let job of filteredJobs()">
+<div class="job-card" *ngFor="let job of paginatedJobs">
  <h3>{{ job.job_title }}</h3>
 <p><strong>Company:</strong> {{ job.company_name }}</p>
     <p><strong>Location:</strong> {{ job.location }}</p>
@@ -41,14 +41,14 @@
     <a
       class="call-btn"
       [href]="'tel:' + job.contact_phone">
+    <i class="fas fa-phone-alt"></i>
 
-      <i class="fas fa-phone-alt"></i>
-
-    </a>
+</a>
 
   </div>
 
 </div>
+
 <div class="job-details-overlay" *ngIf="showJobDetails" (click)="showJobDetails=false">
   <div class="job-details-popup" (click)="$event.stopPropagation()">
 
@@ -209,6 +209,7 @@
 
   </div>
   </div>
+  
   <div class="job-right">
 
   <div class="job-post-top">
@@ -254,5 +255,33 @@
       <button type="submit">Save Job</button>
     </form> -->
 
+<div class="job-pagination">
 
+
+<button
+type="button"
+(click)="previousPage()"
+[disabled]="currentPage === 1">
+
+← Previous
+
+</button>
+
+
+<span>
+{{currentPage}} / {{totalPages}}
+</span>
+
+
+<button
+type="button"
+(click)="nextPage()"
+[disabled]="currentPage === totalPages">
+
+Next →
+
+</button>
+
+
+</div>
 </section>

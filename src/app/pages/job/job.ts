@@ -21,7 +21,8 @@ export class Job implements OnInit {
   selectedType = 'All';
   showApplyForm = false;
   showJobDetails = false;
-
+currentPage = 1;
+jobsPerPage = 3;
   selectedJob: any = null;
   selectedResume: File | null = null;
 
@@ -66,7 +67,48 @@ export class Job implements OnInit {
 
     this.jobs = data || [];
   }
+get paginatedJobs() {
 
+  const start =
+    (this.currentPage - 1) * this.jobsPerPage;
+
+  const end =
+    start + this.jobsPerPage;
+
+  return this.filteredJobs().slice(start, end);
+
+}
+
+
+get totalPages(){
+
+  return Math.ceil(
+    this.filteredJobs().length / this.jobsPerPage
+  );
+
+}
+
+
+nextPage(){
+
+  if(this.currentPage < this.totalPages){
+
+    this.currentPage++;
+
+  }
+
+}
+
+
+previousPage(){
+
+  if(this.currentPage > 1){
+
+    this.currentPage--;
+
+  }
+
+}
   async loadJobDetails(id: string) {
     const { data, error } = await supabase
       .from('job_vacancies')
