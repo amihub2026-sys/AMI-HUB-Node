@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -8,7 +8,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 export class ApiService {
 
 
-  baseUrl = 'https://ami-hub-backend.onrender.com/api';
+  baseUrl = environment.apiUrl;
 
   constructor(
     private http: HttpClient
@@ -89,6 +89,13 @@ delete<T = any>(url: string) {
     this.getHeaders()
   );
 }
+patch<T = any>(url: string, data: any) {
+  return this.http.patch<T>(
+    `${this.baseUrl}${url}`,
+    data,
+    this.getHeaders()
+  );
+}
   // ======================
   // DASHBOARD
   // ======================
@@ -163,4 +170,5 @@ uploadImage(file: File, folder: string) {
     this.getHeaders()
   );
 }
+
 }
