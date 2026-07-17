@@ -1,27 +1,37 @@
 import { Component, Input, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { SupabaseService } from '../../../../../services/supabase.service';
+import { ApiService } from '../../../../../services/api.service';
 
 interface AdminSubscriptionPlanItem {
-  subscriptionplanid: number;
-  planname: string;
-  description: string;
-  price: number;
-  validitydays: number;
-  postlimit: number;
-  isactive: boolean;
-  createdon: string | null;
-  createdLabel: string;
-  plan_id: string;
-  name: string;
-  ad_limit: number;
-  video_enabled: boolean;
-  is_active: boolean;
-  created_at: string | null;
-  remaining_ads: number;
-}
 
+subscriptionplanid: string;
+
+planname:string;
+
+description:string;
+
+price:number;
+
+validitydays:number;
+
+postlimit:number;
+
+isactive:boolean;
+
+createdLabel:string;
+
+plan_id:string;
+
+ad_limit:number;
+
+video_enabled:boolean;
+
+remaining_ads:number;
+
+is_active:boolean;
+
+}
 type SubscriptionStatusFilter = 'all' | 'active' | 'inactive';
 
 @Component({
@@ -41,11 +51,11 @@ itemsPerPage = 5;
   allSubscriptionPlans: AdminSubscriptionPlanItem[] = [];
   loading = false;
   saving = false;
-  deletingId: number | null = null;
+ deletingId: string | null = null;
 
   showForm = false;
   isEditMode = false;
-  editingPlanId: number | null = null;
+  editingPlanId: string | null = null;
 
   formModel = {
     planname: '',
@@ -55,24 +65,19 @@ itemsPerPage = 5;
     postlimit: 1,
     isactive: true,
     plan_id: '',
-    name: '',
     ad_limit: 1,
     video_enabled: false,
     is_active: true,
     remaining_ads: 1,
   };
 
-  constructor(
-    private supabaseService: SupabaseService,
-    private cdr: ChangeDetectorRef
-  ) {}
+constructor(
+ private api: ApiService,
+ private cdr: ChangeDetectorRef
+){}
 
   ngOnInit(): void {
     this.fetchSubscriptionPlans();
-  }
-
-  get supabase() {
-    return this.supabaseService.supabase;
   }
 get totalPages(): number {
   return Math.ceil(this.filteredSubscriptionPlans.length / this.itemsPerPage) || 1;
@@ -88,61 +93,73 @@ goToPage(page: number): void {
 
   this.currentPage = page;
 }
-  async fetchSubscriptionPlans(): Promise<void> {
-    this.loading = true;
-    this.cdr.detectChanges();
+async fetchSubscriptionPlans(): Promise<void>{
 
-    try {
-      const { data, error } = await this.supabase
-        .from('subscription_plans')
-        .select('*')
-        .order('subscriptionplanid', { ascending: false });
+this.loading=true;
 
-      if (error) {
-        console.error('Fetch subscription plans error:', error);
-        alert(error.message || 'Failed to load subscription plans.');
-        this.cdr.detectChanges();
-        return;
-      }
 
-      this.allSubscriptionPlans = (data || []).map((item: any) =>
-        this.mapSubscriptionPlan(item)
-      );
-      this.cdr.detectChanges();
-    } catch (err) {
-      console.error('Fetch subscription plans exception:', err);
-      alert('Something went wrong while loading subscription plans.');
-      this.cdr.detectChanges();
-    } finally {
-      this.loading = false;
-      this.cdr.detectChanges();
-    }
-  }
+this.api.get('/subscription-plans')
+.subscribe({
 
-  mapSubscriptionPlan(item: any): AdminSubscriptionPlanItem {
-    const createdSource = item.createdon || item.created_at || null;
+next:(res:any)=>{
 
-    return {
-      subscriptionplanid: Number(item.subscriptionplanid ?? 0),
-      planname: item.planname ?? item.name ?? '',
-      description: item.description ?? '',
-      price: Number(item.price ?? 0),
-      validitydays: Number(item.validitydays ?? 0),
-      postlimit: Number(item.postlimit ?? item.ad_limit ?? 0),
-      isactive: !!item.isactive,
-      createdon: item.createdon ?? null,
-      createdLabel: this.formatDate(createdSource),
-      plan_id: item.plan_id ?? '',
-      name: item.name ?? item.planname ?? '',
-      ad_limit: Number(item.ad_limit ?? item.postlimit ?? 0),
-      video_enabled: !!item.video_enabled,
-      is_active: !!item.is_active,
-      created_at: item.created_at ?? null,
-      remaining_ads: Number(
-        item.remaining_ads ?? item.ad_limit ?? item.postlimit ?? 0
-      ),
-    };
-  }
+
+this.allSubscriptionPlans =
+(res.data || []).map((item:any)=>({
+
+subscriptionplanid:item._id,
+
+planname:item.planName,
+
+description:item.description || '',
+
+price:item.price,
+
+validitydays:item.validity,
+
+postlimit:item.postLimit,
+
+isactive:item.isActive,
+
+is_active:item.isActive,
+
+plan_id:item.planId,
+
+ad_limit:item.adLimit,
+
+video_enabled:item.videoEnabled,
+
+remaining_ads:item.remaining,
+
+createdLabel:this.formatDate(item.createdAt)
+
+}));
+
+
+this.loading=false;
+
+this.cdr.detectChanges();
+
+},
+
+
+error:(err)=>{
+
+console.error(
+"LOAD PLANS ERROR",
+err
+);
+
+this.loading=false;
+
+}
+
+
+});
+
+
+}
+ 
 
   formatDate(value: string | null): string {
     if (!value) return '-';
@@ -172,7 +189,6 @@ goToPage(page: number): void {
         String(plan.planname || '').toLowerCase().includes(q) ||
         String(plan.description || '').toLowerCase().includes(q) ||
         String(plan.plan_id || '').toLowerCase().includes(q) ||
-        String(plan.name || '').toLowerCase().includes(q) ||
         String(plan.price).toLowerCase().includes(q) ||
         String(plan.validitydays).toLowerCase().includes(q) ||
         String(plan.postlimit).toLowerCase().includes(q) ||
@@ -222,22 +238,19 @@ goToPage(page: number): void {
     this.isEditMode = true;
     this.editingPlanId = plan.subscriptionplanid;
     this.showForm = true;
-
-    this.formModel = {
-      planname: plan.planname || '',
-      description: plan.description || '',
-      price: Number(plan.price || 0),
-      validitydays: Number(plan.validitydays || 0),
-      postlimit: Number(plan.postlimit || 0),
-      isactive: !!plan.isactive,
-      plan_id: plan.plan_id || '',
-      name: plan.name || '',
-      ad_limit: Number(plan.ad_limit || 0),
-      video_enabled: !!plan.video_enabled,
-      is_active: !!plan.is_active,
-      remaining_ads: Number(plan.remaining_ads || 0),
-    };
-
+this.formModel = {
+  planname: plan.planname || '',
+  description: plan.description || '',
+  price: Number(plan.price || 0),
+  validitydays: Number(plan.validitydays || 0),
+  postlimit: Number(plan.postlimit || 0),
+  isactive: !!plan.isactive,
+  plan_id: plan.plan_id || '',
+  ad_limit: Number(plan.ad_limit || 0),
+  video_enabled: !!plan.video_enabled,
+  is_active: !!plan.is_active,
+  remaining_ads: Number(plan.remaining_ads || 0),
+};
     this.cdr.detectChanges();
   }
 
@@ -258,7 +271,6 @@ goToPage(page: number): void {
       postlimit: 1,
       isactive: true,
       plan_id: '',
-      name: '',
       ad_limit: 1,
       video_enabled: false,
       is_active: true,
@@ -291,53 +303,76 @@ goToPage(page: number): void {
       postlimit: Number(this.formModel.postlimit || 0),
       isactive: !!this.formModel.isactive,
       plan_id: this.formModel.plan_id.trim(),
-      name: (this.formModel.name || this.formModel.planname).trim(),
       ad_limit: Number(this.formModel.ad_limit || 0),
       video_enabled: !!this.formModel.video_enabled,
       is_active: !!this.formModel.is_active,
       remaining_ads: Number(this.formModel.remaining_ads || 0),
     };
 
-    try {
-      if (this.isEditMode && this.editingPlanId) {
-        const { error } = await this.supabase
-          .from('subscription_plans')
-          .update(payload)
-          .eq('subscriptionplanid', this.editingPlanId);
+try {
 
-        if (error) {
-          console.error('Update subscription plan error:', error);
-          alert(error.message || 'Failed to update subscription plan.');
-          this.cdr.detectChanges();
-          return;
-        }
+if(this.isEditMode && this.editingPlanId){
 
-        alert('Subscription plan updated successfully.');
-      } else {
-        const now = new Date().toISOString();
+this.api.put(
+  `/subscription-plans/${this.editingPlanId}`,
+  {
+    planName: this.formModel.planname,
+    planId: this.formModel.plan_id,
+    description: this.formModel.description,
+    price: this.formModel.price,
+    validity: this.formModel.validitydays,
+    postLimit: this.formModel.postlimit,
+    adLimit: this.formModel.ad_limit,
+    remaining: this.formModel.remaining_ads,
+    videoEnabled: this.formModel.video_enabled,
+    isActive: this.formModel.isactive
+  }
+)
+.subscribe(()=>{
 
-        const insertPayload = {
-          ...payload,
-          createdon: now,
-          created_at: now,
-        };
+  alert("Subscription plan updated successfully");
 
-        const { error } = await this.supabase
-          .from('subscription_plans')
-          .insert([insertPayload]);
+  this.closeForm();
 
-        if (error) {
-          console.error('Create subscription plan error:', error);
-          alert(error.message || 'Failed to create subscription plan.');
-          this.cdr.detectChanges();
-          return;
-        }
+  this.fetchSubscriptionPlans();
 
-        alert('Subscription plan created successfully.');
-      }
+});
+}
+else {
 
-      this.closeForm();
-      await this.fetchSubscriptionPlans();
+
+this.api.post(
+'/subscription-plans',
+{
+planName:this.formModel.planname,
+planId:this.formModel.plan_id,
+description:this.formModel.description,
+price:this.formModel.price,
+validity:this.formModel.validitydays,
+postLimit:this.formModel.postlimit,
+adLimit:this.formModel.ad_limit,
+remaining:this.formModel.remaining_ads,
+videoEnabled:this.formModel.video_enabled,
+isActive:this.formModel.isactive
+}
+)
+.subscribe(()=>{
+
+
+alert(
+"Subscription plan created successfully"
+);
+
+
+this.closeForm();
+
+this.fetchSubscriptionPlans();
+
+
+});
+
+
+}
     } catch (err) {
       console.error('Save subscription plan exception:', err);
       alert('Something went wrong while saving subscription plan.');
@@ -347,76 +382,77 @@ goToPage(page: number): void {
       this.cdr.detectChanges();
     }
   }
+async toggleSubscriptionStatus(
+plan: AdminSubscriptionPlanItem
+){
 
-  async toggleSubscriptionStatus(plan: AdminSubscriptionPlanItem): Promise<void> {
-    const nextValue = !(plan.isactive && plan.is_active);
+this.api.patch(
+`/subscription-plans/${plan.subscriptionplanid}/status`,
+{}
+)
+.subscribe(()=>{
 
-    try {
-      const { error } = await this.supabase
-        .from('subscription_plans')
-        .update({
-          isactive: nextValue,
-          is_active: nextValue,
-        })
-        .eq('subscriptionplanid', plan.subscriptionplanid);
 
-      if (error) {
-        console.error('Toggle subscription status error:', error);
-        alert(error.message || 'Failed to update status.');
-        this.cdr.detectChanges();
-        return;
-      }
+plan.isactive = !plan.isactive;
 
-      plan.isactive = nextValue;
-      plan.is_active = nextValue;
-      this.cdr.detectChanges();
-    } catch (err) {
-      console.error('Toggle subscription status exception:', err);
-      alert('Something went wrong while updating status.');
-      this.cdr.detectChanges();
-    }
-  }
+plan.is_active = plan.isactive;
 
-  async deleteSubscription(plan: AdminSubscriptionPlanItem): Promise<void> {
-    const confirmed = confirm(
-      `Are you sure you want to delete "${plan.planname}"?`
+
+this.cdr.detectChanges();
+
+
+});
+
+}
+async deleteSubscription(plan: AdminSubscriptionPlanItem): Promise<void> {
+
+  const confirmed = confirm(
+    `Are you sure you want to delete "${plan.planname}?"`
+  );
+
+  if (!confirmed) return;
+
+
+  this.deletingId = plan.subscriptionplanid;
+
+
+  this.api.delete(
+    `/subscription-plans/${plan.subscriptionplanid}`
+  )
+  .subscribe(()=>{
+
+
+    this.allSubscriptionPlans =
+    this.allSubscriptionPlans.filter(
+      item =>
+      item.subscriptionplanid !== plan.subscriptionplanid
     );
 
-    if (!confirmed) return;
 
-    this.deletingId = plan.subscriptionplanid;
+    alert(
+      "Subscription plan deleted successfully"
+    );
+
+
+    this.deletingId=null;
+
     this.cdr.detectChanges();
 
-    try {
-      const { error } = await this.supabase
-        .from('subscription_plans')
-        .delete()
-        .eq('subscriptionplanid', plan.subscriptionplanid);
 
-      if (error) {
-        console.error('Delete subscription plan error:', error);
-        alert(error.message || 'Failed to delete subscription plan.');
-        this.cdr.detectChanges();
-        return;
-      }
+  });
 
-      this.allSubscriptionPlans = this.allSubscriptionPlans.filter(
-        (item) => item.subscriptionplanid !== plan.subscriptionplanid
-      );
+}
 
-      alert('Subscription plan deleted successfully.');
-      this.cdr.detectChanges();
-    } catch (err) {
-      console.error('Delete subscription plan exception:', err);
-      alert('Something went wrong while deleting subscription plan.');
-      this.cdr.detectChanges();
-    } finally {
-      this.deletingId = null;
-      this.cdr.detectChanges();
-    }
-  }
 
-  trackBySubscription(index: number, plan: AdminSubscriptionPlanItem): number {
-    return plan.subscriptionplanid;
-  }
+// ADD HERE
+
+trackBySubscription(
+  index: number,
+  plan: AdminSubscriptionPlanItem
+): string {
+
+  return plan.subscriptionplanid;
+
+}
+
 }
