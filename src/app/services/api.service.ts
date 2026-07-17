@@ -13,9 +13,7 @@ export class ApiService {
   constructor(
     private http: HttpClient
   ) {}
-
-
-  getToken(){
+ getToken(){
 
     return (
       localStorage.getItem('adminToken') ||
@@ -23,9 +21,6 @@ export class ApiService {
     );
 
   }
-
-
-
 getHeaders(){
 
  const token = this.getToken();
@@ -39,14 +34,9 @@ getHeaders(){
   };
 
  }
-
-
- return {};
-
+return {};
 }
-
-
-  // ======================
+// ======================
   // AUTH
   // ======================
 

@@ -4,7 +4,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { SupabaseService } from '../../services/supabase.service';
 import { SnackbarService } from '../../services/snackbar.service';
-
+import { environment } from '../../../environments/environment';
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -523,8 +523,8 @@ setTimeout(async () => {
 
   try {
 
-    const response = await fetch(
-      'https://ami-hub-backend.onrender.com/api/auth/admin-login',
+  const response = await fetch(
+  `${environment.apiUrl}/auth/admin-login`,
       {
         method: 'POST',
         headers: {
