@@ -17,6 +17,7 @@ export type AdminMenuKey =
 | 'user-boost-plans'
 | 'payments'
   | 'reports'
+  |'custom-fields'
   | 'locations'
   | 'banners'
   | 'notifications'
@@ -57,6 +58,8 @@ export class AdminSidebar {
 { key: 'user-boost-plans', label: 'User Boost Plans', icon: '🔥' },
 { key: 'payments', label: 'Payments', icon: '💳' },
     { key: 'reports', label: 'Reports', icon: '📈' },
+    { key: 'custom-fields', label: 'Custom Fields', icon: '⚙️' },
+
     { key: 'locations', label: 'Locations', icon: '📍' },
     { key: 'banners', label: 'Banners', icon: '🖼️' },
     { key: 'notifications', label: 'Notifications', icon: '🔔' },

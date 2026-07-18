@@ -1,0 +1,95 @@
+<div class="custom-field-page">
+
+  <div class="header">
+    <h2>Custom Fields</h2>
+    <button class="add-btn" (click)="openAddForm()">+ Add Field</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Icon</th>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Required</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let field of paginatedFields">
+        <td><img *ngIf="field.icon" [src]="field.icon" class="table-icon"></td>
+        <td>{{field.label}}</td>
+        <td>{{field.fieldType}}</td>
+        <td>{{field.isRequired?'Yes':'No'}}</td>
+        <td>{{field.isActive?'Active':'Inactive'}}</td>
+        <td>
+          <button (click)="editField(field)">Edit</button>
+          <button (click)="deleteField(field._id)">Delete</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Pagination -->
+  <div class="pagination" *ngIf="totalPages>1">
+  <button [disabled]="currentPage===1" (click)="goToPage(currentPage - 1)">Prev</button>
+
+    <button *ngFor="let p of [].constructor(totalPages); let i=index"
+            [class.active]="currentPage===i+1"
+            (click)="currentPage=i+1">{{i+1}}</button>
+ <button [disabled]="currentPage===totalPages" (click)="goToPage(currentPage + 1)">Next</button>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" *ngIf="showForm">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <h2>{{isEdit?'Edit Custom Field':'Add Custom Field'}}</h2>
+
+      <label>Field Name</label>
+      <input type="text" [(ngModel)]="newField.fieldName">
+
+      <label>Label</label>
+      <input type="text" [(ngModel)]="newField.label">
+
+      <label>Icon Image</label>
+      <input type="file" accept="image/*" (change)="onIconSelected($event)">
+
+      <div class="icon-preview" *ngIf="newField.icon">
+        <img [src]="newField.icon">
+      </div>
+
+      <label>Field Type</label>
+      <select [(ngModel)]="newField.fieldType">
+        <option value="text">Text</option>
+        <option value="number">Number</option>
+        <option value="dropdown">Dropdown</option>
+        <option value="checkbox">Checkbox</option>
+      </select>
+
+      <div *ngIf="newField.fieldType==='dropdown'">
+        <label>Options</label>
+        <div class="option-box">
+          <input type="text" [(ngModel)]="optionText">
+          <button type="button" (click)="addOption()">Add</button>
+        </div>
+        <div class="option-list" *ngFor="let item of newField.options; let i=index">
+          {{item}} <button (click)="removeOption(i)">❌</button>
+        </div>
+      </div>
+
+      <div class="check-row">
+        <label><input type="checkbox" [(ngModel)]="newField.isRequired"> Required</label>
+        <label><input type="checkbox" [(ngModel)]="newField.isActive"> Active</label>
+      </div>
+
+      <div class="modal-actions">
+        <button class="save-btn" (click)="saveField()">
+          {{isUploadingIcon ? 'Uploading...' : 'Save'}}
+        </button>
+        <button class="cancel-btn" (click)="closeForm()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+</div>

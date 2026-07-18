@@ -86,6 +86,12 @@
       *ngIf="activeMenu === 'payments'"
       [searchQuery]="searchQuery"
     ></app-admin-payments>
+    
+
+    <app-admin-custom-fields
+  *ngIf="activeMenu === 'custom-fields'"
+  [searchQuery]="searchQuery">
+</app-admin-custom-fields>
 
     <div class="content-card" *ngIf="activeMenu === 'services'">
       <h1>Services</h1>
