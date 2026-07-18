@@ -180,7 +180,7 @@ export class Category implements OnInit {
 
     this.router.navigate(
 
-      ['/products'],
+      ['/product-list'],
 
       {
         queryParams:{

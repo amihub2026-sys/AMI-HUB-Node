@@ -1,151 +1,283 @@
-
 <app-categories></app-categories>
+
+
 <div class="page-layout">
+
+
+  <!-- FILTER MOBILE BACKDROP -->
   <div
-  class="filter-backdrop"
-  *ngIf="isFilterOpen"
-  (click)="toggleFilter()">
-</div>
-  <aside class="left-panel" [class.active]="isFilterOpen">
-   <app-filters
-  (filtersApplied)="onFiltersApplied($event)"
-  (filtersReset)="onFiltersReset()"
-></app-filters>
-  </aside>
-    <div class="results-content">
-      <div class="subcategory-bar" *ngIf="subcategories().length > 0">
-        <button
-          type="button"
-          class="subcategory-chip"
-          [class.active]="selectedSubcategoryId === null"
-          (click)="showAllSubcategoryPosts()"
-        >
-          All
-        </button>
-
-        <button
-          type="button"
-          class="subcategory-chip"
-          *ngFor="let sub of subcategories()"
-          [class.active]="selectedSubcategoryId === sub.subcategoryid"
-          (click)="selectSubcategory(sub)"
-        >
-          <img
-            *ngIf="sub.iconurl"
-            [src]="sub.iconurl"
-            [alt]="sub.subcategoryname"
-          />
-          <span>{{ sub.subcategoryname }}</span>
-        </button>
-      </div>
- <div class="loading-text" *ngIf="isLoading()">
-  Loading results...
-</div>
-      <div class="results-list">
-      
-
-       <div
-  class="empty-text"
-  *ngIf="!isLoading() && filteredResults.length === 0"
->
-  No matching posts found.
-</div>
-   <div
-  class="featured-card result-card"
-  *ngFor="let item of filteredResults"
-  (click)="openDetails(item)"
->
-
-  <!-- BADGE
-  <span class="card-badge">
-    {{ item.displayType === 'service' ? 'SERVICE' : 'PRODUCT' }}
-  </span> -->
-<!-- 
-  HEART
-  <span class="favorite">
-    ♡
-  </span> -->
-
-
-  <!-- IMAGE -->
-<div class="card-image">
-
-  <span class="card-badge">
-    {{item.displayType}}
-  </span>
-
-  <img
-    [src]="item.mainImage"
-    [alt]="item.displayTitle"
-  />
-
-</div>
-
-  <div class="card-body">
-
-
-    <!-- CATEGORY -->
-   <p class="category">
-  ✦ {{item.displayCategory}}
-</p>
-
-
-    <!-- TITLE -->
-    <h4>
-      {{item.displayTitle}}
-    </h4>
-
-
-    <!-- DESCRIPTION -->
-    <p class="description">
-      {{item.description || 'Quality service and best products available'}}
-    </p>
-
-
-    <!-- RATING LOCATION -->
-    <div class="info-row">
-
-      <span>
-        ⭐ 4.8
-      </span>
-
-<span>
-  <i class="fas fa-location-dot"></i>
-  {{getDistrict(item)}}
-</span>
-    </div>
-
-
-    <!-- PRICE + BUTTON -->
-    <div class="bottom-row">
-
-      <div class="price-box">
-
-        <strong *ngIf="item.displayPrice > 0">
-          ₹{{item.displayPrice}}
-        </strong>
-
-        <!-- <small>
-          /service
-        </small> -->
-
-      </div>
-
-
-      <a class="card-link">
-        View Details
-      </a>
-
-
-    </div>
-
-
+    class="filter-backdrop"
+    *ngIf="isFilterOpen"
+    (click)="toggleFilter()">
   </div>
+
+
+
+  <!-- FILTER -->
+  <aside 
+    class="left-panel"
+    [class.active]="isFilterOpen">
+
+    <app-filters
+      (filtersApplied)="onFiltersApplied($event)"
+      (filtersReset)="onFiltersReset()">
+    </app-filters>
+
+  </aside>
+
+
+
+
+  <!-- RIGHT CONTENT -->
+  <main class="results-content">
+
+
+
+    <!-- SUB CATEGORY BAR -->
+   <div
+      class="subcategory-bar"
+      *ngIf="subcategories().length > 0">
+
+
+      <button
+        type="button"
+        class="subcategory-chip"
+        [class.active]="selectedSubcategoryId === null"
+        (click)="showAllSubcategoryPosts()">
+
+        All
+
+      </button>
+
+
+
+      <button
+        type="button"
+        class="subcategory-chip"
+        *ngFor="let sub of subcategories()"
+        [class.active]="selectedSubcategoryId === sub.subcategoryid"
+        (click)="selectSubcategory(sub)">
+
+
+
+        <img
+          *ngIf="sub.iconurl"
+          [src]="sub.iconurl"
+          [alt]="sub.subcategoryname">
+
+
+
+        <span>
+          {{sub.subcategoryname}}
+        </span>
+
+
+
+      </button>
+
+
+    </div>
+
+
+
+
+
+
+    <!-- LOADING -->
+
+    <div
+      class="loading-text"
+      *ngIf="isLoading()">
+
+      Loading results...
+
+    </div>
+
+
+
+
+
+
+
+    <!-- PRODUCTS GRID -->
+
+    <div class="results-list">
+
+
+
+      <!-- EMPTY -->
+
+      <div
+        class="empty-text"
+        *ngIf="!isLoading() && filteredResults.length === 0">
+
+        No matching posts found.
+
+      </div>
+
+
+
+
+
+
+      <!-- CARD -->
+
+      <div
+        class="featured-card result-card"
+        *ngFor="let item of filteredResults"
+        (click)="openDetails(item)">
+
+
+
+
+
+        <!-- IMAGE -->
+
+        <div class="card-image">
+
+
+          <span class="card-badge">
+
+            {{item.displayType}}
+
+          </span>
+
+
+
+          <img
+            [src]="item.mainImage"
+            [alt]="item.displayTitle">
+
 
         </div>
-    
 
-  </div>
+
+
+
+
+
+        <!-- BODY -->
+
+        <div class="card-body">
+
+
+
+          <!-- CATEGORY -->
+
+          <p class="category">
+
+            ✦ {{item.displayCategory}}
+
+          </p>
+
+
+
+
+
+
+          <!-- TITLE -->
+
+          <h4>
+
+            {{item.displayTitle}}
+
+          </h4>
+
+
+
+
+
+
+
+          <!-- DESCRIPTION -->
+
+          <p class="description">
+
+            {{item.description || 
+            'Quality service and best products available'}}
+
+          </p>
+
+
+
+
+
+
+
+          <!-- INFO -->
+
+          <div class="info-row">
+
+
+            <span>
+
+              ⭐ 4.8
+
+            </span>
+
+
+
+            <span>
+
+              <i class="fas fa-location-dot"></i>
+
+              {{getDistrict(item)}}
+
+            </span>
+
+
+          </div>
+
+
+
+
+
+
+
+
+          <!-- BOTTOM -->
+
+          <div class="bottom-row">
+
+
+
+            <div class="price-box">
+
+
+              <strong
+                *ngIf="item.displayPrice > 0">
+
+                ₹{{item.displayPrice}}
+
+              </strong>
+
+
+
+            </div>
+
+
+
+
+
+            <a class="card-link">
+
+              View Details
+
+            </a>
+
+
+
+          </div>
+
+
+
+
+
+        </div>
+
+
+
+      </div>
 </div>
-
+    </main>
 </div>

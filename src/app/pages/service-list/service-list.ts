@@ -1,10 +1,13 @@
 import { Component, OnInit, HostListener, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, ActivatedRoute } from '@angular/router';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../services/supabase.service';
 import { supabase } from '../../../supabaseClient';
+import { Category } from '../categories/categories';
+import { Filters } from '../filters/filters';
 
 interface CategoryItem {
   categoryid: number;
@@ -24,11 +27,23 @@ interface SubcategoryItem {
 }
 
 @Component({
+
   selector: 'app-service-list',
-  standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
-  templateUrl: './service-list.html',
-  styleUrl: './service-list.css',
+
+  standalone:true,
+
+imports:[
+ CommonModule,
+ FormsModule,
+ Category,
+  Filters
+],
+  templateUrl:'./service-list.html',
+
+  styleUrls:[
+    './service-list.css'
+  ]
+
 })
 export class ServiceList implements OnInit {
   isFilterOpen = false;
@@ -59,7 +74,8 @@ export class ServiceList implements OnInit {
 constructor(
   private supabaseService: SupabaseService,
   private route: ActivatedRoute,
-  private location: Location
+  private location: Location,
+    private router: Router
 ) {}
 
   async ngOnInit(): Promise<void> {
@@ -100,7 +116,55 @@ constructor(
       this.applyFilters();
     });
   }
+   onFiltersApplied(filters:any){
 
+  this.searchText = filters.searchText || '';
+
+  this.locationText = filters.locationText || '';
+
+  this.minPrice = filters.minPrice;
+
+  this.maxPrice = filters.maxPrice;
+
+  this.sortBy = filters.sortBy || 'Newest';
+
+  this.applyFilters();
+
+}
+
+
+
+onFiltersReset(){
+
+  this.resetFilters();
+
+}
+
+
+
+
+openDetails(item:any){
+
+  this.router.navigate([
+    '/service-details',
+    item.postid || item.id
+  ]);
+
+}
+
+
+
+
+getDistrict(item:any){
+
+  return (
+    item?.district ||
+    item?.city ||
+    item?.location ||
+    'Tamil Nadu'
+  );
+
+}
   private loadSelectedLocationAndRadius(): void {
     if (typeof window === 'undefined') return;
 
@@ -131,7 +195,11 @@ constructor(
       }
     }
   }
+get filteredResults(){
 
+  return this.filteredPosts();
+
+}
   async loadCategories(): Promise<void> {
     try {
       const { data, error } = await supabase
