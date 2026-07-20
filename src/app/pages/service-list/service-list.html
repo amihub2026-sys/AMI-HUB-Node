@@ -1,19 +1,8 @@
 <app-categories></app-categories>
 
-
 <div class="page-layout">
 
-
-  <!-- FILTER MOBILE BACKDROP -->
-  <div
-    class="filter-backdrop"
-    *ngIf="isFilterOpen"
-    (click)="toggleFilter()">
-  </div>
-
-
-
-  <!-- FILTER -->
+   <!-- FILTER -->
   <aside 
     class="left-panel"
     [class.active]="isFilterOpen">
@@ -25,259 +14,162 @@
 
   </aside>
 
+  <!-- Right Content -->
+  <div class="results-content">
+
+    <!-- Your service cards -->
+<!-- =========================================
+     SERVICE CARDS SECTION ONLY
+========================================== -->
+
+<div class="service-results-area">
+
+  <!-- LOADING -->
+  <div
+    class="service-loading-message"
+    *ngIf="isLoadingServices"
+  >
+    <i class="fas fa-spinner fa-spin"></i>
+    Loading services...
+  </div>
 
 
+  <!-- NO SERVICE RESULT -->
+  <div
+    class="service-empty-message"
+    *ngIf="
+      !isLoadingServices &&
+      filteredServices.length === 0
+    "
+  >
+    <i class="fas fa-briefcase"></i>
 
-  <!-- RIGHT CONTENT -->
-  <main class="results-content">
+    <h3>No services found</h3>
 
-
-
-    <!-- SUB CATEGORY BAR -->
-   <div
-      class="subcategory-bar"
-      *ngIf="subcategories().length > 0">
-
-
-      <button
-        type="button"
-        class="subcategory-chip"
-        [class.active]="selectedSubcategoryId === null"
-        (click)="showAllSubcategoryPosts()">
-
-        All
-
-      </button>
+    <p>
+      Try changing the category, location or filter options.
+    </p>
+  </div>
 
 
+  <!-- SERVICE GRID -->
+  <div
+    class="service-card-grid"
+    *ngIf="
+      !isLoadingServices &&
+      filteredServices.length > 0
+    "
+  >
 
-      <button
-        type="button"
-        class="subcategory-chip"
-        *ngFor="let sub of subcategories()"
-        [class.active]="selectedSubcategoryId === sub.subcategoryid"
-        (click)="selectSubcategory(sub)">
+    <article
+      class="service-result-card"
+      *ngFor="
+        let service of filteredServices;
+        trackBy: trackByService
+      "
+      (click)="openServiceDetails(service)"
+    >
 
-
+      <!-- SERVICE IMAGE -->
+      <div class="service-card-image">
 
         <img
-          *ngIf="sub.iconurl"
-          [src]="sub.iconurl"
-          [alt]="sub.subcategoryname">
+          [src]="getServiceImage(service)"
+          [alt]="getServiceTitle(service)"
+          (error)="onServiceImageError($event)"
+        >
 
-
-
-        <span>
-          {{sub.subcategoryname}}
+        <!-- ONLY SERVICE BADGE -->
+        <span class="service-card-badge">
+          Service
         </span>
 
-
-
-      </button>
-
-
-    </div>
-
-
-
-
-
-
-    <!-- LOADING -->
-
-    <div
-      class="loading-text"
-      *ngIf="isLoading()">
-
-      Loading results...
-
-    </div>
-
-
-
-
-
-
-
-    <!-- PRODUCTS GRID -->
-
-    <div class="results-list">
-
-
-
-      <!-- EMPTY -->
-
-      <div
-        class="empty-text"
-        *ngIf="!isLoading() && filteredResults.length === 0">
-
-        No matching posts found.
-
       </div>
 
 
+      <!-- SERVICE CARD BODY -->
+      <div class="service-card-body">
+
+        <!-- SERVICE CATEGORY -->
+        <p class="service-card-category">
+          ✦ {{ getServiceCategory(service) }}
+        </p>
 
 
+        <!-- SERVICE TITLE -->
+        <h3
+          class="service-card-title"
+          [title]="getServiceTitle(service)"
+        >
+          {{ getServiceTitle(service) }}
+        </h3>
 
 
-      <!-- CARD -->
-
-      <div
-        class="featured-card result-card"
-        *ngFor="let item of filteredResults"
-        (click)="openDetails(item)">
-
-
-
-
-
-        <!-- IMAGE -->
-
-        <div class="card-image">
+        <!-- SERVICE DESCRIPTION -->
+        <p class="service-card-description">
+          {{
+            service?.description ||
+            service?.serviceDescription ||
+            'Quality service available near you.'
+          }}
+        </p>
 
 
-          <span class="card-badge">
+        <!-- RATING AND LOCATION -->
+        <div class="service-card-info">
 
-            {{item.displayType}}
-
+          <span class="service-card-rating">
+            <i class="fas fa-star"></i>
+            {{ service?.rating || service?.averageRating || 4.8 }}
           </span>
 
-
-
-          <img
-            [src]="item.mainImage"
-            [alt]="item.displayTitle">
-
+          <span
+            class="service-card-location"
+            [title]="getServiceLocation(service)"
+          >
+            <i class="fas fa-location-dot"></i>
+            {{ getServiceLocation(service) }}
+          </span>
 
         </div>
 
 
+        <!-- PRICE AND BUTTON -->
+        <div class="service-card-bottom">
 
+          <div class="service-card-price">
 
+            <strong *ngIf="getServicePrice(service) > 0">
+              ₹{{ getServicePrice(service) }}
+            </strong>
 
-
-        <!-- BODY -->
-
-        <div class="card-body">
-
-
-
-          <!-- CATEGORY -->
-
-          <p class="category">
-
-            ✦ {{item.displayCategory}}
-
-          </p>
-
-
-
-
-
-
-          <!-- TITLE -->
-
-          <h4>
-
-            {{item.displayTitle}}
-
-          </h4>
-
-
-
-
-
-
-
-          <!-- DESCRIPTION -->
-
-          <p class="description">
-
-            {{item.description || 
-            'Quality service and best products available'}}
-
-          </p>
-
-
-
-
-
-
-
-          <!-- INFO -->
-
-          <div class="info-row">
-
-
-            <span>
-
-              ⭐ 4.8
-
+            <span *ngIf="getServicePrice(service) <= 0">
+              Contact for price
             </span>
-
-
-
-            <span>
-
-              <i class="fas fa-location-dot"></i>
-
-              {{getDistrict(item)}}
-
-            </span>
-
 
           </div>
 
 
-
-
-
-
-
-
-          <!-- BOTTOM -->
-
-          <div class="bottom-row">
-
-
-
-            <div class="price-box">
-
-
-              <strong
-                *ngIf="item.displayPrice > 0">
-
-                ₹{{item.displayPrice}}
-
-              </strong>
-
-
-
-            </div>
-
-
-
-
-
-            <a class="card-link">
-
-              View Details
-
-            </a>
-
-
-
-          </div>
-
-
-
-
+          <button
+            type="button"
+            class="service-view-button"
+            (click)="
+              openServiceDetails(service);
+              $event.stopPropagation()
+            "
+          >
+            View Details
+          </button>
 
         </div>
-
-
 
       </div>
+
+    </article>
+
+  </div>
+
 </div>
-    </main>
+  </div>
+
 </div>

@@ -26,7 +26,26 @@
   </aside>
 
 
+  <!-- PRODUCT LOADING UI -->
+<div
+  class="product-loading-ui"
+  *ngIf="isLoading()"
+>
 
+  <div class="product-loading-dots">
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+
+  <p>Loading products...</p>
+
+</div>
 
   <!-- RIGHT CONTENT -->
   <main class="results-content">
@@ -83,42 +102,12 @@
 
 
 
-    <!-- LOADING -->
-
-    <div
-      class="loading-text"
-      *ngIf="isLoading()">
-
-      Loading results...
-
-    </div>
-
-
-
-
 
 
 
     <!-- PRODUCTS GRID -->
 
     <div class="results-list">
-
-
-
-      <!-- EMPTY -->
-
-      <div
-        class="empty-text"
-        *ngIf="!isLoading() && filteredResults.length === 0">
-
-        No matching posts found.
-
-      </div>
-
-
-
-
-
 
       <!-- CARD -->
 
@@ -127,21 +116,15 @@
         *ngFor="let item of filteredResults"
         (click)="openDetails(item)">
 
-
-
-
-
         <!-- IMAGE -->
 
         <div class="card-image">
-
 
           <span class="card-badge">
 
             {{item.displayType}}
 
           </span>
-
 
 
           <img
@@ -151,15 +134,9 @@
 
         </div>
 
-
-
-
-
-
         <!-- BODY -->
 
         <div class="card-body">
-
 
 
           <!-- CATEGORY -->
