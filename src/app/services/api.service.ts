@@ -7,54 +7,42 @@ import { environment } from '../../environments/environment';
 })
 export class ApiService {
 
-
   baseUrl = environment.apiUrl;
 
   constructor(
     private http: HttpClient
   ) {}
- getToken(){
 
+
+  getToken() {
     return (
       localStorage.getItem('adminToken') ||
       localStorage.getItem('token')
     );
-
   }
-getHeaders(){
 
- const token = this.getToken();
 
- if(token){
+  getHeaders() {
 
-<<<<<<< HEAD
-  return {
-    headers:new HttpHeaders({
-      Authorization:`Bearer ${token}`
-    })
-  };
+    const token = this.getToken();
 
- }
-return {};
-}
-// ======================
-=======
- getHeaders() {
-  return {
-    headers: new HttpHeaders({
-      Authorization: `Bearer ${localStorage.getItem('token')}`
-    })
-  };
-}
+    if (token) {
+      return {
+        headers: new HttpHeaders({
+          Authorization: `Bearer ${token}`
+        })
+      };
+    }
 
+    return {};
+  }
 
 
   // ======================
->>>>>>> change7
   // AUTH
   // ======================
 
-  login(data:any){
+  login(data: any) {
 
     return this.http.post(
       `${this.baseUrl}/auth/login`,
@@ -64,29 +52,14 @@ return {};
   }
 
 
-get<T = any>(url: string) {
-  return this.http.get<T>(
-    `${this.baseUrl}${url}`,
-    this.getHeaders()
-  );
-}
 
-<<<<<<< HEAD
-post<T = any>(url: string, data: any) {
-  return this.http.post<T>(
-    `${this.baseUrl}${url}`,
-    data,
-    this.getHeaders()
-  );
-}
-=======
   // ======================
   // COMMON GET
   // ======================
 
-  get(url:string){
+  get<T = any>(url: string) {
 
-    return this.http.get(
+    return this.http.get<T>(
       `${this.baseUrl}${url}`,
       this.getHeaders()
     );
@@ -99,9 +72,9 @@ post<T = any>(url: string, data: any) {
   // COMMON POST
   // ======================
 
-  post(url:string,data:any){
+  post<T = any>(url: string, data: any) {
 
-    return this.http.post(
+    return this.http.post<T>(
       `${this.baseUrl}${url}`,
       data,
       this.getHeaders()
@@ -115,39 +88,49 @@ post<T = any>(url: string, data: any) {
   // COMMON PUT
   // ======================
 
-  put(url:string,data:any){
+  put<T = any>(url: string, data: any) {
 
-return this.http.put(
-`${this.baseUrl}${url}`,
-data,
-this.getHeaders()
-);
+    return this.http.put<T>(
+      `${this.baseUrl}${url}`,
+      data,
+      this.getHeaders()
+    );
 
-}
+  }
 
->>>>>>> change7
 
-put<T = any>(url: string, data: any) {
-  return this.http.put<T>(
-    `${this.baseUrl}${url}`,
-    data,
-    this.getHeaders()
-  );
-}
 
-delete<T = any>(url: string) {
-  return this.http.delete<T>(
-    `${this.baseUrl}${url}`,
-    this.getHeaders()
-  );
-}
-patch<T = any>(url: string, data: any) {
-  return this.http.patch<T>(
-    `${this.baseUrl}${url}`,
-    data,
-    this.getHeaders()
-  );
-}
+  // ======================
+  // COMMON DELETE
+  // ======================
+
+  delete<T = any>(url: string) {
+
+    return this.http.delete<T>(
+      `${this.baseUrl}${url}`,
+      this.getHeaders()
+    );
+
+  }
+
+
+
+  // ======================
+  // COMMON PATCH
+  // ======================
+
+  patch<T = any>(url: string, data: any) {
+
+    return this.http.patch<T>(
+      `${this.baseUrl}${url}`,
+      data,
+      this.getHeaders()
+    );
+
+  }
+
+
+
   // ======================
   // DASHBOARD
   // ======================
@@ -210,25 +193,33 @@ patch<T = any>(url: string, data: any) {
     );
 
   }
-uploadImage(file: File, folder: string) {
-
-  const formData = new FormData();
-
-  formData.append(
-    "file",
-    file
-  );
-
-  formData.append(
-    "folder",
-    folder
-  );
 
 
-  return this.http.post<any>(
-    `${this.baseUrl}/uploads/r2`,
-    formData
-  );
 
-}
+  // ======================
+  // UPLOAD
+  // ======================
+
+  uploadImage(file: File, folder: string) {
+
+    const formData = new FormData();
+
+    formData.append(
+      "file",
+      file
+    );
+
+    formData.append(
+      "folder",
+      folder
+    );
+
+
+    return this.http.post<any>(
+      `${this.baseUrl}/uploads/r2`,
+      formData
+    );
+
+  }
+
 }
