@@ -204,7 +204,7 @@ this.posts.set(mergedPosts);
       return;
     }
 
-    
+
 
     const success = await this.router.navigate(['/edit-post', String(post.postid)]);
 
@@ -285,7 +285,7 @@ this.posts.set(mergedPosts);
         );
       }
 
-    
+
 
       const success = await this.router.navigate(['/featured-plan'], {
         state: {
@@ -335,7 +335,7 @@ this.posts.set(mergedPosts);
         .eq('postid', Number(post.postid))
         .select('postid, userid');
 
-      
+
 
       if (error) {
         console.error('Delete error:', error);

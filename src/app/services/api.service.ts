@@ -27,6 +27,7 @@ getHeaders(){
 
  if(token){
 
+<<<<<<< HEAD
   return {
     headers:new HttpHeaders({
       Authorization:`Bearer ${token}`
@@ -37,6 +38,19 @@ getHeaders(){
 return {};
 }
 // ======================
+=======
+ getHeaders() {
+  return {
+    headers: new HttpHeaders({
+      Authorization: `Bearer ${localStorage.getItem('token')}`
+    })
+  };
+}
+
+
+
+  // ======================
+>>>>>>> change7
   // AUTH
   // ======================
 
@@ -57,6 +71,7 @@ get<T = any>(url: string) {
   );
 }
 
+<<<<<<< HEAD
 post<T = any>(url: string, data: any) {
   return this.http.post<T>(
     `${this.baseUrl}${url}`,
@@ -64,6 +79,53 @@ post<T = any>(url: string, data: any) {
     this.getHeaders()
   );
 }
+=======
+  // ======================
+  // COMMON GET
+  // ======================
+
+  get(url:string){
+
+    return this.http.get(
+      `${this.baseUrl}${url}`,
+      this.getHeaders()
+    );
+
+  }
+
+
+
+  // ======================
+  // COMMON POST
+  // ======================
+
+  post(url:string,data:any){
+
+    return this.http.post(
+      `${this.baseUrl}${url}`,
+      data,
+      this.getHeaders()
+    );
+
+  }
+
+
+
+  // ======================
+  // COMMON PUT
+  // ======================
+
+  put(url:string,data:any){
+
+return this.http.put(
+`${this.baseUrl}${url}`,
+data,
+this.getHeaders()
+);
+
+}
+
+>>>>>>> change7
 
 put<T = any>(url: string, data: any) {
   return this.http.put<T>(

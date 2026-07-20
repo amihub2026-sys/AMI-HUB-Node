@@ -135,13 +135,20 @@ export class PostAd implements OnInit {
   // ---------------- Submit Ad ----------------
   submitAd() {
 
-  const token = localStorage.getItem('token');
+  const token =
+  localStorage.getItem('token') ||
+  localStorage.getItem('userToken');
 
-  if(!token){
-    alert("Please login first");
-    this.router.navigate(['/login']);
-    return;
-  }
+
+if(!token){
+
+  alert("Please login first");
+
+  this.router.navigate(['/login']);
+
+  return;
+
+}
 
 
   if(!this.adTitle){
@@ -228,3 +235,4 @@ export class PostAd implements OnInit {
 
 }
 }
+
