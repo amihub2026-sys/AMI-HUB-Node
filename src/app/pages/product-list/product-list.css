@@ -173,7 +173,8 @@
     grid-template-columns:repeat(4,minmax(0,1fr));
 
 
-    gap:20px;
+    column-gap: 3px;
+  row-gap: 16px;
 
 
 }
@@ -181,16 +182,110 @@
 
 
 
-.loading-text,
-.empty-text{
+/* =========================================
+   PRODUCT LOADING UI
+========================================= */
+
+.product-loading-ui {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+
+  width: 100%;
+  min-height: 480px;
+
+  gap: 12px;
+
+  color: #53678a;
+  text-align: center;
+}
+
+.product-loading-ui p {
+  margin: 0;
+
+  color: #53678a;
+
+  font-size: 16px;
+  font-weight: 600;
+}
 
 
-    grid-column:1/-1;
+/* LOADING DOT CIRCLE */
 
-    text-align:center;
+.product-loading-dots {
+  position: relative;
 
-    padding:40px;
+  width: 34px;
+  height: 34px;
+}
 
+.product-loading-dots span {
+  position: absolute;
+
+  top: 15px;
+  left: 15px;
+
+  width: 5px;
+  height: 5px;
+
+  border-radius: 50%;
+
+  background: #2563eb;
+
+  transform-origin: 2px 2px;
+
+  animation: productLoadingFade 1.1s linear infinite;
+}
+
+.product-loading-dots span:nth-child(1) {
+  transform: rotate(0deg) translateY(-13px);
+  animation-delay: 0s;
+}
+
+.product-loading-dots span:nth-child(2) {
+  transform: rotate(45deg) translateY(-13px);
+  animation-delay: -0.1375s;
+}
+
+.product-loading-dots span:nth-child(3) {
+  transform: rotate(90deg) translateY(-13px);
+  animation-delay: -0.275s;
+}
+
+.product-loading-dots span:nth-child(4) {
+  transform: rotate(135deg) translateY(-13px);
+  animation-delay: -0.4125s;
+}
+
+.product-loading-dots span:nth-child(5) {
+  transform: rotate(180deg) translateY(-13px);
+  animation-delay: -0.55s;
+}
+
+.product-loading-dots span:nth-child(6) {
+  transform: rotate(225deg) translateY(-13px);
+  animation-delay: -0.6875s;
+}
+
+.product-loading-dots span:nth-child(7) {
+  transform: rotate(270deg) translateY(-13px);
+  animation-delay: -0.825s;
+}
+
+.product-loading-dots span:nth-child(8) {
+  transform: rotate(315deg) translateY(-13px);
+  animation-delay: -0.9625s;
+}
+
+@keyframes productLoadingFade {
+  0% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.15;
+  }
 }
 
 

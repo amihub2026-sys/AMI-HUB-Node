@@ -1,625 +1,480 @@
-/* PAGE LAYOUT */
-.page-layout {
-  display: flex;
-  align-items: flex-start;
-  gap: 20px;
-  padding: 20px;
-  background: #f8fafc;
-  min-height: 100vh;
-  box-sizing: border-box;
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
-}
 
-/* LEFT PANEL */
-.left-panel {
-  width: 280px;
-  flex: 0 0 280px;
-  position: sticky;
-  top: 20px;
-  min-width: 0;
-  box-sizing: border-box;
-  align-self: flex-start;
-}
+.page-layout{
 
-/* RIGHT PANEL */
-.right-panel {
-  flex: 1;
-  min-width: 0;
-  width: 100%;
-  box-sizing: border-box;
-}
+    width:100%;
 
-/* TITLE */
-.title {
-  font-size: 20px;
-  font-weight: 700;
-  margin: 0 0 16px;
-  color: #111827;
-}
+    display:grid;
 
-/* FILTER CARD */
-.filter-card {
-  background: #ffffff;
-  padding: 16px;
-  border-radius: 16px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
-  border: 1px solid #edf0f3;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  overflow: hidden;
-}
+    grid-template-columns:300px minmax(0,1fr);
 
-.filter-card h3 {
-  font-size: 18px;
-  font-weight: 800;
-  margin: 0 0 14px;
-  color: #111827;
-}
+    gap:24px;
 
-/* FILTER GROUP */
-.filter-group {
-  margin-bottom: 12px;
+    padding:24px;
+
+    align-items:start;
+
+}
+/* =========================================
+   SERVICE RESULTS AREA
+========================================= */
+
+.service-results-area {
   width: 100%;
   min-width: 0;
 }
 
-.filter-group label {
-  font-size: 12px;
-  font-weight: 700;
-  margin-bottom: 6px;
-  display: block;
-  color: #1f2937;
-}
 
-.filter-group input,
-.filter-group select {
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  height: 42px;
-  min-height: 42px;
-  padding: 0 12px;
-  border-radius: 12px;
-  border: 1px solid #d6deea;
-  background: #f8fafc;
-  font-size: 13px;
-  color: #111827;
-  box-sizing: border-box;
-  transition: all 0.2s ease;
-  display: block;
-}
+/* =========================================
+   SERVICE CARD GRID
+========================================= */
 
-.filter-group input::placeholder {
-  color: #6b7280;
-}
+.service-card-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 
-.filter-group select {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-image:
-    linear-gradient(45deg, transparent 50%, #111827 50%),
-    linear-gradient(135deg, #111827 50%, transparent 50%);
-  background-position:
-    calc(100% - 18px) calc(50% - 2px),
-    calc(100% - 13px) calc(50% - 2px);
-  background-size: 5px 5px, 5px 5px;
-  background-repeat: no-repeat;
-  padding-right: 36px;
-}
+  column-gap: 3px;
+  row-gap: 16px;
 
-.filter-group input:focus,
-.filter-group select:focus {
-  outline: none;
-  border-color: #2563eb;
-  background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.10);
-}
-
-/* REMOVE NUMBER INPUT ARROWS */
-.filter-group input[type="number"]::-webkit-outer-spin-button,
-.filter-group input[type="number"]::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-.filter-group input[type="number"] {
-  appearance: textfield;
-  -moz-appearance: textfield;
-}
-
-/* PRICE */
-.price-row {
-  display: flex;
-  gap: 8px;
   width: 100%;
 }
 
-.price-row input {
-  flex: 1;
-  min-width: 0;
-  height: 42px;
-  min-height: 42px;
-  padding: 0 12px;
-  line-height: normal;
-}
+/* =========================================
+   SERVICE CARD
+========================================= */
 
-/* BUTTONS */
-.filter-actions {
+.service-result-card {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 14px;
-  width: 100%;
+
+  width: 90%;
+  min-width: 0;
+  height: 400px;
+
+  overflow: hidden;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+
+  cursor: pointer;
+
+  transition:
+    transform 0.35s ease,
+    box-shadow 0.35s ease,
+    border-color 0.35s ease;
 }
 
-.filter-actions button {
+.service-result-card:hover {
+  transform: translateY(-7px);
+
+  border-color: #c8d8f6;
+
+  box-shadow: 0 20px 40px rgba(0, 47, 140, 0.15);
+}
+
+
+/* =========================================
+   SERVICE IMAGE
+========================================= */
+
+.service-card-image {
+  position: relative;
+
+  flex-shrink: 0;
+
   width: 100%;
-  min-width: 0;
-  height: 40px;
-  border-radius: 999px;
-  border: none;
+  height: 210px;
+
+  overflow: hidden;
+
+  background: #f1f5f9;
+}
+
+.service-card-image img {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  transition: transform 0.4s ease;
+}
+
+.service-result-card:hover .service-card-image img {
+  transform: scale(1.07);
+}
+
+
+/* =========================================
+   SERVICE BADGE
+========================================= */
+
+.service-card-badge {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  background-color: #2563eb;
+  color: white;
+  padding: 7px 14px;
+  border-radius: 10px;
+  font-size: 12px;
   font-weight: 700;
+  z-index: 2;
+}
+
+
+/* =========================================
+   SERVICE CARD BODY
+========================================= */
+
+.service-card-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+
+  min-height: 0;
+
+  padding: 14px;
+}
+
+
+/* SERVICE CATEGORY */
+
+.service-card-category {
+  height: 18px;
+  margin: 0 0 6px;
+
+  overflow: hidden;
+
+  color: #2563eb;
+
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 18px;
+  text-transform: capitalize;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+/* SERVICE TITLE */
+
+.service-card-title {
+  height: 22px;
+  margin: 0 0 7px;
+
+  overflow: hidden;
+
+  color: #111827;
+
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 22px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+/* SERVICE DESCRIPTION */
+
+.service-card-description {
+  display: -webkit-box;
+
+  height: 39px;
+  margin: 0 0 9px;
+
+  overflow: hidden;
+
+  color: #64748b;
+
   font-size: 13px;
+  line-height: 19px;
+
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+
+/* =========================================
+   SERVICE RATING AND LOCATION
+========================================= */
+
+.service-card-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  min-height: 25px;
+  margin: 3px 0 9px;
+
+  color: #475569;
+
+  font-size: 13px;
+}
+
+.service-card-rating,
+.service-card-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.service-card-rating {
+  flex-shrink: 0;
+}
+
+.service-card-rating i {
+  color: #eab308;
+}
+
+.service-card-location {
+  min-width: 0;
+  max-width: 62%;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.service-card-location i {
+  flex-shrink: 0;
+
+  color: #2563eb;
+}
+
+
+/* =========================================
+   SERVICE PRICE AND BUTTON
+========================================= */
+
+.service-card-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  margin-top: auto;
+  padding-top: 12px;
+
+  border-top: 1px solid #e5e7eb;
+}
+
+.service-card-price {
+  min-width: 0;
+}
+
+.service-card-price strong {
+  color: #080808;
+
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.service-card-price span {
+  color: #64748b;
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.service-view-button {
+  flex-shrink: 0;
+
+  min-width: 108px;
+  min-height: 36px;
+
+  padding: 8px 14px;
+
+  border: 1px solid #2563eb;
+  border-radius: 10px;
+
+  background: #ffffff;
+  color: #2563eb;
+
+  font-size: 13px;
+  font-weight: 700;
+
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-sizing: border-box;
+
+  transition:
+    background 0.25s ease,
+    color 0.25s ease;
+}
+
+.service-view-button:hover {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+
+/* =========================================
+   LOADING AND EMPTY MESSAGES
+========================================= */
+
+.service-loading-message,
+.service-empty-message {
   display: flex;
   align-items: center;
   justify-content: center;
-  line-height: 1;
-}
-
-/* APPLY */
-.filter-actions button:first-child {
-  background: linear-gradient(135deg, #0f172a, #1e293b);
-  color: #fff;
-}
-
-/* RESET */
-.filter-actions .reset {
-  background: linear-gradient(135deg, #2563eb, #3b82f6);
-  color: #fff;
-}
-
-.filter-actions button:hover {
-  transform: translateY(-1px);
-  opacity: 0.97;
-}
-
-/* GRID */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
-  align-items: stretch;
-}
-
-/* CARD */
-.card {
-  min-width: 0;
-  background: #fff;
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid #e9eef3;
-  display: flex;
   flex-direction: column;
-  transition: 0.2s ease;
-}
 
-.card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-}
-
-/* IMAGE */
-.image-wrap {
-  height: 110px;
-  overflow: hidden;
-  background: #f3f4f6;
-}
-
-.card img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
+  min-height: 350px;
 
-/* BODY */
-.card-body {
-  padding: 8px;
+  padding: 35px;
+
+  color: #64748b;
+
   text-align: center;
-  display: flex;
-  flex-direction: column;
-  flex: 1;
 }
 
-/* TITLE */
-.card h3 {
-  font-size: 12px;
-  font-weight: 700;
-  margin: 0 0 4px;
-  min-height: 30px;
-  color: #111827;
-  line-height: 1.35;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
+.service-loading-message {
+  gap: 12px;
 
-/* PRICE */
-.price {
-  font-size: 14px;
-  font-weight: 800;
-  color: #00a650;
-  margin: 0 0 4px;
-}
-
-/* META */
-.meta {
-  font-size: 11px;
-  color: #666;
-  margin: 0 0 6px;
-  line-height: 1.35;
-  min-height: 28px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  word-break: break-word;
-}
-
-/* BUTTON */
-.card a {
-  display: block;
-  text-align: center;
-  background: #eaf1ff;
-  color: #2b5cff;
-  padding: 6px;
-  border-radius: 6px;
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 600;
-  text-decoration: none;
-  margin-top: auto;
 }
 
-/* EMPTY */
-.empty {
-  text-align: center;
-  padding: 30px;
+.service-loading-message i {
+  color: #2563eb;
+
+  font-size: 28px;
 }
 
-/* LOADING */
-.loading {
-  text-align: center;
-  padding: 15px;
+.service-empty-message i {
+  margin-bottom: 14px;
+
+  color: #2563eb;
+
+  font-size: 42px;
 }
 
-/* 4 CARDS */
+.service-empty-message h3 {
+  margin: 0 0 7px;
+
+  color: #111827;
+
+  font-size: 20px;
+}
+
+.service-empty-message p {
+  margin: 0;
+
+  font-size: 14px;
+}
+
+
+/* =========================================
+   RESPONSIVE SERVICE CARDS
+========================================= */
+
 @media (max-width: 1400px) {
-  .grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-
-/* TABLET */
-@media (max-width: 1100px) {
-  .page-layout {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .left-panel {
-    width: 100%;
-    flex: none;
-    position: static;
-    top: auto;
-  }
-
-  .right-panel {
-    width: 100%;
-  }
-
-  .grid {
+  .service-card-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
-/* MOBILE */
-@media (max-width: 768px) {
-  .page-layout {
-    display: flex;
-    flex-direction: column;
-    padding: 10px 8px 18px;
+@media (max-width: 1050px) {
+  .service-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+}
+
+@media (max-width: 700px) {
+  .service-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
   }
 
-  .left-panel {
-    width: 100%;
-    flex: none;
-    position: static;
-    top: auto;
-    order: 1;
+  .service-result-card {
+    height: 340px;
+
+    border-radius: 9px;
   }
 
-  .right-panel {
-    width: 100%;
-    order: 2;
+  .service-card-image {
+    height: 155px;
   }
 
-  .filter-card {
-    padding: 12px;
-    border-radius: 14px;
+  .service-card-badge {
+    right: 8px;
+    bottom: 8px;
+
+    min-width: 54px;
+    min-height: 25px; 
+
+    padding: 5px 9px;
+
+    border-radius: 8px;
+
+    font-size: 10px;
   }
 
-  .filter-card h3 {
-    font-size: 15px;
-    margin: 0 0 10px;
-    line-height: 1.2;
-  }
-
-  .filter-group {
-    margin-bottom: 10px;
-  }
-
-  .filter-group label {
-    font-size: 12px;
-    margin-bottom: 5px;
-  }
-
-  .filter-group input,
-  .filter-group select {
-    height: 40px;
-    min-height: 40px;
-    font-size: 13px;
-    border-radius: 10px;
-    padding: 0 12px;
-  }
-
-  .filter-group select {
-    padding-right: 34px;
-  }
-
-  .price-row {
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .price-row input,
-  .price-row input[type="number"] {
-    height: 40px !important;
-    min-height: 40px !important;
-    padding: 0 12px !important;
-    border-radius: 10px !important;
-    font-size: 13px !important;
-  }
-
-  .filter-actions {
-    gap: 8px;
-    margin-top: 10px;
-  }
-
-  .filter-actions button {
-    height: 36px;
-    font-size: 12px;
-  }
-
-  .title {
-    font-size: 18px;
-    margin-bottom: 10px;
-  }
-
-  .grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-  }
-
-  .image-wrap {
-    height: 90px;
-  }
-}
-
-/* SMALL MOBILE */
-@media (max-width: 480px) {
-  .page-layout {
-    padding: 8px 6px 16px;
-    gap: 8px;
-  }
-
-  .filter-card {
+  .service-card-body {
     padding: 10px;
-    border-radius: 12px;
   }
 
-  .filter-card h3 {
+  .service-card-category {
+    height: 16px;
+
+    font-size: 10px;
+    line-height: 16px;
+  }
+
+  .service-card-title {
+    height: 19px;
+
     font-size: 14px;
-    margin-bottom: 8px;
+    line-height: 19px;
   }
 
-  .filter-group {
-    margin-bottom: 8px;
-  }
+  .service-card-description {
+    height: 32px;
 
-  .filter-group label {
     font-size: 11px;
-    margin-bottom: 4px;
+    line-height: 16px;
   }
 
-  .filter-group input,
-  .filter-group select {
-    height: 38px;
-    min-height: 38px;
-    font-size: 12px;
-    border-radius: 10px;
-    padding: 0 10px;
+  .service-card-info {
+    gap: 5px;
+
+    font-size: 10px;
   }
 
-  .filter-group select {
-    padding-right: 30px;
+  .service-card-location {
+    max-width: 58%;
   }
 
-  .price-row {
-    gap: 6px;
+  .service-card-bottom {
+    gap: 7px;
   }
 
-  .price-row input,
-  .price-row input[type="number"] {
-    height: 38px !important;
-    min-height: 38px !important;
-    padding: 0 10px !important;
-    border-radius: 10px !important;
-    font-size: 12px !important;
+  .service-card-price strong {
+    font-size: 14px;
   }
 
-  .filter-actions {
-    gap: 6px;
-    margin-top: 8px;
+  .service-card-price span {
+    font-size: 9px;
   }
 
-  .filter-actions button {
-    height: 34px;
-    font-size: 11px;
-  }
-}
+  .service-view-button {
+    min-width: 78px;
+    min-height: 31px;
 
-/* EXTRA SMALL */
-@media (max-width: 360px) {
-  .filter-card {
-    padding: 10px;
-  }
+    padding: 5px 7px;
 
-  .filter-group input,
-  .filter-group select {
-    height: 34px;
-    min-height: 34px;
-    font-size: 12px;
-  }
+    border-radius: 8px;
 
-  .price-row input,
-  .price-row input[type="number"] {
-    height: 34px !important;
-    min-height: 34px !important;
-    font-size: 12px !important;
-  }
-
-  .filter-actions button {
-    height: 30px;
-    font-size: 11px;
-  }
-}
-.filter-toggle,
-.filter-backdrop,
-.filter-close {
-  display: none;
-}
-
-@media (max-width: 768px) {
-  .filter-toggle {
-    display: inline-flex;
-    margin: 0 0 12px;
-    padding: 10px 16px;
-    border: none;
-    border-radius: 12px;
-    background: #111827;
-    color: #fff;
-    font-weight: 700;
-  }
-
-  .filter-backdrop {
-    display: block;
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.45);
-    backdrop-filter: blur(5px);
-    z-index: 19999;
-  }
-
-  .left-panel {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 85% !important;
-    max-width: 320px !important;
-    height: 100dvh !important;
-    z-index: 20000 !important;
-    background: #fff !important;
-    transform: translateX(-110%) !important;
-    transition: transform 0.3s ease !important;
-    overflow-y: auto !important;
-    padding: 14px 14px 120px !important;
-    box-shadow: 10px 0 30px rgba(0,0,0,0.18);
-  }
-
-  .left-panel.active {
-    transform: translateX(0) !important;
-  }
-
-  .filter-card {
-    position: relative;
-    padding-top: 48px !important;
-    padding-bottom: 120px !important;
-  }
-
-  .filter-close {
-    display: flex;
-    position: absolute;
-    top: 10px;
-    right: 12px;
-    width: 34px;
-    height: 34px;
-    border: none;
-    border-radius: 50%;
-    background: #111827;
-    color: #fff;
-    font-size: 22px;
-    align-items: center;
-    justify-content: center;
-  }
-}
-.page-back-arrow{
-
-  width:32px;
-
-  height:32px;
-
-  border-radius:50%;
-
-  background:#ffffff;
-
-  box-shadow:0 4px 12px rgba(0,0,0,0.08);
-
-  display:flex;
-
-  align-items:center;
-
-  justify-content:center;
-
-  font-size:18px;
-
-  font-weight:700;
-
-  cursor:pointer;
-
-  margin-bottom:12px;
-
-  color:#111827;
-}
-
-@media(max-width:768px){
-
-  .page-back-arrow{
-
-    width:28px;
-
-    height:28px;
-
-    font-size:16px;
-
-    margin-bottom:10px;
+    font-size: 10px;
   }
 }
