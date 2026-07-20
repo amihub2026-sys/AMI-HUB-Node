@@ -72,6 +72,7 @@ export const routes: Routes = [
 
   { path: 'service', component: Service },
   { path: 'service/:id', component: Service },
+  { path: 'custom-fields', component: CustomFields },
   { path: 'service-list', component: ServiceList },
   { path: 'service-categories', component: ServiceCategories },
 
