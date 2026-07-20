@@ -1158,9 +1158,20 @@ video_urls: videoUrls,
         localStorage.setItem('pending_post_userid', String(effectiveUserId));
       }
 
-      this.router.navigate(['/subscription-plan'], {
-        queryParams: { flow: 'normal' }
-      });
+this.router.navigate(
+  ['/custom-fields'],
+  {
+    state: {
+      categoryId: selectedCategory?.categoryid,
+      categoryName: this.mainAd.category,
+
+      subcategoryId: selectedSubcategory?.subcategoryid,
+      subcategoryName: this.mainAd.subcategory,
+
+      flow: 'normal'
+    }
+  }
+);
     } catch (err) {
       console.error('Error preparing post:', err);
       this.showAlert('Error preparing post');

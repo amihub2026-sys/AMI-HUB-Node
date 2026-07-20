@@ -1,42 +1,305 @@
 <div class="custom-container">
 
-  <!-- Category/Subcategory info box -->
+  <!-- Selected Category and Subcategory -->
   <div class="info-box">
-    <p><strong>Category:</strong> {{category}}</p>
-    <p><strong>Subcategory:</strong> {{subcategory}}</p>
-  </div>
 
-  <h2>Additional Details</h2>
-
-  <!-- Dynamic Fields -->
-  <div *ngFor="let field of fields" class="field">
-    <label>{{field.label}}</label>
-
-    <input *ngIf="field.type=='text' || field.type=='number'"
-           [type]="field.type"
-           [name]="field.name"
-           [(ngModel)]="formData[field.name]">
-
-    <select *ngIf="field.type=='select'"
-            [name]="field.name"
-            [(ngModel)]="formData[field.name]">
-      <option value="">Select</option>
-      <option *ngFor="let op of field.options">{{op}}</option>
-    </select>
-  </div>
-
-  <button type="button" class="post-btn" (click)="submitCustomFields()">Post Ad</button>
-
-  <!-- Success Overlay -->
-  <div class="overlay" *ngIf="adPosted">
-    <div class="success-box">
-      <h2>YOU DID IT! </h2>
-      <p>Published ✅</p>
-      <div class="actions">
-        <button (click)="goBack()">GO BACK to Dashboard</button>
-        <button (click)="viewAd()">VIEW AD</button>
-      </div>
+    <div class="info-item">
+      <span class="info-label">Category</span>
+      <strong>{{ categoryName || 'Not selected' }}</strong>
     </div>
+
+    <div class="info-item">
+      <span class="info-label">Subcategory</span>
+      <strong>{{ subcategoryName || 'Not selected' }}</strong>
+    </div>
+
   </div>
+
+  <div class="custom-header">
+    <h2>Additional Details</h2>
+
+    <p>
+      Enter the information below to continue posting your ad.
+    </p>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-box" *ngIf="isLoading">
+    <div class="loader"></div>
+    <p>Loading additional fields...</p>
+  </div>
+
+  <!-- API Error -->
+  <div
+    class="error-box"
+    *ngIf="!isLoading && loadError"
+  >
+    {{ loadError }}
+
+<button
+  type="button"
+  class="continue-btn"
+  (click)="goToSubscription()"
+>
+  Post Ad
+</button>
+  </div>
+
+  <!-- Dynamic Custom Fields Form -->
+  <form
+    *ngIf="!isLoading && !loadError"
+    #customFieldsForm="ngForm"
+    (ngSubmit)="submitCustomFields(customFieldsForm)"
+    novalidate
+  >
+
+    <!-- No Custom Fields -->
+    <div
+      class="empty-box"
+      *ngIf="fields.length === 0"
+    >
+      <h3>No additional details required</h3>
+
+      <p>
+        No custom fields are assigned to this subcategory.
+        You can continue to the next step.
+      </p>
+    </div>
+
+    <!-- Fields -->
+    <div
+      class="fields-grid"
+      *ngIf="fields.length > 0"
+    >
+
+      <div
+        class="field"
+        *ngFor="let field of fields; trackBy: trackByField"
+      >
+
+        <label
+          class="field-label"
+          [for]="field.fieldName"
+        >
+          <span *ngIf="field.icon" class="field-icon">
+            {{ field.icon }}
+          </span>
+
+          {{ field.label }}
+
+          <span
+            class="required-star"
+            *ngIf="field.isRequired"
+          >
+            *
+          </span>
+        </label>
+
+        <!-- Text Field -->
+        <input
+          *ngIf="field.fieldType === 'text'"
+          type="text"
+          class="form-control"
+          [id]="field.fieldName"
+          [name]="field.fieldName"
+          [placeholder]="field.placeholder || ('Enter ' + field.label)"
+          [(ngModel)]="formData[field.fieldName]"
+          [required]="field.isRequired"
+          #textControl="ngModel"
+        >
+
+        <!-- Number Field -->
+        <input
+          *ngIf="field.fieldType === 'number'"
+          type="number"
+          class="form-control"
+          [id]="field.fieldName"
+          [name]="field.fieldName"
+          [placeholder]="field.placeholder || ('Enter ' + field.label)"
+          [(ngModel)]="formData[field.fieldName]"
+          [required]="field.isRequired"
+          #numberControl="ngModel"
+        >
+
+        <!-- Textarea -->
+        <textarea
+          *ngIf="field.fieldType === 'textarea'"
+          class="form-control textarea-control"
+          [id]="field.fieldName"
+          [name]="field.fieldName"
+          rows="4"
+          [placeholder]="field.placeholder || ('Enter ' + field.label)"
+          [(ngModel)]="formData[field.fieldName]"
+          [required]="field.isRequired"
+          #textareaControl="ngModel"
+        ></textarea>
+
+        <!-- Dropdown -->
+        <select
+          *ngIf="
+            field.fieldType === 'dropdown' ||
+            field.fieldType === 'select'
+          "
+          class="form-control"
+          [id]="field.fieldName"
+          [name]="field.fieldName"
+          [(ngModel)]="formData[field.fieldName]"
+          [required]="field.isRequired"
+          #selectControl="ngModel"
+        >
+          <option value="">
+            Select {{ field.label }}
+          </option>
+
+          <option
+            *ngFor="let option of field.options"
+            [value]="option"
+          >
+            {{ option }}
+          </option>
+        </select>
+
+        <!-- Date -->
+        <input
+          *ngIf="field.fieldType === 'date'"
+          type="date"
+          class="form-control"
+          [id]="field.fieldName"
+          [name]="field.fieldName"
+          [(ngModel)]="formData[field.fieldName]"
+          [required]="field.isRequired"
+          #dateControl="ngModel"
+        >
+
+        <!-- Radio Buttons -->
+        <div
+          class="option-list"
+          *ngIf="field.fieldType === 'radio'"
+        >
+          <label
+            class="option-card"
+            *ngFor="let option of field.options"
+          >
+            <input
+              type="radio"
+              [name]="field.fieldName"
+              [value]="option"
+              [(ngModel)]="formData[field.fieldName]"
+              [required]="field.isRequired"
+            >
+
+            <span>{{ option }}</span>
+          </label>
+        </div>
+
+        <!-- Single Checkbox -->
+        <label
+          class="single-checkbox"
+          *ngIf="
+            field.fieldType === 'checkbox' &&
+            (!field.options || field.options.length === 0)
+          "
+        >
+          <input
+            type="checkbox"
+            [id]="field.fieldName"
+            [name]="field.fieldName"
+            [(ngModel)]="formData[field.fieldName]"
+          >
+
+          <span>{{ field.label }}</span>
+        </label>
+
+        <!-- Multiple Checkbox Options -->
+        <div
+          class="option-list"
+          *ngIf="
+            field.fieldType === 'checkbox' &&
+            field.options &&
+            field.options.length > 0
+          "
+        >
+          <label
+            class="option-card"
+            *ngFor="let option of field.options"
+          >
+            <input
+              type="checkbox"
+              [checked]="isCheckboxSelected(
+                field.fieldName,
+                option
+              )"
+              (change)="onCheckboxChange(
+                field.fieldName,
+                option,
+                $any($event.target).checked
+              )"
+            >
+
+            <span>{{ option }}</span>
+          </label>
+        </div>
+
+        <!-- Help Text -->
+        <small
+          class="help-text"
+          *ngIf="field.helpText"
+        >
+          {{ field.helpText }}
+        </small>
+
+        <!-- Validation Message -->
+        <small
+          class="validation-error"
+          *ngIf="
+            submitted &&
+            field.isRequired &&
+            !hasFieldValue(field)
+          "
+        >
+          {{ field.label }} is required.
+        </small>
+
+      </div>
+
+    </div>
+
+    <!-- Submit Error -->
+    <div
+      class="submit-error"
+      *ngIf="submitError"
+    >
+      {{ submitError }}
+    </div>
+
+    <!-- Buttons -->
+    <div class="form-actions">
+
+      <button
+        type="button"
+        class="back-btn"
+        (click)="goBack()"
+        [disabled]="isSubmitting"
+      >
+        Back
+      </button>
+
+      <button
+        type="submit"
+        class="continue-btn"
+        [disabled]="isSubmitting"
+      >
+        <span *ngIf="!isSubmitting">
+          Continue
+        </span>
+
+        <span *ngIf="isSubmitting">
+          Please wait...
+        </span>
+      </button>
+
+    </div>
+
+  </form>
 
 </div>
