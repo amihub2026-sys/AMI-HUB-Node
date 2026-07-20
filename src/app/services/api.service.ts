@@ -27,20 +27,13 @@ export class ApiService {
 
 
 
-  getHeaders(){
-
-    return {
-
-      headers:new HttpHeaders({
-
-        Authorization:
-        `Bearer ${this.getToken()}`
-
-      })
-
-    };
-
-  }
+ getHeaders() {
+  return {
+    headers: new HttpHeaders({
+      Authorization: `Bearer ${localStorage.getItem('token')}`
+    })
+  };
+}
 
 
 
@@ -96,13 +89,13 @@ export class ApiService {
 
   put(url:string,data:any){
 
-    return this.http.put(
-      `${this.baseUrl}${url}`,
-      data,
-      this.getHeaders()
-    );
+return this.http.put(
+`${this.baseUrl}${url}`,
+data,
+this.getHeaders()
+);
 
-  }
+}
 
 
 

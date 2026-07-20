@@ -135,38 +135,89 @@ constructor(
     this.showAdminPassword = !this.showAdminPassword;
   }
 
-  private storeUserSession(data: any) {
-    if (!this.isBrowser) return;
+  private storeUserSession(response:any) {
 
-    const resolvedUuid =
-      data?.supabase_uid ||
-      data?.auth_user_id ||
-      data?.user_id ||
-      '';
+  if (!this.isBrowser) return;
 
-    localStorage.setItem('userToken', 'loggedUser');
-    localStorage.removeItem('adminToken');
 
-    localStorage.setItem('userId', String(data.userid || ''));
-    localStorage.setItem('userEmail', data.email || '');
-    localStorage.setItem('userName', data.fullname || data.name || '');
-    localStorage.setItem('userTypeId', String(data.usertypeid || ''));
-    localStorage.setItem('username', data.username || '');
+  console.log("STORE SESSION RESPONSE:", response);
 
-    if (resolvedUuid) {
-      localStorage.setItem('supabase_uid', resolvedUuid);
-    } else {
-      localStorage.removeItem('supabase_uid');
-    }
+
+  const token = response.token;
+
+  const user = response.user;
+
+
+  if(token){
+
+    localStorage.setItem(
+      'token',
+      token
+    );
+
+    localStorage.setItem(
+      'userToken',
+      token
+    );
+
   }
 
+
+  if(user){
+
+    localStorage.setItem(
+      'user',
+      JSON.stringify(user)
+    );
+
+
+    localStorage.setItem(
+      'userId',
+      user._id
+    );
+
+
+    localStorage.setItem(
+      'userName',
+      user.fullName || ''
+    );
+
+
+    localStorage.setItem(
+      'userEmail',
+      user.email || ''
+    );
+
+
+    localStorage.setItem(
+      'userTypeId',
+      String(user.usertypeid || '')
+    );
+
+  }
+
+
+  console.log(
+    "TOKEN AFTER STORE:",
+    localStorage.getItem('token')
+  );
+
+
+  console.log(
+    "USER AFTER STORE:",
+    localStorage.getItem('user')
+  );
+
+}
   private normalizeTargetRoute(route: string): string {
     if (!route || route === '/') return '/';
     return route.startsWith('/') ? route : `/${route}`;
   }
 
   private async redirectAfterLogin(user: any) {
-    const onboardingDone = user.isonboardingcompleted === true;
+    const onboardingDone =
+  user.isOnboardingCompleted === true ||
+  user.isonboardingcompleted === true;
 
     if (!onboardingDone) {
       localStorage.removeItem('redirectToAfterLogin');
@@ -204,7 +255,7 @@ constructor(
 
  async loginWithEmailPassword() {
 
-  const identifier = this.email.trim();
+  const identifier = this.email.trim() || this.mobile.trim();
   const password = this.password.trim();
 
 
@@ -221,105 +272,83 @@ constructor(
 
   this.authService.login({
 
-    mobile: identifier,
-    password: password
+ identifier: identifier,
+ password: password
 
-  })
+})
   .subscribe({
 
-    next:(res:any)=>{
+   next:(res:any)=>{
+
+  console.log(
+    "LOGIN RESPONSE FULL:",
+    JSON.stringify(res)
+  );
 
 
-      console.log(
-        "LOGIN RESPONSE",
-        res
-      );
+  const responseData = res.data || res;
 
 
-      // SAVE JWT TOKEN
-      localStorage.setItem(
-        'token',
-        res.token
-      );
-
-
-      // SAVE USER ID
-      if(res.user?._id){
-
-        localStorage.setItem(
-          'userId',
-          res.user._id
-        );
-
-      }
-
-
-      // SAVE USER DETAILS
-      localStorage.setItem(
-        'userName',
-        res.user?.fullName || ''
-      );
-
-
-      localStorage.setItem(
-        'userEmail',
-        res.user?.email || ''
-      );
-
-
-      localStorage.setItem(
-        'userTypeId',
-        String(
-          res.user?.usertypeid || ''
-        )
-      );
-
-
-      console.log(
-        "TOKEN SAVED:",
-        localStorage.getItem('token')
-      );
-
-
-      console.log(
-        "USER ID SAVED:",
-        localStorage.getItem('userId')
-      );
+  this.storeUserSession(responseData);
 
 
 
-      this.showAlert(
-        'Login Successful',
-        'success'
-      );
+  console.log(
+    "TOKEN AFTER SAVE:",
+    localStorage.getItem('token')
+  );
+
+
+  console.log(
+    "USER ID:",
+    localStorage.getItem('userId')
+  );
 
 
 
-      setTimeout(()=>{
-
-        if(
-          res.user?.isOnboardingCompleted === false
-        ){
-
-          this.router.navigate([
-            '/account-setup'
-          ]);
-
-        }
-        else{
-
-          this.router.navigate([
-            '/'
-          ]);
-
-        }
-
-
-      },1000);
+  this.showAlert(
+    'Login Successful',
+    'success'
+  );
 
 
 
-    },
+  setTimeout(()=>{
+
+  const user = responseData.user || responseData;
+
+
+  const onboardingDone =
+    user.isOnboardingCompleted === true ||
+    user.isonboardingcompleted === true;
+
+
+  console.log(
+    "ONBOARDING STATUS:",
+    onboardingDone
+  );
+
+
+  if(!onboardingDone){
+
+    this.router.navigate([
+      '/account-setup'
+    ]);
+
+  }
+  else{
+
+    this.router.navigate([
+      '/'
+    ]);
+
+  }
+
+
+},1000);
+
+
+},
 
 
     error:(err:any)=>{

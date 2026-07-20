@@ -7,7 +7,7 @@ import { HttpClient } from '@angular/common/http';
 })
 export class AuthService {
 
-  private apiUrl = 'https://ami-hub-backend.onrender.com/api/auth';
+ private apiUrl = 'http://localhost:5000/api/auth';
 
 
   constructor(
@@ -15,14 +15,19 @@ export class AuthService {
   ) {}
 
 
-  login(data:any) {
+ login(data:any) {
 
-    return this.http.post(
-      `${this.apiUrl}/login`,
-      data
-    );
+  console.log("LOGIN DATA SENT:", data);
 
-  }
+  return this.http.post(
+    `${this.apiUrl}/login`,
+    {
+      identifier: data.identifier,
+      password: data.password
+    }
+  );
+
+}
 
 
   register(data:any) {
@@ -37,25 +42,53 @@ export class AuthService {
 
   saveSession(response:any){
 
- const token = response.data.token;
- const user = response.data.user;
+  console.log("SAVE SESSION RESPONSE:", response);
 
 
- localStorage.setItem('token', token);
-
- localStorage.setItem('userToken', token);
-
-
- localStorage.setItem(
-   'user',
-   JSON.stringify(user)
- );
+  const token = response.token;
+  const user = response.user;
 
 
- localStorage.setItem(
-   'userId',
-   user._id
- );
+  if(token){
+
+    localStorage.setItem(
+      'token',
+      token
+    );
+
+    localStorage.setItem(
+      'userToken',
+      token
+    );
+
+  }
+
+
+  if(user){
+
+    localStorage.setItem(
+      'user',
+      JSON.stringify(user)
+    );
+
+
+    localStorage.setItem(
+      'userId',
+      user._id
+    );
+
+  }
+
+
+  console.log(
+    "TOKEN SAVED:",
+    localStorage.getItem('token')
+  );
+
+  console.log(
+    "USER ID SAVED:",
+    localStorage.getItem('userId')
+  );
 
 }
 
