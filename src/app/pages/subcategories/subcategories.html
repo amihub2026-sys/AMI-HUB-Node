@@ -1,0 +1,104 @@
+<div class="subcategory-wrapper">
+
+
+  <!-- BACK BUTTON -->
+<button
+  class="subcategory-back-btn"
+  (click)="backToCategories()">
+
+  <i class="fas fa-arrow-left"></i>
+
+</button>
+
+
+
+  <!-- LOADING -->
+
+  <!-- <div
+    class="subcategory-loading"
+    *ngIf="isLoading"
+  >
+
+    Loading...
+
+  </div> -->
+
+
+
+
+  <!-- SUBCATEGORY ROW -->
+
+  <div
+    class="subcategory-row"
+    *ngIf="
+      !isLoading &&
+      subcategories.length > 0
+    "
+  >
+
+
+
+    <button
+      class="subcategory-item"
+
+      type="button"
+
+      *ngFor="
+      let sub of subcategories
+      "
+
+      (click)="selectSubcategory(sub)"
+    >
+
+
+      <div class="subcategory-icon">
+
+
+        <img
+          *ngIf="sub.iconurl"
+
+          [src]="sub.iconurl"
+
+          [alt]="sub.subcategoryname"
+        >
+
+
+      </div>
+
+
+
+      <span>
+
+        {{sub.subcategoryname}}
+
+      </span>
+
+
+
+    </button>
+
+
+
+  </div>
+
+
+
+
+
+  <!-- EMPTY -->
+
+  <div
+    class="subcategory-empty"
+
+    *ngIf="
+    !isLoading &&
+    subcategories.length===0
+    "
+  >
+
+    No subcategories found
+
+  </div>
+
+
+</div>

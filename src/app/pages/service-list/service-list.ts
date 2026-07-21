@@ -4,8 +4,10 @@ import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { supabase } from '../../../supabaseClient';
+import { SupabaseService } from '../../services/supabase.service';
 
 import { Category } from '../categories/categories';
+import { Subcategories } from '../subcategories/subcategories';
 import { Filters } from '../filters/filters';
 import { Router } from '@angular/router';
 
@@ -25,14 +27,18 @@ interface CategoryItem {
 imports: [
   CommonModule,
   RouterModule,
-  Filters, Category
+  Filters,
+  Category,
+  Subcategories
 ],
 
   templateUrl: './service-list.html',
   styleUrl: './service-list.css'
 })
 export class ServiceList {
+showSubcategories = false;
 
+selectedCategory: any = null;
   isFilterOpen = false;
   services: any[] = [];
 isLoading = false;
@@ -40,6 +46,18 @@ isLoading = false;
 filteredServices: any[] = [];
 
 isLoadingServices = false;
+onCategorySelected(category:any){
+
+  console.log(
+    "Selected Service Category",
+    category
+  );
+
+  this.selectedCategory = category;
+
+  this.showSubcategories = true;
+
+}
 
 private readonly apiUrl = environment.apiUrl;
 
@@ -59,9 +77,10 @@ private readonly apiUrl = environment.apiUrl;
     console.log('Service filters reset');
   }
 
-  constructor(private http: HttpClient,
-  private router: Router) {}
-  
+constructor(
+  private router: Router,
+  private supabaseService: SupabaseService
+) {}
 
 viewService(service: any): void {
   const id = service?._id || service?.id;
@@ -187,15 +206,27 @@ getServiceCategory(service: any): string {
   );
 }
 
-
 getServiceLocation(service: any): string {
-  return (
-    service?.displayLocation ||
-    service?.location ||
-    'Location'
-  );
-}
 
+  const location =
+    service?.location ||
+    service?.displayLocation ||
+    '';
+
+  if (!location) {
+    return 'Location';
+  }
+
+  const parts = location.split(',');
+
+  // show district only
+  if (parts.length >= 3) {
+    return parts[2].trim();
+  }
+
+  return parts[0].trim();
+
+}
 
 getServicePrice(service: any): number {
   return Number(

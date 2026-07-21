@@ -15,13 +15,21 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { SupabaseService } from '../../services/supabase.service';
 import { supabase } from '../../../supabaseClient';
+import { Category } from '../categories/categories';
+interface CategoryItem {
+  categoryid: number;
+  categoryname: string;
+  category_type?: string | null;
+  isactive?: boolean | null;
+  sortorder?: number | null;
+}
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.html',
   styleUrls: ['./home.css'],
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule]
+  imports: [CommonModule, FormsModule, Category, RouterModule]
 })
 export class Home implements OnInit, AfterViewInit, OnDestroy {
 @ViewChild('categorySlider')

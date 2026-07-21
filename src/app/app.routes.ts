@@ -10,7 +10,7 @@ import { ProductList } from './pages/product-list/product-list';
 import { ProductDetails } from './pages/product-details/product-details';
 import { Service } from './pages/service/service';
 import { ServiceList } from './pages/service-list/service-list';
-import { Coustme } from './pages/coustme/coustme';
+import { Subcategories } from './pages/subcategories/subcategories';
 import { CustomFields } from './pages/custom-fields/custom-fields';
 import { ServiceCustom } from './pages/service-custom/service-custom';
 import { ProductCategories } from './pages/product-categories/product-categories';
@@ -75,6 +75,10 @@ export const routes: Routes = [
   { path: 'custom-fields', component: CustomFields },
   { path: 'service-list', component: ServiceList },
   { path: 'service-categories', component: ServiceCategories },
+  {
+  path: 'subcategories',
+  component: Subcategories
+},
 
   { path: 'seller-profile', component: SellerProfileComponent },
 

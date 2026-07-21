@@ -9,6 +9,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { SupabaseService } from '../../services/supabase.service';
+import { Output, EventEmitter } from '@angular/core';
 
 
 @Component({
@@ -21,6 +22,8 @@ templateUrl: './categories.html',
 styleUrls: ['./categories.css']
 })
 export class Category implements OnInit {
+  @Output()
+categorySelected = new EventEmitter<any>();
   @ViewChild('categorySlider')
   categorySlider!: ElementRef<HTMLDivElement>;
   constructor(
@@ -114,55 +117,11 @@ export class Category implements OnInit {
     });
   }
   // OPEN CATEGORY
-  openCategory(category:any){
-    const categoryName =
-    (
-      category?.categoryname || ''
-    ).toLowerCase();
-    // JOB
-    if(categoryName === 'job'){
-      this.router.navigate(['/job']);
-      return;
-    }
-    // SERVICE
-    if(category?.category_type === 'service'){
-      this.router.navigate(
-        ['/service-list'],
-        {
-          queryParams:{
-            category:
-            category.categoryid
-          }
-        }
-      );
-      return;
-    }
-    // PRODUCT
-    if(category?.category_type === 'product'){
-      this.router.navigate(
-        ['/products'],
-        {
-          queryParams:{
-            category:
-            category.categoryid
-          }
-        }
-      );
-      return;
-    }
-    // DEFAULT SEARCH
-    this.router.navigate(
-      ['/search'],
-      {
-        queryParams:{
-          category:
-          category.categoryid,
-          type:'all'
-        }
-      }
+openCategory(cat:any){
 
-    );
-  }
+  this.categorySelected.emit(cat);
+
+}
   // IMAGE ERROR FALLBACK
   onCategoryImageError(
     event:Event

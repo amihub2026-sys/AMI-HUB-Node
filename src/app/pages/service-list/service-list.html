@@ -1,4 +1,30 @@
-<app-categories></app-categories>
+<!-- CATEGORY -->
+
+<app-categories
+
+*ngIf="!showSubcategories"
+
+categoryType="service"
+
+(categorySelected)="onCategorySelected($event)">
+
+</app-categories>
+
+
+
+<!-- SUBCATEGORY -->
+
+<app-subcategories
+
+*ngIf="showSubcategories"
+
+categoryType="service"
+
+[selectedCategory]="selectedCategory"
+
+(back)="showSubcategories=false">
+
+</app-subcategories>
 
 <div class="page-layout">
 
