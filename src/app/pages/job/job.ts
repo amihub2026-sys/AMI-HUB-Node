@@ -3,11 +3,12 @@ import { FormsModule } from '@angular/forms';
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { supabase } from '../../../supabaseClient';
+import { SearchResults } from '../search-results/search-results';
 
 @Component({
   selector: 'app-job',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SearchResults],
   templateUrl: './job.html',
   styleUrl: './job.css'
 })

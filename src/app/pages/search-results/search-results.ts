@@ -1,4 +1,4 @@
-import { Component, ChangeDetectorRef, HostListener } from '@angular/core';
+import { Component, ChangeDetectorRef, HostListener,Input } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Location } from '@angular/common';
@@ -35,6 +35,7 @@ interface SubcategoryItem {
   styleUrls: ['./search-results.css']
 })
 export class SearchResults {
+  @Input() results:any[] = [];
   searchText = '';
   locationText = '';
   selectedRadiusKm = 5;
@@ -51,7 +52,6 @@ sortBy = 'Newest';
 
   isLoading = false;
 
-  results: any[] = [];
   filteredResults: any[] = [];
 
   categories: CategoryItem[] = [];
@@ -426,11 +426,25 @@ async selectCategory(id:number|null){
     });
   }
 
-async selectType(type: 'all' | 'product' | 'service' | 'job') {
-    this.selectedType = type;
-    await this.searchNow();
+selectType(type: 'product' | 'service') {
+
+  this.selectedType = type;
+
+
+  if(type === 'product') {
+
+    this.router.navigate(['/products']);
+
   }
 
+
+  if(type === 'service') {
+
+  this.router.navigate(['/service-list']);
+
+}
+
+}
   async loadCategories() {
     try {
       let query = supabase
@@ -821,7 +835,13 @@ if (this.sortBy === 'Price High') {
     if (!id) return;
     this.router.navigate(['/details', id]);
   }
-  goToJobs(): void {
+
+  goToJobs(){
+
+  this.selectedType = 'job';
+
   this.router.navigate(['/job']);
+
 }
+
 }

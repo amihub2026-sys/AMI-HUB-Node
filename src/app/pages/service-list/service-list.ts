@@ -5,7 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { supabase } from '../../../supabaseClient';
 import { SupabaseService } from '../../services/supabase.service';
-
+import { SearchResults } from '../search-results/search-results';
 import { Category } from '../categories/categories';
 import { Subcategories } from '../subcategories/subcategories';
 import { Filters } from '../filters/filters';
@@ -29,7 +29,7 @@ imports: [
   RouterModule,
   Filters,
   Category,
-  Subcategories
+  Subcategories, SearchResults
 ],
 
   templateUrl: './service-list.html',

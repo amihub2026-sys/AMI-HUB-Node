@@ -13,41 +13,43 @@
       <img src="assets/hub_logo.png">
     </div>
 
-<!-- active pages -->
+
 <!-- active pages -->
 <div class="nav-links">
 
-  <a
+  <button
+    class="nav-link-btn"
     [class.active]="selectedType === 'product'"
     (click)="selectType('product')">
 
     <i class="fas fa-box"></i>
     Products
 
-  </a>
+  </button>
 
 
-  <a
+  <button
+    class="nav-link-btn"
     [class.active]="selectedType === 'service'"
     (click)="selectType('service')">
 
     <i class="fas fa-briefcase"></i>
     Services
 
-  </a>
+  </button>
 
 
-<a
-  [class.active]="selectedType === 'job'"
-  (click)="goToJobs()">
+  <button
+    class="nav-link-btn"
+    [class.active]="selectedType === 'job'"
+    (click)="goToJobs()">
 
-  <i class="fas fa-user-tie"></i>
-  Jobs
+    <i class="fas fa-user-tie"></i>
+    Jobs
 
-</a>
+  </button>
 
 </div>
-
 
    <div class="search-box">
 
@@ -267,24 +269,24 @@
 
 </div> -->
  
-  <div class="results-layout">
+  <!-- <div class="results-layout">
    <div
     class="mobile-filter-overlay"
     *ngIf="showMobileFilters"
     (click)="closeMobileFilters()"
-  ></div>
+  ></div> -->
 
-  <div
+  <!-- <div
     class="filters-panel"
     [class.mobile-filter-open]="showMobileFilters"
   >
 
 
-<h3>🔍 Filters</h3>
+<h3>🔍 Filters</h3> -->
 
 
 <!-- SEARCH -->
-<details open>
+<!-- <details open>
   <summary>
     Search
   </summary>
@@ -301,10 +303,10 @@
   </div>
 
 </details>
-
+ -->
 
 <!-- CATEGORY -->
-<details>
+<!-- <details>
 
 <summary>
   Category
@@ -380,15 +382,9 @@
 
 </div>
 
-</details>
-
-  
-
-
-
-
+</details> -->
 <!-- LOCATION -->
-<details>
+<!-- <details>
 
 <summary>
  Location
@@ -408,13 +404,9 @@
 </div>
 </div>
 
-</details>
-
-
-
-
+</details> -->
 <!-- RADIUS -->
-<details>
+<!-- <details>
 
 <summary>
  Radius
@@ -444,20 +436,17 @@ max="50"
 
 </div>
 
-</details>
-
-
-
+</details> -->
 <!-- PRICE -->
 
-<details>
+<!-- <details>
 
 <summary>
  Price Range
-</summary>
+</summary> -->
 
 
-<div class="filter-content">
+<!-- <div class="filter-content">
 
 <div class="budget-row">
 
@@ -466,22 +455,17 @@ type="number"
 [(ngModel)]="minPrice"
 placeholder="Min price"
 />
-
-
 <input
 type="number"
 [(ngModel)]="maxPrice"
 placeholder="Max price"
 />
-
-
 </div>
-
 </div>
-</details>
+</details> -->
 <!-- SORT -->
 
-<details>
+<!-- <details>
 
   <summary>
     Sort By
@@ -521,11 +505,11 @@ placeholder="Max price"
 
   </div>
 
-</details>
+</details> -->
 
   <!-- BUTTONS -->
 
-<div class="filter-actions">
+<!-- <div class="filter-actions">
 
   <button
     type="button"
@@ -591,7 +575,7 @@ placeholder="Max price"
   class="featured-card result-card"
   *ngFor="let item of filteredResults"
   (click)="openDetails(item)"
->
+> -->
 
   <!-- BADGE
   <span class="card-badge">
@@ -605,7 +589,7 @@ placeholder="Max price"
 
 
   <!-- IMAGE -->
-<div class="card-image">
+<!-- <div class="card-image">
 
   <span class="card-badge">
     {{item.displayType}}
@@ -618,29 +602,29 @@ placeholder="Max price"
 
 </div>
 
-  <div class="card-body">
+  <div class="card-body"> -->
 
 
     <!-- CATEGORY -->
-   <p class="category">
+   <!-- <p class="category">
   ✦ {{item.displayCategory}}
-</p>
+</p> -->
 
 
     <!-- TITLE -->
-    <h4>
+    <!-- <h4>
       {{item.displayTitle}}
-    </h4>
+    </h4> -->
 
 
     <!-- DESCRIPTION -->
-    <p class="description">
+    <!-- <p class="description">
       {{item.description || 'Quality service and best products available'}}
-    </p>
+    </p> -->
 
 
     <!-- RATING LOCATION -->
-    <div class="info-row">
+    <!-- <div class="info-row">
 
       <span>
         ⭐ 4.8
@@ -650,31 +634,31 @@ placeholder="Max price"
   <i class="fas fa-location-dot"></i>
   {{getDistrict(item)}}
 </span>
-    </div>
+    </div> -->
 
 
     <!-- PRICE + BUTTON -->
-    <div class="bottom-row">
+    <!-- <div class="bottom-row">
 
       <div class="price-box">
 
         <strong *ngIf="item.displayPrice > 0">
           ₹{{item.displayPrice}}
-        </strong>
+        </strong> -->
 
         <!-- <small>
           /service
         </small> -->
 
-      </div>
+      <!-- </div>
 
 
       <a class="card-link">
         View Details
-      </a>
+      </a> -->
 
 
-    </div>
+    <!-- </div>
 
 
   </div>
@@ -683,4 +667,4 @@ placeholder="Max price"
     
 
   </div>
-</div>
+</div> -->

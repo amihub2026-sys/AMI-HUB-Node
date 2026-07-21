@@ -345,7 +345,22 @@ font-size:15px;
 
 }
 
+.nav-link-btn{
 
+    border:none;
+    background:transparent;
+
+    color:inherit;
+
+    font:inherit;
+
+    cursor:pointer;
+
+    display:flex;
+    align-items:center;
+    gap:8px;
+
+}
 
 /* ================================
  LOGIN HEADER
