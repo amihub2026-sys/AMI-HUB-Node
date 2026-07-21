@@ -1,0 +1,355 @@
+/* MAIN WRAPPER */
+
+.subcategory-wrapper{
+
+width:100%;
+
+display:flex;
+
+align-items:center;
+
+gap:15px;
+
+}
+
+
+
+/* BACK BUTTON */
+
+.subcategory-back{
+
+width:35px;
+
+height:35px;
+
+border-radius:50%;
+
+border:none;
+
+background:#f1f5ff;
+
+color:#1557db;
+
+cursor:pointer;
+
+}
+
+
+
+/* ROW */
+
+.subcategory-row{
+
+display:flex;
+
+align-items:flex-start;
+
+gap:28px;
+
+width:100%;
+
+overflow-x:auto;
+
+scroll-behavior:smooth;
+
+}
+
+
+
+.subcategory-row::-webkit-scrollbar{
+
+display:none;
+
+}
+
+
+
+/* ITEM */
+
+.subcategory-item{
+
+flex:0 0 90px;
+
+border:none;
+
+background:none;
+
+cursor:pointer;
+
+text-align:center;
+
+}
+
+
+
+/* ICON */
+
+.subcategory-icon{
+
+  width:45px;
+
+  height:45px;
+
+  margin:auto;
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:center;
+
+  background:transparent;
+
+  border:none;
+
+  border-radius:0;
+
+}
+
+
+.subcategory-icon img{
+
+
+width:38px;
+
+height:38px;
+
+object-fit:contain;
+
+}
+
+
+
+/* NAME */
+
+.subcategory-item span{
+
+display:block;
+margin-top:8px;
+font-size:10px;
+font-weight:500;
+color:#111827;
+line-height:15px;
+
+
+}
+
+
+
+/* LOADING */
+
+.subcategory-loading{
+
+width:100%;
+
+text-align:center;
+
+color:#64748b;
+
+}
+
+
+
+/* EMPTY */
+
+.subcategory-empty{
+
+color:#64748b;
+
+font-size:14px;
+
+}
+/* MAIN WRAPPER */
+.subcategory-wrapper{
+
+  width:100%;
+
+  display:flex;
+
+  align-items:center;
+
+  gap:15px;
+
+  padding:10px 20px;
+
+  background:#fff;
+
+}
+
+
+/* BACK BUTTON */
+
+.subcategory-back-btn{
+
+  width:42px;
+  height:42px;
+
+  flex-shrink:0;
+
+  border-radius:50%;
+
+  border:1px solid #dbe4ff;
+
+  background:#ffffff;
+
+  color:#2563eb;
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:center;
+
+  font-size:18px;
+
+  cursor:pointer;
+
+  box-shadow:0 3px 10px rgba(0,0,0,0.12);
+
+  transition:0.3s ease;
+
+}
+
+
+.subcategory-back-btn:hover{
+
+  background:#2563eb;
+
+  color:#fff;
+
+  transform:translateX(-3px);
+
+}
+
+
+
+/* SUBCATEGORY LIST */
+
+.subcategory-row{
+
+  display:flex;
+
+  align-items:center;
+
+  gap:20px;
+
+  overflow-x:auto;
+
+  flex:1;
+
+  scrollbar-width:none;
+
+}
+
+
+.subcategory-row::-webkit-scrollbar{
+
+  display:none;
+
+}
+
+
+
+/* EACH ITEM */
+
+.subcategory-item{
+
+  min-width:90px;
+
+  border:none;
+
+  background:transparent;
+
+  cursor:pointer;
+
+  text-align:center;
+
+}
+
+
+.subcategory-icon img{
+
+  width:38px;
+
+  height:38px;
+
+  object-fit:contain;
+
+}
+
+
+
+
+
+/* MOBILE */
+
+@media(max-width:768px){
+
+  .subcategory-wrapper{
+
+    padding:10px;
+
+  }
+
+
+  .subcategory-back-btn{
+
+    width:36px;
+
+    height:36px;
+
+  }
+
+
+  .subcategory-item{
+
+    min-width:75px;
+
+  }
+
+.subcategory-icon{
+
+width:50px;
+
+height:50px;
+
+background:transparent;
+
+border:none;
+
+}
+
+}
+
+
+
+/* MOBILE */
+
+@media(max-width:700px){
+
+
+.subcategory-row{
+
+gap:18px;
+
+}
+
+
+.subcategory-item{
+
+flex:0 0 75px;
+
+}
+
+
+.subcategory-icon img{
+
+width:32px;
+
+height:32px;
+
+}
+
+
+
+}

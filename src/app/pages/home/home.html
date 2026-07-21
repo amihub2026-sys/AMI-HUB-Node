@@ -5,64 +5,10 @@
 <div class="side-fill right-fill">
   <img src="/assets/ads/right_poster.png" alt="Right ad" />
 </div> -->
-
+<app-categories></app-categories>
   <!-- MAIN CONTENT -->
   <div class="whole">
 
-<!-- CATEGORY SLIDER -->
-<section class="categories-section">
-
-  <div class="category-slider-wrapper">
-
-    <!-- LEFT ARROW -->
-    <button
-      type="button"
-      class="category-arrow left-arrow"
-      (click)="slideCategories('left')"
-      aria-label="Previous categories"
-    >
-      <i class="fas fa-chevron-left"></i>
-    </button>
-
-    <!-- CATEGORY ROW -->
-    <div
-      class="flipkart-category-row"
-      #categorySlider
-      *ngIf="browseCategories().length > 0"
-    >
-      <button
-        type="button"
-        class="flipkart-category-item"
-        *ngFor="let cat of browseCategories()"
-        (click)="openCategory(cat)"
-      >
-        <div class="flipkart-category-icon">
-          <img
-            [src]="getCategoryImage(cat)"
-            [alt]="cat.categoryname"
-            loading="lazy"
-          >
-        </div>
-
-        <span class="flipkart-category-label">
-          {{ cat.categoryname }}
-        </span>
-      </button>
-    </div>
-
-    <!-- RIGHT ARROW -->
-    <button
-      type="button"
-      class="category-arrow right-arrow"
-      (click)="slideCategories('right')"
-      aria-label="Next categories"
-    >
-      <i class="fas fa-chevron-right"></i>
-    </button>
-
-  </div>
-
-</section>
 
 
 

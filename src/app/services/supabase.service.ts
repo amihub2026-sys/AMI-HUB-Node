@@ -74,6 +74,7 @@ export interface Post {
 
 @Injectable({ providedIn: 'root' })
 export class SupabaseService {
+  
   public supabase: SupabaseClient = supabase;
   private currentUser: User | null = null;
 
@@ -84,7 +85,43 @@ export class SupabaseService {
       });
     }
   }
+async getSubcategoriesByCategory(categoryId:any){
+  
 
+  const { data, error } = await this.supabase
+    .from('subcategories')
+    .select('*')
+    .eq(
+      'categoryid',
+      categoryId
+    )
+    .eq(
+      'isactive',
+      true
+    )
+    .order(
+      'sortorder',
+      {
+        ascending:true
+      }
+    );
+
+
+  if(error){
+
+    console.error(
+      "Subcategory error",
+      error
+    );
+
+    throw error;
+
+  }
+
+
+  return data || [];
+
+}
   // ---------------- Helpers ----------------
   private isBrowser(): boolean {
     return typeof window !== 'undefined';

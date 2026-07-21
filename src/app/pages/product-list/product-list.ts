@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../services/supabase.service';
 import { supabase } from '../../../supabaseClient';
 import { Category } from '../categories/categories';
+import { Subcategories } from '../subcategories/subcategories';
 import { Router } from '@angular/router';
 import {
   Filters,
@@ -70,12 +71,15 @@ imports: [
  RouterModule,
  FormsModule,
  Category,
+ Subcategories,
   Filters
 ],
   templateUrl: './product-list.html',
   styleUrl: './product-list.css',
 })
 export class ProductList implements OnInit {
+  
+  showSubcategories = false;
   isFilterOpen = false;
   currentUserId = signal<string>('');
   posts = signal<any[]>([]);
@@ -87,6 +91,21 @@ export class ProductList implements OnInit {
   categoriesData: CategoryItem[] = [];
   allSubcategories: SubcategoryItem[] = [];
 results: ProductCardItem[] = [];
+selectedCategory: any = null;
+
+onCategorySelected(category:any){
+
+  console.log(
+    "Selected Category",
+    category
+  );
+
+
+  this.selectedCategory = category;
+
+  this.showSubcategories = true;
+
+}
 
 filteredResults: ProductCardItem[] = [];
   private page = 0;
@@ -101,8 +120,8 @@ filteredResults: ProductCardItem[] = [];
   maxPrice: number | null = null;
   sortBy = 'Newest';
 
-  selectedCategoryId: number | null = null;
-  selectedSubcategoryId: number | null = null;
+selectedCategoryId: string | number | null = null;
+  selectedSubcategoryId: string | number | null = null;
   selectedCategoryName = '';
 
 constructor(
@@ -126,9 +145,10 @@ this.currentUserId.set(user?.id || '');
         ? Number(params['category'])
         : null;
 
-      this.selectedSubcategoryId = params['subcategory']
-        ? Number(params['subcategory'])
-        : null;
+this.selectedSubcategoryId =
+  params['subcategory'] 
+  ? String(params['subcategory'])
+  : null;
 
       this.searchText = (params['q'] || '').toString().trim();
 
@@ -325,6 +345,19 @@ onFiltersReset(): void {
 
   // Reload all products here.
 }
+selectSubcategory(subcategory: any): void {
+
+  console.log('Selected Subcategory:', subcategory);
+
+  this.selectedSubcategoryId =
+    subcategory?.subcategoryid ||
+    subcategory?._id ||
+    null;
+
+
+  // reload/filter your products here
+
+}
   async loadAllSubcategories(): Promise<void> {
     try {
       const { data, error } = await supabase
@@ -414,7 +447,8 @@ onFiltersReset(): void {
 
     if (matchedSubcategory) {
       this.selectedCategoryId = Number(matchedSubcategory.categoryid);
-      this.selectedSubcategoryId = Number(matchedSubcategory.subcategoryid);
+this.selectedSubcategoryId =
+  String(matchedSubcategory.subcategoryid);
 
       const selectedCategory = this.categoriesData.find(
         (c) => Number(c.categoryid) === Number(matchedSubcategory.categoryid)
@@ -482,11 +516,7 @@ onFiltersReset(): void {
     this.applyFilters();
   }
 
-  selectSubcategory(sub: SubcategoryItem): void {
-    this.selectedSubcategoryId = Number(sub.subcategoryid);
-    this.searchText = sub.subcategoryname || '';
-    this.applyFilters();
-  }
+
 
   showAllSubcategoryPosts(): void {
     this.selectedSubcategoryId = null;
@@ -866,6 +896,7 @@ onFiltersReset(): void {
       await this.loadMorePosts();
     }
   }
+  
 
   getMainImage(post: any): string {
     const fallback = 'assets/no-image.png';
@@ -886,4 +917,5 @@ toggleFilter() {
 goBack(): void {
   this.location.back();
 }
+
 }
