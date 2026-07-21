@@ -8,6 +8,7 @@ import { supabase } from '../../../supabaseClient';
 import { Category } from '../categories/categories';
 import { Subcategories } from '../subcategories/subcategories';
 import { Router } from '@angular/router';
+import { SearchResults } from '../search-results/search-results';
 import {
   Filters,
   FilterState
@@ -72,7 +73,8 @@ imports: [
  FormsModule,
  Category,
  Subcategories,
-  Filters
+  Filters,
+  SearchResults
 ],
   templateUrl: './product-list.html',
   styleUrl: './product-list.css',
