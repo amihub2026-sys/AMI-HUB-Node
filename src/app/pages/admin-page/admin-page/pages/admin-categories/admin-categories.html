@@ -59,7 +59,7 @@
 
     <div class="summary-card summary-purple">
       <div class="summary-top">
-        <span>Product Type</span>
+       <span>Product Categories</span>
         <div class="summary-icon">🛍️</div>
       </div>
       <h2>{{ productCategories }}</h2>
@@ -103,13 +103,43 @@
         />
       </div>
 
-      <div class="form-group">
-        <label>Category Type *</label>
-        <select [(ngModel)]="form.category_type">
-          <option value="product">Product</option>
-          <option value="service">Service</option>
-        </select>
-      </div>
+<div class="form-group full-width">
+  <label>Available In *</label>
+
+  <div class="category-type-options">
+
+    <label class="checkbox-wrap">
+      <input
+        type="radio"
+        name="categoryScope"
+        value="product"
+        [(ngModel)]="form.categoryScope"
+      />
+      <span>Product</span>
+    </label>
+
+    <label class="checkbox-wrap">
+      <input
+        type="radio"
+        name="categoryScope"
+        value="service"
+        [(ngModel)]="form.categoryScope"
+      />
+      <span>Service</span>
+    </label>
+
+    <label class="checkbox-wrap">
+      <input
+        type="radio"
+        name="categoryScope"
+        value="both"
+        [(ngModel)]="form.categoryScope"
+      />
+      <span>Product & Service</span>
+    </label>
+
+  </div>
+</div>
 
       <div class="form-group">
         <label>Icon Upload</label>
@@ -185,7 +215,7 @@
     <div class="section-head">
       <div>
         <h3>Categories List</h3>
-        <p>Live data from Supabase categories table</p>
+       <p>Live category data from AMI HUB database</p>
       </div>
 
       <div class="count-badge">
@@ -232,7 +262,7 @@
             </td>
 
             <td>{{ item.slug }}</td>
-            <td>{{ item.category_type || '-' }}</td>
+            <td>{{ getCategoryTypeLabel(item.availableIn) }}</td>
             <td>{{ item.sortorder }}</td>
 
             <td>
