@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../../../services/api.service';
 import { firstValueFrom } from 'rxjs';
 interface AdminCategoryItem {
+
   categoryid: string;
   categoryname: string;
   slug: string;
@@ -13,7 +14,9 @@ interface AdminCategoryItem {
   isactive: boolean;
   createdon: string;
   rawcreatedon: string;
-  category_type: string;
+
+  availableIn: string[];
+
 }
 
 @Component({
@@ -40,16 +43,15 @@ export class AdminCategoriesComponent implements OnInit {
   editingCategoryId: string | null = null;
   selectedIconFile: File | null = null;
 selectedBannerFile: File | null = null;
-  form = {
-    categoryname: '',
-    slug: '',
-    iconurl: '',
-    bannerurl: '',
-    sortorder: 1,
-    isactive: true,
-    category_type: 'product',
-  };
-
+form = {
+  categoryname: '',
+  slug: '',
+  iconurl: '',
+  bannerurl: '',
+  sortorder: 1,
+  isactive: true,
+  categoryScope: 'product',
+};
   async ngOnInit(): Promise<void> {
     await this.loadCategories();
   }
@@ -70,7 +72,19 @@ selectedBannerFile: File | null = null;
           isactive: row.isActive,
           createdon: this.formatDate(row.createdAt),
           rawcreatedon: row.createdAt,
-          category_type: row.type || '-',
+          availableIn: Array.isArray(row.availableIn)
+  ? row.availableIn
+  : row.type
+    ? [row.type]
+    : [],
+
+category_type: this.getCategoryTypeLabel(
+  Array.isArray(row.availableIn)
+    ? row.availableIn
+    : row.type
+      ? [row.type]
+      : []
+),
         }));
         this.isLoading = false;
         this.cdr.detectChanges();
@@ -107,7 +121,9 @@ selectedBannerFile: File | null = null;
         String(item.categoryid).includes(q) ||
         item.categoryname.toLowerCase().includes(q) ||
         item.slug.toLowerCase().includes(q) ||
-        item.category_type.toLowerCase().includes(q) ||
+       this.getCategoryTypeLabel(item.availableIn)
+  .toLowerCase()
+  .includes(q) ||
         String(item.sortorder).includes(q) ||
         (item.isactive ? 'active' : 'inactive').includes(q)
     );
@@ -122,10 +138,11 @@ selectedBannerFile: File | null = null;
   get inactiveCategories(): number {
     return this.categories.filter((c) => !c.isactive).length;
   }
-  get productCategories(): number {
-    return this.categories.filter((c) => c.category_type === 'product').length;
-  }
-
+get productCategories(): number {
+  return this.categories.filter((category) =>
+    category.availableIn.includes('product')
+  ).length;
+}
 openCreateForm(): void {
   this.showForm = true;
   this.editingCategoryId = null;
@@ -135,17 +152,15 @@ openCreateForm(): void {
 
   this.successMessage = '';
   this.errorMessage = '';
-
-  this.form = {
-    categoryname: '',
-    slug: '',
-    iconurl: '',
-    bannerurl: '',
-    sortorder: this.categories.length + 1,
-    isactive: true,
-    category_type: 'product',
-  };
-
+this.form = {
+  categoryname: '',
+  slug: '',
+  iconurl: '',
+  bannerurl: '',
+  sortorder: this.categories.length + 1,
+  isactive: true,
+  categoryScope: 'product',
+};
   this.cdr.detectChanges();
 }
 editCategory(item: AdminCategoryItem): void {
@@ -158,6 +173,21 @@ editCategory(item: AdminCategoryItem): void {
   this.successMessage = '';
   this.errorMessage = '';
 
+  let categoryScope = 'product';
+
+  const types = item.availableIn || [];
+
+  if (
+    types.includes('product') &&
+    types.includes('service')
+  ) {
+    categoryScope = 'both';
+  } else if (types.includes('service')) {
+    categoryScope = 'service';
+  } else {
+    categoryScope = 'product';
+  }
+
   this.form = {
     categoryname: item.categoryname,
     slug: item.slug,
@@ -165,7 +195,7 @@ editCategory(item: AdminCategoryItem): void {
     bannerurl: item.bannerurl,
     sortorder: item.sortorder,
     isactive: item.isactive,
-    category_type: item.category_type || 'product',
+    categoryScope,
   };
 
   this.cdr.detectChanges();
@@ -242,10 +272,10 @@ async saveCategory(): Promise<void> {
     return;
   }
 
-  if (!this.form.category_type.trim()) {
-    this.errorMessage = 'Category type is required.';
-    return;
-  }
+if (!this.form.categoryScope) {
+  this.errorMessage = 'Select where the category should appear.';
+  return;
+}
 
   this.isSaving = true;
   this.cdr.detectChanges();
@@ -268,14 +298,28 @@ async saveCategory(): Promise<void> {
       );
     }
 
-    const payload = {
-      categoryName: this.form.categoryname.trim(),
-      type: this.form.category_type.trim(),
-      icon: iconUrl || '',
-      image: bannerUrl || '',
-      sortOrder: Number(this.form.sortorder || 0),
-      isActive: this.form.isactive
-    };
+let availableIn: string[] = [];
+
+if (this.form.categoryScope === 'product') {
+  availableIn = ['product'];
+}
+
+if (this.form.categoryScope === 'service') {
+  availableIn = ['service'];
+}
+
+if (this.form.categoryScope === 'both') {
+  availableIn = ['product', 'service'];
+}
+
+const payload = {
+  categoryName: this.form.categoryname.trim(),
+  availableIn,
+  icon: iconUrl || '',
+  image: bannerUrl || '',
+  sortOrder: Number(this.form.sortorder || 0),
+  isActive: this.form.isactive
+};
 
     if (this.editingCategoryId) {
       await firstValueFrom(
@@ -343,8 +387,26 @@ async saveCategory(): Promise<void> {
   getStatusClass(item: AdminCategoryItem): string {
     return item.isactive ? 'status-active' : 'status-inactive';
   }
+getCategoryTypeLabel(availableIn: string[]): string {
+  const hasProduct = availableIn.includes('product');
+  const hasService = availableIn.includes('service');
 
-  trackByCategory(index: number, item: AdminCategoryItem): string {
+  if (hasProduct && hasService) {
+    return 'Product & Service';
+  }
+
+  if (hasProduct) {
+    return 'Product';
+  }
+
+  if (hasService) {
+    return 'Service';
+  }
+
+  return '-';
+}
+
+trackByCategory(index: number, item: AdminCategoryItem): string {
     return item.categoryid;
   }
 
