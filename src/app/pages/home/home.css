@@ -18,6 +18,13 @@ body {
 
 
 /* ================= HERO BANNER PERFECT PADDING ================= */
+app-categories{
+
+    display:block;
+
+    padding-top:150px;
+
+}
 
 .top-hero{
   padding: 14px;
@@ -3416,6 +3423,30 @@ DOTS SPACE FIX
 }
 
 /* ================= RESPONSIVE ================= */
+
+/* ==========================
+   MOBILE HOME CATEGORY SPACE
+========================== */
+
+@media(max-width:768px){
+
+app-categories{
+
+    display:block;
+
+    padding-top:65px;
+
+    padding-left:10px;
+
+    padding-right:10px;
+
+    width:100%;
+
+    box-sizing:border-box;
+
+}
+
+}
 
 @media (max-width: 768px) {
   .featured-matrimony-card::before,

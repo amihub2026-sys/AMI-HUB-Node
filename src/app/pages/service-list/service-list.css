@@ -14,6 +14,24 @@
     align-items:start;
 
 }
+
+/* CATEGORY SPACE BELOW FIXED NAV */
+
+.service-category-space{
+
+    padding-top:75px;
+
+}
+
+@media(max-width:768px){
+
+.service-category-space{
+
+    padding-top:120px;
+
+}
+
+}
 /* =========================================
    SERVICE RESULTS AREA
 ========================================= */
@@ -397,8 +415,35 @@
 
 
 /* =========================================
-   RESPONSIVE SERVICE CARDS
+   DESKTOP FILTER STICKY
 ========================================= */
+
+@media(min-width:769px){
+
+.left-panel{
+
+    position:sticky !important;
+
+    top:90px;
+
+    height:calc(100vh - 120px);
+
+    overflow-y:auto;
+
+    align-self:start;
+
+}
+
+
+/* remove mobile bar in desktop */
+
+.mobile-filter-bar{
+
+    display:none !important;
+
+}
+
+}
 
 
 /* ==========================

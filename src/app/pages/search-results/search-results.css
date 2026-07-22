@@ -10,7 +10,41 @@
     margin:0 !important;
     padding:0 !important;
 }
+/* ==================================
+   PRODUCT SERVICE JOB NAV FIXED
+================================== */
 
+.service-navbar{
+
+    position:fixed;
+
+    top:0;
+
+    left:0;
+
+    width:100%;
+
+    z-index:9999;
+
+    background:#0737a8;
+
+}
+
+
+/* content below fixed nav */
+
+.results-page{
+
+    padding-top:85px;
+
+}
+
+
+.results-content{
+
+    padding-top:10px;
+
+}
 
 .service-navbar{
     margin:0 !important;
@@ -831,7 +865,41 @@ cursor:pointer;
     transition:.3s ease;
 
 }
+@media(max-width:768px){
 
+
+.service-navbar{
+
+    position:fixed;
+
+    top:0;
+
+    left:0;
+
+    width:100%;
+
+    z-index:9999;
+
+}
+
+
+/* avoid category hiding */
+
+.results-page{
+
+    padding-top:75px !important;
+
+}
+
+
+.results-content{
+
+    padding-top:10px;
+
+}
+
+
+}
 @media(max-width:768px){
 
 .nav-link-btn{
