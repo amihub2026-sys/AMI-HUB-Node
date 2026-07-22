@@ -221,5 +221,78 @@ export class ApiService {
     );
 
   }
+  // ======================
+// CUSTOM FIELD ASSIGNMENT
+// ======================
+
+
+getCustomFieldAssignments(){
+
+  return this.get(
+    '/custom-field-assignment/all'
+  );
+
+}
+
+
+
+getCustomFields(){
+
+  return this.get(
+    '/admin/custom-fields'
+  );
+
+}
+
+
+
+getAssignedCustomFields(
+  categoryId:string,
+  subcategoryId:string,
+  type:string
+){
+
+  return this.get(
+    `/custom-field-assignment?categoryId=${categoryId}&subcategoryId=${subcategoryId}&type=${type}`
+  );
+
+}
+
+
+
+assignCustomFields(data:any){
+
+  return this.post(
+    '/custom-field-assignment',
+    data
+  );
+
+}
+
+
+
+updateCustomFieldAssignment(
+  id:string,
+  data:any
+){
+
+  return this.put(
+    `/custom-field-assignment/${id}`,
+    data
+  );
+
+}
+
+
+
+deleteCustomFieldAssignment(
+  id:string
+){
+
+  return this.delete(
+    `/custom-field-assignment/${id}`
+  );
+
+}
 
 }

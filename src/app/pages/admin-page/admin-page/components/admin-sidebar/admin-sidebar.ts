@@ -18,6 +18,8 @@ export type AdminMenuKey =
 | 'payments'
   | 'reports'
   |'custom-fields'
+  | 'custom-field-assignment'
+
   | 'locations'
   | 'banners'
   | 'notifications'
@@ -59,7 +61,11 @@ export class AdminSidebar {
 { key: 'payments', label: 'Payments', icon: '💳' },
     { key: 'reports', label: 'Reports', icon: '📈' },
     { key: 'custom-fields', label: 'Custom Fields', icon: '⚙️' },
-
+{
+  key: 'custom-field-assignment',
+  label: 'Custom Field Assignment',
+  icon: '🔗'
+},
     { key: 'locations', label: 'Locations', icon: '📍' },
     { key: 'banners', label: 'Banners', icon: '🖼️' },
     { key: 'notifications', label: 'Notifications', icon: '🔔' },

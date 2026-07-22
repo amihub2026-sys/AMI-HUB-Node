@@ -92,6 +92,10 @@
   *ngIf="activeMenu === 'custom-fields'"
   [searchQuery]="searchQuery">
 </app-admin-custom-fields>
+<app-admin-custom-field-assignment
+  *ngIf="activeMenu === 'custom-field-assignment'"
+>
+</app-admin-custom-field-assignment>
 
     <div class="content-card" *ngIf="activeMenu === 'services'">
       <h1>Services</h1>
