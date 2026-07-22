@@ -6,6 +6,9 @@
 
 <div class="product-category-space">
 
+<div class="category-switcher">
+
+
 <app-categories
 *ngIf="!showSubcategories"
 (categorySelected)="onCategorySelected($event)">
@@ -18,6 +21,8 @@
 (back)="showSubcategories=false">
 </app-subcategories>
 
+
+</div>
 </div>
 
 <div class="page-layout">

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
@@ -79,7 +79,8 @@ private readonly apiUrl = environment.apiUrl;
 
 constructor(
   private router: Router,
-  private supabaseService: SupabaseService
+  private supabaseService: SupabaseService,
+  private cdr: ChangeDetectorRef
 ) {}
 
 viewService(service: any): void {
@@ -170,8 +171,12 @@ async loadServices(): Promise<void> {
     this.services = [];
     this.filteredServices = [];
   } finally {
-    this.isLoadingServices = false;
-  }
+
+  this.isLoadingServices = false;
+
+  this.cdr.detectChanges();
+
+}
 }
 
 getServiceImage(service: any): string {

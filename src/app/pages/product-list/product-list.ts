@@ -111,7 +111,7 @@ onCategorySelected(category:any){
 
 filteredResults: ProductCardItem[] = [];
   private page = 0;
-  private readonly pageSize = 100;
+  private readonly pageSize = 20;
 
   private selectedLocation: any = null;
   selectedRadiusKm = 50;
@@ -138,9 +138,11 @@ constructor(
     const user = await this.supabaseService.getCurrentUser();
 this.currentUserId.set(user?.id || '');
     this.loadSelectedLocationAndRadius();
-    await this.loadCategories();
-    await this.loadAllSubcategories();
-    await this.loadResults();
+   await Promise.all([
+  this.loadCategories(),
+  this.loadAllSubcategories(),
+  this.loadResults()
+]);
 
     this.route.queryParams.subscribe(async (params) => {
       this.selectedCategoryId = params['category']
@@ -209,7 +211,7 @@ this.selectedSubcategoryId =
       .eq('status', 'Active')
       .eq('adtype', 'product')
       .order('createdon', { ascending: false })
-      .limit(60);
+      .limit(20);
 
     if (error) {
       throw error;
@@ -234,10 +236,13 @@ this.selectedSubcategoryId =
     this.results = [];
     this.filteredResults = [];
 
-  } finally {
-    this.isLoading.set(false);
-    this.cdr.detectChanges();
-  }
+  }finally {
+
+ this.isLoading.set(false);
+
+ this.cdr.detectChanges();
+
+}
 }
 
 buildLocation(item: any): string {
@@ -383,35 +388,23 @@ selectSubcategory(subcategory: any): void {
     }
   }
 
-  async loadSubcategories(categoryId: number | null): Promise<void> {
-    if (!categoryId) {
-      this.subcategories.set([]);
-      return;
-    }
+async loadSubcategories(categoryId: number | null): Promise<void> {
 
-    try {
-      const { data, error } = await supabase
-        .from('subcategories')
-        .select(
-          'subcategoryid, categoryid, subcategoryname, iconurl, isactive, sortorder'
-        )
-        .eq('categoryid', categoryId)
-        .eq('isactive', true)
-        .order('sortorder', { ascending: true });
-
-      if (error) {
-        console.error('Error loading subcategories:', error);
-        this.subcategories.set([]);
-        return;
-      }
-
-      this.subcategories.set((data || []) as SubcategoryItem[]);
-     
-    } catch (error) {
-      console.error('Error loading subcategories:', error);
-      this.subcategories.set([]);
-    }
+  if (!categoryId) {
+    this.subcategories.set([]);
+    return;
   }
+
+
+  const filtered = this.allSubcategories.filter(
+    (sub:any)=>
+      Number(sub.categoryid) === Number(categoryId)
+  );
+
+
+  this.subcategories.set(filtered);
+
+}
 
   async onSearchTextChange(): Promise<void> {
     await this.syncSearchWithCategoryAndSubcategory();
