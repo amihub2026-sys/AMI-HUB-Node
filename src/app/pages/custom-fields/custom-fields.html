@@ -81,9 +81,12 @@
           class="field-label"
           [for]="field.fieldName"
         >
-          <span *ngIf="field.icon" class="field-icon">
-            {{ field.icon }}
-          </span>
+<img
+  *ngIf="field.icon"
+  class="field-icon"
+  [src]="field.icon"
+  alt="icon"
+/>
 
           {{ field.label }}
 

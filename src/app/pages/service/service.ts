@@ -4,16 +4,8 @@ import { Location } from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-
-
-import {
-  SupabaseService,
-  Category,
-  Subcategory,
-  StateItem,
-  CityItem,
-  AreaItem
-} from '../../services/supabase.service';
+import { ApiService } from '../../services/api.service';
+import { SupabaseService } from '../../services/supabase.service';
 import {
   PostDraftService,
   ServiceBlockDraft
@@ -24,6 +16,17 @@ import {
   AppLocationResult
 } from '../../services/location-search';
 
+import {
+  Category,
+  Subcategory
+} from '../../services/category.types';
+
+
+import {
+  StateItem,
+  CityItem,
+  AreaItem
+} from '../../services/supabase.service';
 @Component({
   selector: 'app-service',
   standalone: true,
@@ -146,11 +149,11 @@ export class Service implements OnInit {
   serviceBlocks: ServiceBlockDraft[] = [
     { title: '', price: null, image: null }
   ];
-
 constructor(
-  private router: Router,
   private supabaseService: SupabaseService,
+  private router: Router,
   private postDraftService: PostDraftService,
+  private api: ApiService,
   private locationSearchService: LocationSearchService,
   private route: ActivatedRoute,
   private cdr: ChangeDetectorRef,
@@ -191,25 +194,37 @@ if (this.adminUser) {
 this.editPostId = id;
 this.isEditMode = !!id;
 
-      try {
-        const categoriesResult = await Promise.race([
-          this.supabaseService.getCategories(),
-          new Promise<Category[]>((_, reject) =>
-            setTimeout(() => reject(new Error('Categories load timeout')), 10000)
-          )
-        ]);
+   try {
 
-        this.ngZone.run(() => {
-          this.categories = Array.isArray(categoriesResult) ? categoriesResult : [];
-          this.cdr.detectChanges();
-        });
-      } catch (err) {
-        console.error('Error loading categories:', err);
-        this.ngZone.run(() => {
-          this.categories = [];
-          this.cdr.detectChanges();
-        });
-      }
+const categoriesResult:any = await this.api.get('/categories?type=service').toPromise();
+
+
+  this.ngZone.run(() => {
+
+this.categories = categoriesResult.data || [];
+
+    this.cdr.detectChanges();
+
+  });
+
+
+} catch(err) {
+
+  console.error(
+    "Error loading categories:",
+    err
+  );
+
+
+  this.ngZone.run(() => {
+
+    this.categories = [];
+
+    this.cdr.detectChanges();
+
+  });
+
+}
 
       try {
         const statesResult = await Promise.race([
@@ -397,16 +412,30 @@ this.isEditMode = !!id;
   }
 
   private async rebuildEditDropdowns(data: any): Promise<void> {
-    const selectedCategory =
-      this.categories.find(c => c.categoryid === data.categoryid) ||
-      this.categories.find(c => c.categoryname === this.mainAd.category);
+const selectedCategory =
+  this.categories.find(c => c._id === data.categoryid) ||
+  this.categories.find(c => c.categoryName === this.mainAd.category);
 
     if (selectedCategory) {
-      this.mainAd.category = selectedCategory.categoryname;
+      this.mainAd.category = selectedCategory.categoryName;
       try {
-        this.subcategoriesList = await this.supabaseService.getSubcategories(
-          selectedCategory.categoryid
-        );
+const result:any = await this.api.get(
+  `/subcategories?categoryId=${selectedCategory._id}&type=${this.adType}`
+).toPromise();
+const subcategories = result.data || [];
+
+this.subcategoriesList = subcategories.map((s:any)=>({
+  _id: String(s._id),
+  categoryId: String(selectedCategory._id),
+  subcategoryName: s.subcategoryName,
+  slug: s.slug || '',
+  icon: s.icon || '',
+  image: s.image || '',
+  description: s.description || '',
+  sortOrder: s.sortOrder || 0,
+  isActive: s.isActive ?? true,
+  availableIn: s.availableIn || []
+}));
       } catch (err) {
         console.error('Error loading subcategories:', err);
         this.subcategoriesList = [];
@@ -415,14 +444,14 @@ this.isEditMode = !!id;
       this.subcategoriesList = [];
     }
 
-    const selectedSubcategory =
-      this.subcategoriesList.find(s => s.subcategoryid === data.subcategoryid) ||
-      this.subcategoriesList.find(
-        s => s.subcategoryname === this.mainAd.subcategory
-      );
+const selectedSubcategory =
+  this.subcategoriesList.find(s => s._id === data.subcategoryid) ||
+  this.subcategoriesList.find(
+    s => s.subcategoryName === this.mainAd.subcategory
+  );
 
     if (selectedSubcategory) {
-      this.mainAd.subcategory = selectedSubcategory.subcategoryname;
+      this.mainAd.subcategory =selectedSubcategory.subcategoryName;
     }
 
     const selectedState =
@@ -490,38 +519,88 @@ this.isEditMode = !!id;
     }
   }
 
-  async onAdTypeChange() {
-    if (this.isEditMode) {
-      this.adType = this.lockedAdType || this.adType;
-      return;
-    }
+async onAdTypeChange() {
 
-    this.mainAd.category = '';
-    this.mainAd.subcategory = '';
-    this.subcategoriesList = [];
-
-    if (this.adType === 'product') {
-      this.serviceBlocks = [];
-    } else {
-      if (this.serviceBlocks.length === 0) {
-        this.serviceBlocks = [{ title: '', price: null, image: null }];
-      }
-    }
+  if (this.isEditMode) {
+    this.adType = this.lockedAdType || this.adType;
+    return;
   }
+
+  this.mainAd.category = '';
+  this.mainAd.subcategory = '';
+  this.subcategoriesList = [];
+
+  try {
+
+    const result:any = await this.api
+      .get(`/categories?type=${this.adType}`)
+      .toPromise();
+
+    this.categories = result.data || [];
+
+    this.cdr.detectChanges();
+
+  } catch(err){
+
+    console.error("Category loading error", err);
+
+    this.categories = [];
+
+  }
+
+
+  if (this.adType === 'product') {
+
+    this.serviceBlocks = [];
+
+  } else {
+
+    if(this.serviceBlocks.length === 0){
+
+      this.serviceBlocks = [
+        {
+          title:'',
+          price:null,
+          image:null
+        }
+      ];
+
+    }
+
+  }
+
+}
 
   async onCategoryChange() {
     this.mainAd.subcategory = '';
     this.subcategoriesList = [];
 
-    const selected = this.categories.find(
-      c => c.categoryname === this.mainAd.category
-    );
+const selected = this.categories.find(
+  c => c.categoryName === this.mainAd.category
+);
 
-    if (selected) {
-      this.subcategoriesList = await this.supabaseService.getSubcategories(
-        selected.categoryid
-      );
-    }
+if (selected) {
+
+const result:any = await this.api.get(
+  `/subcategories?categoryId=${selected._id}&type=${this.adType}`
+).toPromise();
+
+const subcategories = result.data || [];
+
+this.subcategoriesList = subcategories.map((s:any)=>({
+  _id: String(s._id),
+  categoryId: String(selected._id),
+  subcategoryName: s.subcategoryName,
+    slug: s.slug || '',
+    icon: s.icon || '',
+    image: s.image || '',
+    description: s.description || '',
+    sortOrder: s.sortOrder || 0,
+    isActive: s.isActive ?? true,
+    availableIn: s.availableIn || []
+  }));
+
+}
   }
 
   async onCountryChange() {
@@ -891,14 +970,13 @@ if (this.mainAd.whatsappnumber && !/^\d{10}$/.test(this.mainAd.whatsappnumber)) 
         this.router.navigate(['/login']);
         return;
       }
+const selectedCategory = this.categories.find(
+  c => c.categoryName === this.mainAd.category
+);
 
-      const selectedCategory = this.categories.find(
-        c => c.categoryname === this.mainAd.category
-      );
-
-      const selectedSubcategory = this.subcategoriesList.find(
-        s => s.subcategoryname === this.mainAd.subcategory
-      );
+const selectedSubcategory = this.subcategoriesList.find(
+  s => s.subcategoryName === this.mainAd.subcategory
+);
 
       const selectedCity = this.citiesList.find(
         c => c.cityname === this.mainAd.district
@@ -953,8 +1031,8 @@ if (this.mainAd.whatsappnumber && !/^\d{10}$/.test(this.mainAd.whatsappnumber)) 
   }
 
   const updatePayload: any = {
-    categoryid: selectedCategory?.categoryid ?? null,
-    subcategoryid: selectedSubcategory?.subcategoryid ?? null,
+categoryId: selectedCategory?._id ?? null,
+subcategoryId: selectedSubcategory?._id ?? null,
     title: this.mainAd.title.trim(),
     description: this.mainAd.description.trim(),
     price: this.mainAd.price ?? 0,
@@ -1060,9 +1138,9 @@ if (this.mainAd.videos.length > 0) {
 }
 
       const rawPayload: any = {
-        userid: String(effectiveUserId),
-        categoryid: selectedCategory?.categoryid ?? null,
-        subcategoryid: selectedSubcategory?.subcategoryid ?? null,
+        sellerId: String(effectiveUserId),
+   categoryId: selectedCategory?._id ?? null,
+subcategoryId: selectedSubcategory?._id ?? null,
         title: this.mainAd.title.trim(),
         description: this.mainAd.description.trim(),
         price: this.mainAd.price ?? 0,
@@ -1070,7 +1148,7 @@ if (this.mainAd.videos.length > 0) {
 
         adtype: this.adType,
         conditiontype: this.adType,
-
+        listingType: this.adType,
         status: 'Processing',
         isfeatured: false,
         is_featured: false,
@@ -1159,18 +1237,28 @@ video_urls: videoUrls,
         localStorage.setItem('pending_post_type', this.adType);
         localStorage.setItem('pending_post_userid', String(effectiveUserId));
       }
-
 this.router.navigate(
   ['/custom-fields'],
   {
     state: {
-      categoryId: selectedCategory?.categoryid,
+
+     categoryId: selectedCategory?._id,
+
       categoryName: this.mainAd.category,
 
-      subcategoryId: selectedSubcategory?.subcategoryid,
+
+    subcategoryId:
+ selectedSubcategory?._id,
+
       subcategoryName: this.mainAd.subcategory,
 
-      flow: 'normal'
+
+      listingType: this.adType,
+
+      type: this.adType,
+
+
+      flow:'normal'
     }
   }
 );

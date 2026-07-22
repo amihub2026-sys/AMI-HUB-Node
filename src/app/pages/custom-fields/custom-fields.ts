@@ -82,7 +82,7 @@ export class CustomFields implements OnInit {
   subcategoryId = '';
 
   subcategoryName = '';
-
+ listingType = '';
 
   fields: DynamicCustomField[] = [];
 
@@ -154,6 +154,11 @@ export class CustomFields implements OnInit {
       state['subcategory'] ||
       this.route.snapshot.queryParamMap.get('subcategoryName') ||
       '';
+this.listingType =
+  state['type'] ||
+  state['listingType'] ||
+  localStorage.getItem('listingType') ||
+  '';
   }
 
 
@@ -184,10 +189,10 @@ export class CustomFields implements OnInit {
       to the selected subcategory.
     */
 
-    this.api
-      .get(
-        `/custom-fields/subcategory/${this.subcategoryId}`
-      )
+ this.api
+.get(
+ `/custom-field-assignment?categoryId=${this.categoryId}&subcategoryId=${this.subcategoryId}&type=${this.listingType}`
+)
       .subscribe({
 
         next: (response: any) => {
@@ -244,70 +249,80 @@ export class CustomFields implements OnInit {
   }
 
 
-  private normalizeField(
-    field: any
-  ): DynamicCustomField {
-
-    return {
-
-      _id:
-        field?._id ||
-        field?.customFieldId ||
-        '',
+private normalizeField(field:any): DynamicCustomField {
 
 
-      fieldName:
-        field?.fieldName ||
-        field?.name ||
-        this.createFieldName(field?.label || 'field'),
+const actualField =
+  field.customFieldId || field;
 
 
-      label:
-        field?.label ||
-        field?.fieldName ||
-        field?.name ||
-        'Field',
+return {
+
+  _id:
+    actualField._id || '',
 
 
-      icon:
-        field?.icon || '',
+  fieldName:
+    actualField.fieldName ||
+    actualField.name ||
+    this.createFieldName(
+      actualField.label || 'field'
+    ),
 
 
-      fieldType:
-        field?.fieldType ||
-        field?.type ||
-        'text',
+  label:
+    actualField.label ||
+    actualField.fieldName ||
+    'Field',
 
 
-      options:
-        Array.isArray(field?.options)
-          ? field.options
-          : [],
+  icon:
+    actualField.icon || '',
 
 
-      placeholder:
-        field?.placeholder || '',
+  fieldType:
+    actualField.fieldType ||
+    actualField.type ||
+    'text',
 
 
-      helpText:
-        field?.helpText ||
-        field?.description ||
-        '',
+  options:
+    Array.isArray(actualField.options)
+    ? actualField.options
+    : [],
 
 
-      isRequired:
-        Boolean(field?.isRequired),
+  placeholder:
+    actualField.placeholder || '',
 
 
-      isActive:
-        field?.isActive !== false,
+  helpText:
+    actualField.helpText ||
+    actualField.description ||
+    '',
 
 
-      sortOrder:
-        Number(field?.sortOrder || 0)
-    };
-  }
+  isRequired:
+    Boolean(
+      field.isRequired ||
+      actualField.isRequired
+    ),
 
+
+  isActive:
+    actualField.isActive !== false,
+
+
+  sortOrder:
+    Number(
+      field.sortOrder ||
+      actualField.sortOrder ||
+      0
+    )
+
+};
+
+}
 
   private createFieldName(
     value: string
