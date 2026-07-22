@@ -120,9 +120,9 @@
             (change)="onCategoryChange()"
           >
             <option value="">Select Category</option>
-            <option *ngFor="let c of categories" [value]="c.categoryname">
-              {{ c.categoryname }}
-            </option>
+<option *ngFor="let c of categories" [value]="c.categoryName">
+  {{ c.categoryName }}
+</option>
           </select>
         </div>
 
@@ -133,9 +133,13 @@
             [(ngModel)]="mainAd.subcategory"
           >
             <option value="">Select Sub Category</option>
-            <option *ngFor="let sub of subcategoriesList" [value]="sub.subcategoryname">
-              {{ sub.subcategoryname }}
-            </option>
+      <option 
+*ngFor="let sub of subcategoriesList" 
+[value]="sub.subcategoryName">
+
+{{ sub.subcategoryName }}
+
+</option>
           </select>
         </div>
       </div>
