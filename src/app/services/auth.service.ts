@@ -7,7 +7,7 @@ import { environment } from '../../environments/environment';
 })
 export class AuthService {
 
-  private apiUrl = 'https://ami-hub-backend.onrender.com/api/auth';
+  private apiUrl = `${environment.apiUrl}/auth`;
 
 
   constructor(
@@ -114,5 +114,33 @@ export class AuthService {
     return !!this.getToken();
 
   }
+
+  sendOtp(mobile:string){
+
+ return this.http.post(
+   `${this.apiUrl}/send-otp`,
+   {
+     mobile
+   }
+ );
+
+}
+
+
+
+verifyOtp(
+ mobile:string,
+ otp:string
+){
+
+ return this.http.post(
+   `${this.apiUrl}/verify-otp`,
+   {
+     mobile,
+     otp
+   }
+ );
+
+}
 
 }
