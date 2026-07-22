@@ -19,12 +19,13 @@ import { AdminUserSubscriptionsComponent } from './admin-page/pages/admin-user-s
 import { AdminBoostPlansComponent } from './admin-page/pages/admin-boost-plans/admin-boost-plans';
 import { AdminPaymentsComponent } from './admin-page/pages/admin-payments/admin-payments';
 import { AdminCustomFields } from './admin-page/pages/admin-custom-fields/admin-custom-fields';
-
+import { AdminCustomFieldAssignment } from './admin-page/pages/admin-custom-field-assignment/admin-custom-field-assignment';
 type AdminMenuKey =
   SidebarAdminMenuKey |
   'advertise' |
   'edit-post' |
-  'custom-fields';
+  'custom-fields' |
+  'custom-field-assignment';
 @Component({
   selector: 'app-admin-page',
   standalone: true,
@@ -46,6 +47,7 @@ type AdminMenuKey =
   AdminUserBoostPlansComponent,
   AdminPaymentsComponent,
   AdminCustomFields,
+  AdminCustomFieldAssignment,
   Service
 ],
   templateUrl: './admin-page.html',
@@ -114,11 +116,10 @@ case 'payments':
         return 'Banners';
       case 'notifications':
         return 'Notifications';
-      case 'settings':
-        return 'Settings';
-      default:
-        return 'Dashboard';
-        case 'advertise':
+  case 'settings':
+  return 'Settings';
+
+case 'advertise':
   return 'Advertise';
 
 case 'edit-post':
@@ -126,6 +127,12 @@ case 'edit-post':
 
 case 'custom-fields':
   return 'Custom Fields';
+
+case 'custom-field-assignment':
+  return 'Custom Field Assignment';
+
+default:
+  return 'Dashboard';
     }
   }
 
@@ -141,6 +148,7 @@ case 'custom-fields':
       this.activeMenu === 'user-boost-plans' ||
       this.activeMenu === 'payments' ||
       this.activeMenu === 'custom-fields'
+      
     );
   }
 

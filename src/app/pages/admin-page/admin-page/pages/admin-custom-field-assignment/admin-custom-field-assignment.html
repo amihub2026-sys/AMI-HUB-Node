@@ -1,0 +1,379 @@
+<div class="assignment-container">
+
+
+<h2>
+  Assign Custom Fields
+</h2>
+
+
+
+<!-- TYPE SELECT -->
+
+<div class="type-box">
+
+<button
+  [class.active]="selectedType==='product'"
+  (click)="selectedType='product'; onTypeChange()"
+>
+ Product
+</button>
+
+
+<button
+  [class.active]="selectedType==='service'"
+  (click)="selectedType='service'; onTypeChange()"
+>
+ Service
+</button>
+
+
+</div>
+
+
+<div class="assignment-layout">
+
+
+<!-- LEFT SIDE -->
+
+<div class="left-panel">
+
+
+<div class="filter-row">
+
+<div>
+<label>Category</label>
+
+<select
+[(ngModel)]="selectedCategoryId"
+(change)="onCategoryChange()"
+>
+
+<option value="">
+Select Category
+</option>
+
+<option
+*ngFor="let cat of categories"
+[value]="cat._id"
+>
+{{cat.categoryName}}
+</option>
+
+</select>
+
+</div>
+
+
+<div>
+
+<label>Sub Category</label>
+
+<select
+[(ngModel)]="selectedSubcategoryId"
+>
+
+<option value="">
+Select Sub Category
+</option>
+
+<option
+*ngFor="let sub of subcategories"
+[value]="sub._id"
+>
+{{sub.subcategoryName}}
+</option>
+
+</select>
+
+</div>
+
+</div>
+
+
+</div>
+
+
+
+<!-- RIGHT SIDE -->
+
+<div class="right-panel">
+
+
+<div class="search-box">
+
+<input
+type="text"
+placeholder="Search custom fields..."
+[(ngModel)]="searchText"
+/>
+
+</div>
+
+
+
+<div class="fields-box">
+
+<h3>
+Available Custom Fields
+</h3>
+
+
+<div
+class="field-item"
+*ngFor="let field of filteredCustomFields"
+>
+
+<input
+type="checkbox"
+[value]="field._id"
+(change)="toggleFieldSelection(field._id,$event)"
+>
+
+
+<span>
+{{field.label}}
+</span>
+
+
+</div>
+
+
+</div>
+
+
+
+<button
+class="assign-btn"
+(click)="assignFields()"
+>
+
+Assign Fields
+
+</button>
+
+
+</div>
+
+
+</div>
+
+<!-- EDIT ASSIGNMENT FORM -->
+
+<div
+class="edit-box"
+*ngIf="editingAssignmentId"
+>
+
+
+<h3>
+Edit Assignment
+</h3>
+
+
+<div class="edit-row">
+
+<label>
+Type
+</label>
+
+
+<select
+[(ngModel)]="selectedType"
+>
+
+<option value="product">
+Product
+</option>
+
+<option value="service">
+Service
+</option>
+
+</select>
+
+</div>
+
+
+
+<div class="edit-row">
+
+<label>
+Required
+</label>
+
+
+<input
+type="checkbox"
+[(ngModel)]="editRequired"
+/>
+
+</div>
+
+
+
+
+<div class="edit-row">
+
+<label>
+Sort Order
+</label>
+
+
+<input
+type="number"
+[(ngModel)]="editSortOrder"
+/>
+
+</div>
+
+
+
+
+<button
+class="update-btn"
+(click)="updateAssignment()"
+>
+Update Assignment
+</button>
+
+
+
+<button
+class="cancel-btn"
+(click)="editingAssignmentId=null"
+>
+Cancel
+</button>
+
+
+</div>
+<!-- EXISTING ASSIGNMENTS -->
+
+<div class="assignments-box">
+
+
+<h3>
+Existing Assignments
+</h3>
+
+
+<table>
+
+
+<thead>
+
+<tr>
+
+<th>
+Field
+</th>
+
+<th>
+Category
+</th>
+
+<th>
+Subcategory
+</th>
+
+<th>
+Type
+</th>
+
+<th>
+Action
+</th>
+
+</tr>
+
+</thead>
+
+
+
+<tbody>
+
+
+<tr
+*ngFor="let item of assignments"
+>
+
+
+<td>
+
+{{item.customFieldId?.label}}
+
+</td>
+
+
+
+<td>
+
+{{item.categoryId?.categoryName}}
+
+</td>
+
+
+
+<td>
+
+{{item.subcategoryId?.subcategoryName}}
+
+</td>
+
+
+
+<td>
+
+{{item.type}}
+
+</td>
+
+
+
+<td>
+
+
+<button
+class="edit-btn"
+(click)="editAssignment(item)"
+>
+Edit
+</button>
+
+
+
+<button
+class="delete-btn"
+(click)="deleteAssignment(item._id)"
+>
+Delete
+</button>
+
+
+</td>
+
+
+</tr>
+
+
+
+<tr *ngIf="assignments.length === 0">
+
+<td colspan="5">
+
+No assignments found
+
+</td>
+
+</tr>
+
+
+</tbody>
+
+
+</table>
+
+
+</div>
+
+</div>
