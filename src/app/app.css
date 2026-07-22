@@ -1126,7 +1126,30 @@ PROFILE BUTTON
 
     object-fit: contain;
   }
+@media(max-width:768px){
 
+  .logo-wrapper{
+      display:flex !important;
+      width:90px !important;
+      height:auto !important;
+      align-items:center;
+      justify-content:center;
+  }
+
+
+  .logo img{
+      display:block !important;
+      visibility:visible !important;
+      opacity:1 !important;
+
+      width:75px !important;
+      height:auto !important;
+
+      object-fit:contain;
+      filter:none !important;
+  }
+
+}
   /* =====================================================
      ROW 1 — ADVERTISE ICON
   ===================================================== */

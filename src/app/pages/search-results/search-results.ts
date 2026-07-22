@@ -306,15 +306,19 @@ async logoutFromDropdown():Promise<void>{
     this.route.queryParams.subscribe(async (params) => {
       this.searchText = (params['q'] || '').trim();
 
-      const incomingType = String(params['type'] || 'all').toLowerCase().trim();
-      this.selectedType =
-        incomingType === 'products'
-          ? 'product'
-          : incomingType === 'services' || incomingType === 'service-list'
-          ? 'service'
-          : incomingType === 'product' || incomingType === 'service'
-          ? (incomingType as 'product' | 'service')
-          : 'all';
+      const incomingType = String(params['type'] || this.selectedType)
+.toLowerCase()
+.trim();
+    this.selectedType =
+ incomingType === 'products'
+ ? 'product'
+ : incomingType === 'services' || incomingType === 'service-list'
+ ? 'service'
+ : incomingType === 'product' ||
+   incomingType === 'service' ||
+   incomingType === 'job'
+ ? (incomingType as 'product' | 'service' | 'job')
+ : 'all';
 
       this.resetPageState();
       await this.initialLoad();
@@ -426,25 +430,27 @@ async selectCategory(id:number|null){
     });
   }
 
-selectType(type: 'product' | 'service') {
+selectType(type:'product'|'service'){
 
   this.selectedType = type;
 
-
-  if(type === 'product') {
-
-    this.router.navigate(['/products']);
-
+  if(type === 'product'){
+    this.router.navigate(
+      ['/products'],
+      {queryParams:{type:'product'}}
+    );
   }
 
 
-  if(type === 'service') {
-
-  this.router.navigate(['/service-list']);
+  if(type === 'service'){
+    this.router.navigate(
+      ['/service-list'],
+      {queryParams:{type:'service'}}
+    );
+  }
 
 }
 
-}
   async loadCategories() {
     try {
       let query = supabase
@@ -836,11 +842,19 @@ if (this.sortBy === 'Price High') {
     this.router.navigate(['/details', id]);
   }
 
-  goToJobs(){
+goToJobs(){
 
   this.selectedType = 'job';
 
-  this.router.navigate(['/job']);
+
+  this.router.navigate(
+    ['/job'],
+    {
+      queryParams:{
+        type:'job'
+      }
+    }
+  );
 
 }
 
