@@ -374,173 +374,138 @@ constructor(
 
 }
 
-  async sendMobileOtp() {
+async sendMobileOtp() {
+
   const phone = this.mobile.trim();
+
 
   if (!/^[6-9]\d{9}$/.test(phone)) {
-    this.showAlert('Enter valid 10 digit mobile number', 'error');
+
+    this.showAlert(
+      'Enter valid 10 digit mobile number',
+      'error'
+    );
+
     return;
+
   }
 
-  console.log('SENDING OTP TO:', phone);
 
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  this.authService
+    .sendOtp(phone)
+    .subscribe({
 
-  const res = await fetch(
-    'https://jhojcdhnsfqmroyfotyp.supabase.co/functions/v1/send-sms-hook',
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
+      next:(res:any)=>{
+
+        console.log(
+          "OTP RESPONSE:",
+          res
+        );
+
+
+        this.otpSent = true;
+
+
+        this.showAlert(
+          "OTP sent successfully",
+          "success"
+        );
+
+
       },
-      body: JSON.stringify({
-        phone: `91${phone}`,
-        otp: otp
-      })
-    }
-  );
-
-  const result = await res.json();
-  console.log('OTP RESPONSE:', result);
-
-  if (!res.ok) {
-    this.showAlert(result.error || 'OTP sending failed', 'error');
-    return;
-  }
-
-  localStorage.setItem('login_otp', otp);
-  console.log('NEW OTP STORED:', otp);
-  localStorage.setItem('login_mobile', phone);
-
-  this.otpSent = true;
-  this.cdr.detectChanges();
-  this.showAlert('OTP sent successfully', 'success');
-}
-  async verifyMobileOtp() {
-  const phone = this.mobile.trim();
-  const otpCode = this.otp.trim();
-
-  const savedOtp = localStorage.getItem('login_otp');
-  const savedMobile = localStorage.getItem('login_mobile');
-
-  if (!otpCode) {
-    this.showAlert('Enter OTP', 'error');
-    return;
-  }
-
-  console.log('ENTERED OTP:', otpCode);
-console.log('SAVED OTP:', savedOtp);
-
-console.log('ENTERED PHONE:', phone);
-console.log('SAVED PHONE:', savedMobile);
-
-if (
-  savedMobile?.trim() !== phone.trim() ||
-  savedOtp?.trim() !== otpCode.trim()
-) {
-  console.log('OTP CHECK FAILED');
-
-  console.log('savedMobile:', savedMobile);
-  console.log('phone:', phone);
-
-  console.log('savedOtp:', savedOtp);
-  console.log('otpCode:', otpCode);
-
-  this.showAlert('Invalid OTP', 'error');
-  return;
-}
-
-const { data: users, error: userError } =
-  await this.supabaseService.supabase
-    .from('users')
-    .select('*')
-    .or(`phonenumber.eq.${phone},phone_number.eq.${phone}`);
-
-console.log('USERS:', users);
-console.log('USER ERROR:', userError);
-
-const existingUser =
-  users && users.length > 0
-    ? users[0]
-    : null;
-
-  if (existingUser) {
-
-localStorage.removeItem('login_otp');
-  localStorage.removeItem('login_mobile');
-
-  this.storeUserSession(existingUser);
-
-  localStorage.setItem('userToken', 'loggedUser');
-  localStorage.setItem('mobile', phone);
-
-  this.showAlert('Login successful', 'success');
-
-  setTimeout(async () => {
-    await this.redirectAfterLogin(existingUser);
-  }, 1000);
-
-  return;
-}
-
-/* CREATE NEW USER */
 
 
-const newAuthId = crypto.randomUUID();
+      error:(err:any)=>{
 
-const { data: newUser, error: insertError } =
-  await this.supabaseService.supabase
-    .from('users')
-    .insert([
-      {
-        phonenumber: phone,
-        phone_number: phone,
-        fullname: 'New User',
-        name: 'New User',
-        username: `user_${phone}`,
+        console.error(
+          err
+        );
 
-        user_id: newAuthId,
-        supabase_uid: newAuthId,
-        auth_user_id: newAuthId,
 
-        isactive: true,
-        isverified: true,
-        isonboardingcompleted: false,
-        createdon: new Date().toISOString()
+        this.showAlert(
+          err.error?.message ||
+          "OTP sending failed",
+          "error"
+        );
+
       }
-    ])
-    .select()
-    .single();
 
 
+    });
 
-if (insertError) {
-
-  console.log('INSERT ERROR FULL:', insertError);
-
-  alert(JSON.stringify(insertError));
-
-  console.error(insertError);
-
-  this.showAlert(insertError.message || 'User creation failed', 'error');
-
-  return;
 }
+async verifyMobileOtp(){
 
-localStorage.removeItem('login_otp');
-localStorage.removeItem('login_mobile');
+ const phone = this.mobile.trim();
 
-this.storeUserSession(newUser);
-localStorage.setItem('supabase_uid', newUser.supabase_uid || newUser.auth_user_id || newUser.user_id);
+ const otpCode = this.otp.trim();
 
-localStorage.setItem('userToken', 'loggedUser');
-localStorage.setItem('mobile', phone);
 
-this.showAlert('Please complete profile setup', 'success');
+ if(!otpCode){
 
-setTimeout(async () => {
-  await this.router.navigate(['/profile-setup']);
-}, 1000);
+   this.showAlert(
+    "Enter OTP",
+    "error"
+   );
+
+   return;
+
+ }
+
+
+
+ this.authService
+ .verifyOtp(
+   phone,
+   otpCode
+ )
+ .subscribe({
+
+  next:(res:any)=>{
+
+
+    console.log(
+      "OTP VERIFY RESPONSE:",
+      res
+    );
+
+
+    this.storeUserSession(res);
+
+
+    this.showAlert(
+      "Login Successful",
+      "success"
+    );
+
+
+    this.redirectAfterLogin(
+      res.user
+    );
+
+
+  },
+
+
+  error:(err:any)=>{
+
+
+    console.error(err);
+
+
+    this.showAlert(
+      err.error?.message ||
+      "OTP verification failed",
+      "error"
+    );
+
+
+  }
+
+
+ });
+
+
 }
 
   async loginAdmin() {

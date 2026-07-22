@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { SnackbarService, SnackbarType } from '../services/snackbar.service';
@@ -18,7 +18,10 @@ export class SnackbarComponent implements OnInit, OnDestroy {
   private timer: any;
   private sub?: Subscription;
 
-  constructor(private snackbarService: SnackbarService) {}
+  constructor(
+  private snackbarService: SnackbarService,
+  private cdr: ChangeDetectorRef
+) {}
 
   ngOnInit(): void {
     this.sub = this.snackbarService.snackbar$.subscribe(data => {
@@ -27,16 +30,33 @@ export class SnackbarComponent implements OnInit, OnDestroy {
   }
 
   show(message: string, type: SnackbarType = 'info'): void {
+
+  setTimeout(() => {
+
     this.message = message;
+
     this.type = type;
+
     this.visible = true;
 
-    clearTimeout(this.timer);
+    this.cdr.detectChanges();
 
-    this.timer = setTimeout(() => {
-      this.visible = false;
-    }, 2500);
-  }
+
+  });
+
+
+  clearTimeout(this.timer);
+
+
+  this.timer = setTimeout(() => {
+
+    this.visible = false;
+
+    this.cdr.detectChanges();
+
+  }, 2500);
+
+}
 
   hide(): void {
     this.visible = false;
