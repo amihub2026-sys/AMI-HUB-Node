@@ -19,6 +19,7 @@ interface CategoryApiItem {
 }
 
 interface SubcategoryApiItem {
+
   _id: string;
 
   categoryId:
@@ -31,13 +32,26 @@ interface SubcategoryApiItem {
       };
 
   subcategoryName: string;
+
   slug: string;
+
   icon?: string;
+
   image?: string;
+
   description?: string;
+
   sortOrder: number;
+
   isActive: boolean;
+
+
+  // ADD THIS
+  availableIn?: string[];
+
+
   createdAt?: string;
+
   updatedAt?: string;
 }
 
@@ -52,6 +66,7 @@ interface AdminSubcategoryItem {
   description: string;
   sortorder: number;
   isactive: boolean;
+availableIn?: string[];
   createdon: string | null;
   createdLabel: string;
 }
@@ -101,7 +116,7 @@ export class AdminSubcategories implements OnInit {
   editingSubcategoryId: string | null = null;
   selectedIconFile: File | null = null;
 selectedImageFile: File | null = null;
-  form = {
+form = {
     categoryid: null as string | null,
     subcategoryname: '',
     slug: '',
@@ -109,8 +124,9 @@ selectedImageFile: File | null = null;
     image: '',
     description: '',
     sortorder: 1,
-    isactive: true
-  };
+    isactive: true,
+    availableIn: 'product'
+};
 
   ngOnInit(): void {
     this.loadCategories();
@@ -191,8 +207,13 @@ selectedImageFile: File | null = null;
               image: row.image || '',
               description: row.description || '',
               sortorder: Number(row.sortOrder || 0),
-              isactive: row.isActive !== false,
-              createdon: row.createdAt || null,
+isactive: row.isActive !== false,
+
+availableIn: Array.isArray(row.availableIn)
+? row.availableIn
+: [],
+
+createdon: row.createdAt || null,
               createdLabel: this.formatDate(row.createdAt)
             };
           });
@@ -237,16 +258,17 @@ openCreateForm(): void {
     this.categories.find((category) => category.isactive) ||
     this.categories[0];
 
-  this.form = {
-    categoryid: firstActiveCategory?.categoryid || null,
-    subcategoryname: '',
-    slug: '',
-    iconurl: '',
-    image: '',
-    description: '',
-    sortorder: this.allSubcategories.length + 1,
-    isactive: true
-  };
+this.form = {
+  categoryid: firstActiveCategory?.categoryid || null,
+  subcategoryname: '',
+  slug: '',
+  iconurl: '',
+  image: '',
+  description: '',
+  sortorder: this.allSubcategories.length + 1,
+  isactive: true,
+  availableIn: 'product'
+};
 
   this.cdr.detectChanges();
 }
@@ -264,16 +286,21 @@ editSubcategory(subcategory: AdminSubcategoryItem): void {
   this.errorMessage = '';
   this.successMessage = '';
 
-  this.form = {
-    categoryid: subcategory.categoryid,
-    subcategoryname: subcategory.subcategoryname,
-    slug: subcategory.slug,
-    iconurl: subcategory.iconurl,
-    image: subcategory.image,
-    description: subcategory.description,
-    sortorder: subcategory.sortorder,
-    isactive: subcategory.isactive
-  };
+this.form = {
+  categoryid: subcategory.categoryid,
+  subcategoryname: subcategory.subcategoryname,
+  slug: subcategory.slug,
+  iconurl: subcategory.iconurl,
+  image: subcategory.image,
+  description: subcategory.description,
+  sortorder: subcategory.sortorder,
+  isactive: subcategory.isactive,
+
+  availableIn:
+    subcategory.availableIn?.length === 2
+    ? 'both'
+    : subcategory.availableIn?.[0] || 'product'
+};
 
   this.cdr.detectChanges();
 }
@@ -378,15 +405,31 @@ async saveSubcategory(): Promise<void> {
       );
     }
 
-    const payload = {
-      categoryId: this.form.categoryid,
-      subcategoryName: this.form.subcategoryname.trim(),
-      icon: iconUrl || '',
-      image: imageUrl || '',
-      description: this.form.description.trim(),
-      sortOrder: Number(this.form.sortorder || 0),
-      isActive: this.form.isactive
-    };
+const payload = {
+
+  categoryId: this.form.categoryid,
+
+  subcategoryName:
+  this.form.subcategoryname.trim(),
+
+
+  availableIn:
+  this.form.availableIn === 'both'
+  ? ['product','service']
+  : [this.form.availableIn],
+
+
+  icon: iconUrl || '',
+
+  image: imageUrl || '',
+
+  description: this.form.description.trim(),
+
+  sortOrder: Number(this.form.sortorder || 0),
+
+  isActive: this.form.isactive
+
+};
 
     if (this.editingSubcategoryId) {
       await firstValueFrom(

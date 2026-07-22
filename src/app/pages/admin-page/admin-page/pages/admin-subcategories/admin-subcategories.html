@@ -80,7 +80,57 @@
           placeholder="Enter sort order"
         />
       </div>
+<div class="form-group full-width">
 
+<label>Available In *</label>
+
+<div class="category-type-options">
+
+<label class="checkbox-wrap">
+
+<input
+type="radio"
+name="subcategoryScope"
+value="product"
+[(ngModel)]="form.availableIn"
+/>
+
+<span>Product</span>
+
+</label>
+
+
+<label class="checkbox-wrap">
+
+<input
+type="radio"
+name="subcategoryScope"
+value="service"
+[(ngModel)]="form.availableIn"
+/>
+
+<span>Service</span>
+
+</label>
+
+
+<label class="checkbox-wrap">
+
+<input
+type="radio"
+name="subcategoryScope"
+value="both"
+[(ngModel)]="form.availableIn"
+/>
+
+<span>Product & Service</span>
+
+</label>
+
+
+</div>
+
+</div>
       <div class="form-group">
         <label>Icon Upload</label>
         <input
@@ -218,6 +268,7 @@
             <th>Subcategory</th>
 
             <th>Category</th>
+            <th>Available In</th>
             <th>Slug</th>
             <th>Sort Order</th>
             <th>Status</th>
@@ -258,9 +309,21 @@
               </div>
             </td>
 
-            <td>{{ subcategory.categoryname }}</td>
-            <td>{{ subcategory.slug || '-' }}</td>
-            <td>{{ subcategory.sortorder }}</td>
+<td>{{ subcategory.categoryname }}</td>
+
+<td>
+  {{
+    subcategory.availableIn?.includes('product') &&
+    subcategory.availableIn?.includes('service')
+      ? 'Product + Service'
+      : subcategory.availableIn?.includes('product')
+      ? 'Product'
+      : 'Service'
+  }}
+</td>
+
+<td>{{ subcategory.slug || '-' }}</td>
+<td>{{ subcategory.sortorder }}</td>
 
             <td>
               <span
@@ -305,7 +368,7 @@
           </tr>
 
           <tr *ngIf="!filteredSubcategories.length">
-            <td colspan="8" class="empty-cell">
+            <td colspan="9" class="empty-cell">
               No subcategories found for the current search/filter.
             </td>
           </tr>
