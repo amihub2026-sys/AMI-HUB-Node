@@ -34,6 +34,45 @@ categoryType="service"
 
 <div class="page-layout">
 
+
+  <!-- FILTER MOBILE BACKDROP -->
+
+  <div class="mobile-filter-bar">
+
+  <button (click)="toggleFilter()">
+
+    <i class="fas fa-sliders"></i>
+
+    Filters
+
+    <span>3</span>
+
+  </button>
+
+
+  <div class="mobile-location">
+
+    📍 Madurai • 10 km
+
+  </div>
+
+
+  <button class="filter-arrow"
+  (click)="toggleFilter()">
+
+    <i class="fas fa-chevron-up"></i>
+
+  </button>
+
+</div>
+
+<div
+ class="filter-backdrop"
+ *ngIf="isFilterOpen"
+ (click)="toggleFilter()">
+</div>
+
+
    <!-- FILTER -->
   <aside 
     class="left-panel"

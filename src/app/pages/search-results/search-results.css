@@ -789,7 +789,81 @@ cursor:pointer;
 
 }
 
+.nav-link-btn.active {
 
+    background:#ffd900 !important;
+
+    color:#0737a8 !important;
+
+    border-radius:14px;
+
+    padding:8px 18px;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:7px;
+
+    box-shadow:
+    0 4px 12px rgba(255,217,0,.35);
+
+    transition:.3s ease;
+
+}
+
+
+.nav-link-btn.active i{
+
+    color:#0737a8 !important;
+
+}
+
+
+/* normal buttons */
+
+.nav-link-btn{
+
+    padding:8px 14px;
+
+    border-radius:14px;
+
+    transition:.3s ease;
+
+}
+
+@media(max-width:768px){
+
+.nav-link-btn{
+
+    padding:6px 8px !important;
+
+    font-size:12px !important;
+
+    gap:4px !important;
+
+    white-space:nowrap;
+
+}
+
+
+.nav-link-btn.active{
+
+    padding:6px 10px !important;
+
+    border-radius:12px !important;
+
+}
+
+
+.nav-link-btn i{
+
+    font-size:12px !important;
+
+}
+
+
+}
 
 /* ==========================================
    EXTRA SMALL DEVICES

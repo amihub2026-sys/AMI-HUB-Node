@@ -614,123 +614,6 @@
 
 }
 
-
-
-/* ===============================
-   RESPONSIVE
-================================ */
-
-
-@media(max-width:1400px){
-
-.results-list{
-
-grid-template-columns:repeat(3,1fr);
-
-}
-
-}
-
-
-
-@media(max-width:1000px){
-
-
-.page-layout{
-
-grid-template-columns:260px 1fr;
-
-}
-
-
-.left-panel{
-
-width:260px;
-
-}
-
-
-.results-list{
-
-grid-template-columns:repeat(2,1fr);
-
-}
-
-
-}
-
-
-
-@media(max-width:768px){
-
-
-.page-layout{
-
-display:block;
-
-padding:12px;
-
-}
-
-
-.left-panel{
-
-
-position:fixed;
-
-left:-100%;
-
-
-top:0;
-
-height:100vh;
-
-z-index:1000;
-
-
-}
-
-
-.left-panel.active{
-
-left:0;
-
-}
-
-
-
-.results-list{
-
-
-grid-template-columns:repeat(2,1fr);
-
-
-gap:12px;
-
-
-}
-
-
-
-.card-image{
-
-
-height:120px;
-
-
-}
-
-
-.result-card{
-
-
-height:280px;
-
-
-}
-
-
-}
 /* FORCE SUBCATEGORY ABOVE GRID */
 
 .results-content{
@@ -755,87 +638,463 @@ height:280px;
     width:100%;
 
 }
+
+
+/* ===============================
+   RESPONSIVE
+================================ */
+
+/* ===============================
+   RESPONSIVE for filter 
+================================ */
+.mobile-filter-bar{
+    display:none;
+}
+
+
+
 @media(max-width:768px){
 
 
-.result-card{
-    width:100%;
-    height:290px;
+/* hide left filter normally */
+
+.left-panel{
+
+    position:fixed;
+
+    top:0;
+
+    left:-100%;
+
+    width:85%;
+
+    height:100vh;
+
+    background:white;
+
+    z-index:9999;
+
+    transition:.3s ease;
+
 }
+
+
+.left-panel.active{
+
+    left:0;
+
+}
+
+
+
+/* backdrop */
+
+.filter-backdrop{
+
+    position:fixed;
+
+    inset:0;
+
+    background:rgba(0,0,0,.45);
+
+    z-index:9998;
+
+}
+
+
+
+/* bottom filter */
+
+.mobile-filter-bar{
+
+
+    position:fixed;
+
+    bottom:15px;
+
+    left:50%;
+
+    transform:translateX(-50%);
+
+
+    width:calc(100% - 40px);
+
+    height:52px;
+
+
+    background:#0737a8;
+
+
+    border-radius:30px;
+
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+
+    padding:0 18px;
+
+
+    color:white;
+
+
+    z-index:9997;
+
+
+    box-shadow:0 8px 25px rgba(0,0,0,.3);
+
+}
+
+
+
+.mobile-filter-bar button{
+
+    background:none;
+
+    border:none;
+
+    color:white;
+
+    font-weight:600;
+
+}
+
+
+
+.mobile-filter-bar span{
+
+    background:#ffd900;
+
+    color:#0737a8;
+
+    border-radius:50%;
+
+    padding:2px 7px;
+
+}
+
+
+
+.mobile-location{
+
+    font-size:13px;
+
+}
+
+
+}
+
+/* ===============================
+   RESPONSIVE for product card
+================================ */
+
+@media(max-width:768px){
+
+
+/* MAIN LAYOUT */
+
+.page-layout{
+
+    display:block !important;
+
+    width:100% !important;
+
+    padding:0 !important;
+
+    margin:0 !important;
+
+}
+
+
+
+/* CONTENT */
+
+.results-content{
+
+    width:100% !important;
+
+    /* padding:0 10px !important; */
+
+    margin:0 !important;
+
+    margin-right: 20px;
+
+}
+
+
+
+/* SUB CATEGORY */
+
+.subcategory-bar{
+
+    width:100% !important;
+
+    display:flex !important;
+
+    gap:8px !important;
+
+    overflow-x:auto;
+
+    padding:8px 0 !important;
+
+}
+
+
+
+.subcategory-chip{
+
+    flex-shrink:0;
+
+}
+
+
+
+/* =====================
+   PRODUCT GRID
+===================== */
+
+
+.results-list{
+
+    width:100% !important;
+
+    display:grid !important;
+
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+
+    gap:10px !important;
+
+    padding:0 !important;
+
+    padding-bottom:100px !important;
+
+}
+
+
+
+/* =====================
+   CARD
+===================== */
+
+
+.result-card{
+
+    width:100% !important;
+
+    min-width:0 !important;
+
+    margin:0 !important;
+
+    border-radius:12px !important;
+
+    overflow:hidden !important;
+
+    height: auto;
+
+}
+
+
+
+/* =====================
+   IMAGE
+===================== */
+
+
+.card-image{
+
+    width:100% !important;
+
+    height:120px !important;
+
+    position:relative;
+
+    overflow:hidden;
+
+}
+
+
+
+.card-image img{
+
+    width:100% !important;
+
+    height:100% !important;
+
+    object-fit:cover !important;
+
+    display:block;
+
+}
+
+
+
+/* BADGE */
+
+.card-badge{
+
+    position:absolute;
+
+    right:8px;
+
+    bottom:8px;
+
+    font-size:11px !important;
+
+    padding:6px 10px !important;
+
+}
+
+
+
+/* =====================
+   CARD BODY
+===================== */
 
 
 .card-body{
 
-    padding:10px;
+    padding:3px !important;
+    
 
 }
 
 
 
-/* PRICE + BUTTON */
+/* CATEGORY */
 
-.bottom-row{
+.category{
 
-    display:flex;
+    font-size:11px !important;
 
-    flex-direction:column;
+    margin:0 0 5px !important;
 
-    align-items:stretch;
-
-    gap:8px;
-
-    padding-top:8px;
+    line-height:15px !important;
 
 }
 
 
 
-.price-box{
+/* TITLE */
 
-    width:100%;
+.card-body h4{
 
-}
+    font-size:15px !important;
 
+    line-height:14px !important;
 
+    margin:4px 0 !important;
 
-.price-box strong{
+    height:15px;
 
-    font-size:14px;
-
-}
-
-
-
-
-.card-link{
-
-    width:100%;
-
-    height:32px;
-
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    padding:0;
-
-    font-size:12px;
+    overflow:hidden;
 
 }
 
 
 
+/* DESCRIPTION */
+
+.description{
+
+    font-size:12px !important;
+
+    line-height:16px !important;
+
+    margin:5px 0 !important;
+
+    height:15px;
+
+    overflow:hidden;
+
+}
+
+
+
+/* INFO ROW */
 
 .info-row{
 
-    margin:6px 0;
+    display:flex !important;
 
-    font-size:11px;
+    justify-content:space-between !important;
+
+    align-items:center;
+
+    margin-top:8px !important;
+
+    font-size:11px !important;
 
 }
 
+
+
+/* BOTTOM */
+
+.bottom-row{
+      
+    display:flex !important;
+
+    justify-content:space-between !important;
+
+    align-items:center !important;
+
+    margin-top:10px !important;
+
+    padding-top:8px !important;
+
+}
+
+
+
+/* PRICE */
+
+.price-box strong{
+
+    font-size:15px !important;
+
+}
+
+
+
+/* BUTTON */
+
+.card-link{
+
+    font-size:11px !important;
+
+    /* padding:7px 10px !important; */
+
+    white-space:nowrap;
+
+}
+
+
+
+/* =====================
+   MOBILE FILTER BAR
+===================== */
+
+
+.mobile-filter-bar{
+
+    width:calc(100% - 30px) !important;
+
+    bottom:15px !important;
+
+}
+
+
+
+/* LAST CARD SPACE */
+
+.results-list{
+
+    padding-bottom:110px !important;
+
+}
 
 
 }

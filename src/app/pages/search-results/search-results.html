@@ -17,26 +17,26 @@
 <!-- active pages -->
 <div class="nav-links">
 
+<button
+  class="nav-link-btn"
+  [class.active]="selectedType === 'product'"
+  (click)="selectType('product')">
+
+  <i class="fas fa-box"></i>
+  <span>Products</span>
+
+</button>
+
+
   <button
-    class="nav-link-btn"
-    [class.active]="selectedType === 'product'"
-    (click)="selectType('product')">
+  class="nav-link-btn"
+  [class.active]="selectedType === 'service'"
+  (click)="selectType('service')">
 
-    <i class="fas fa-box"></i>
-    Products
+  <i class="fas fa-briefcase"></i>
+  <span>Services</span>
 
-  </button>
-
-
-  <button
-    class="nav-link-btn"
-    [class.active]="selectedType === 'service'"
-    (click)="selectType('service')">
-
-    <i class="fas fa-briefcase"></i>
-    Services
-
-  </button>
+</button>
 
 
   <button
