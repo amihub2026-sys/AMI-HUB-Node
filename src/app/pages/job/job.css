@@ -20,6 +20,8 @@ body {
 
     padding:30px 35px;
 
+    padding-top: 74px;
+
     box-sizing:border-box;
 
 }
@@ -593,6 +595,7 @@ margin-top: 50px;
     .job-area{
         display:block;
         padding:15px 20px;
+        padding-top: 120px;
         width:100%;
         box-sizing:border-box;
     }

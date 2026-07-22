@@ -1,7 +1,13 @@
 :host{
     display:block;
 }
+/* CATEGORY BELOW FIXED NAV */
 
+.product-category-space{
+
+    padding-top:75px;
+
+}
 
 /* ===============================
    MAIN LAYOUT
@@ -36,7 +42,7 @@
 
     position:sticky;
 
-    top:20px;
+    top:80px;
 
 }
 
@@ -651,7 +657,15 @@
     display:none;
 }
 
+@media(max-width:768px){
 
+.product-category-space{
+
+    padding-top:120px;
+
+}
+
+}
 
 @media(max-width:768px){
 

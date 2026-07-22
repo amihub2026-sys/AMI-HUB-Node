@@ -7,14 +7,28 @@
   display: none;
 }
 
-/* ==========================================
-   TOP NAVBAR - PREMIUM BLUE
-========================================== */
-/* ==========================================
-   AMI HUB MAIN NAVBAR
-   BLUE - YELLOW - WHITE THEME
-========================================== */
+.topbar{
 
+    position:fixed !important;
+
+    top:0;
+
+    left:0;
+
+    width:100%;
+
+    z-index:9999;
+
+}
+
+
+/* Home only */
+
+.home-container{
+
+    padding-top:80px;
+
+}
 
 .topbar{
 
@@ -1891,7 +1905,39 @@ PROFILE BUTTON
   border-radius: 50px;
   font-weight: 600;
 } */
+/* ==========================
+   FIXED APP NAV MOBILE
+========================== */
 
+@media(max-width:768px){
+
+.topbar{
+
+    position:fixed !important;
+
+    top:0;
+
+    left:0;
+
+    width:100%;
+
+    z-index:9999;
+
+}
+
+
+/* Content below fixed nav */
+
+router-outlet{
+
+    display:block;
+
+    padding-top:65px;
+
+}
+
+
+}
 @media (max-width: 768px) {
   .clear-location-btn {
     width: auto;
