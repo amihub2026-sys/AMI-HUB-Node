@@ -8,7 +8,7 @@ import {
 
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { SupabaseService } from '../../services/supabase.service';
+import { ApiService } from '../../services/api.service';
 import { Output, EventEmitter } from '@angular/core';
 
 
@@ -26,10 +26,10 @@ export class Category implements OnInit {
 categorySelected = new EventEmitter<any>();
   @ViewChild('categorySlider')
   categorySlider!: ElementRef<HTMLDivElement>;
-  constructor(
-    private router: Router,
-    private supabaseService: SupabaseService
-  ){}
+constructor(
+  private router: Router,
+  private api: ApiService
+){}
   // CATEGORY DATA
 
   browseCategories = signal<any[]>([]);
@@ -45,57 +45,95 @@ categorySelected = new EventEmitter<any>();
 
   }
   // LOAD CATEGORY DATA
-  async loadBrowseCategories() {
-    this.isCategoriesLoading.set(true);
-    try {
-      const data =
-      await this.supabaseService.getAllBrowseCategories();
-      const allCategories =
-      (data || [])
-      .filter(
-        (item:any)=>item?.isactive === true
+async loadBrowseCategories(){
+
+  this.isCategoriesLoading.set(true);
+
+  this.api.get<any>('/categories')
+  .subscribe({
+
+    next:(res)=>{
+
+      console.log(
+        "MONGO CATEGORIES:",
+        res
       );
+
+const allCategories =
+(res.data || [])
+.filter(
+(item:any)=>
+item.isActive === true
+)
+.map((item:any)=>({
+
+  ...item,
+
+  // keep old html names
+  categoryname: item.categoryName,
+  iconurl: item.icon,
+  image_url: item.image
+
+}));
+
+
       this.browseCategories.set(
         allCategories
       );
-      this.productCategories.set(
-        allCategories.filter(
-          (item:any)=>
-          item.category_type === 'product'
-        )
 
-      );
-      this.serviceCategories.set(
-        allCategories.filter(
-          (item:any)=>
-          item.category_type === 'service'
-        )
-      );
-    }
-    catch(error){
-      console.error(
-        "Error loading categories",
-        error
-      );
-      this.browseCategories.set([]);
-      this.productCategories.set([]);
-      this.serviceCategories.set([]);
-    }
-    finally{
+
+this.productCategories.set(
+  allCategories.filter(
+    (item:any)=>
+    item.availableIn?.includes('product')
+  )
+);
+
+
+this.serviceCategories.set(
+  allCategories.filter(
+    (item:any)=>
+    item.availableIn?.includes('service')
+  )
+);
+
+
       this.isCategoriesLoading.set(false);
+
+    },
+
+
+    error:(err)=>{
+
+      console.error(
+        "CATEGORY LOAD ERROR:",
+        err
+      );
+
+
+      this.browseCategories.set([]);
+
+      this.productCategories.set([]);
+
+      this.serviceCategories.set([]);
+
+      this.isCategoriesLoading.set(false);
+
     }
-  }
+
+  });
+
+}
   // CATEGORY IMAGE
-  getCategoryImage(category:any):string {
-    return (
+getCategoryImage(category:any):string {
 
-      category?.iconurl ||
+  return (
+    category?.icon ||
+    category?.image ||
+    'assets/icons/default.png'
+  );
 
-      category?.image_url ||
-
-      'assets/icons/default.png'
-    );
-  }
+}
   // CATEGORY SLIDER
 
   slideCategories(
