@@ -863,4 +863,19 @@ goBack(): void {
   }
 }
 
+
+openUserPage(userid:any){
+
+  if(!userid){
+    console.log("Seller userid missing");
+    return;
+  }
+
+
+  this.router.navigate([
+    '/user-page',
+    userid
+  ]);
+
+}
 }
