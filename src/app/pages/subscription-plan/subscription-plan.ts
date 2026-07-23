@@ -8,9 +8,8 @@ import {
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
-import { supabase } from '../../../supabaseClient';
 import { SnackbarService } from '../../services/snackbar.service';
-
+import { ApiService } from '../../services/api.service';
 interface SubscriptionPlanItem {
   subscriptionplanid: number;
   plan_id: string;
@@ -51,16 +50,17 @@ export class SubscriptionPlan implements OnInit {
     private route: ActivatedRoute,
     private cd: ChangeDetectorRef,
     private ngZone: NgZone,
-    private snackbar: SnackbarService
+    private snackbar: SnackbarService,
+    private api: ApiService
   ) {}
 
-  async ngOnInit(): Promise<void> {
+ngOnInit(): void {
     const flow = this.route.snapshot.queryParamMap.get('flow');
     this.flowType = flow === 'featured' ? 'featured' : 'normal';
 
     if (!this.isBrowser) return;
 
-    await this.loadPlans();
+    this.loadPlans();
   }
 
   goHome(): void {
@@ -69,95 +69,93 @@ export class SubscriptionPlan implements OnInit {
     this.router.navigate(['/']);
   }
 
-  private async loadPlans(): Promise<void> {
-    this.isLoadingPlans = true;
+private loadPlans(): void {
 
-    try {
-      const { data, error } = await supabase
-        .from('subscription_plans')
-        .select('*')
-        .eq('isactive', true)
-        .order('price', { ascending: true });
+  this.isLoadingPlans = true;
 
-      if (error) throw error;
+  try {
 
-      this.plans = (data || []).map((item: any) => ({
-        subscriptionplanid: Number(item.subscriptionplanid),
-        plan_id: String(item.plan_id || ''),
-        planname: String(item.planname || item.name || ''),
-        price: Number(item.price || 0),
-        description: String(item.description || ''),
-        validitydays: Number(item.validitydays || 30),
-        postlimit: Number(item.postlimit || item.ad_limit || 1),
-        ad_limit: Number(item.ad_limit || item.postlimit || 1),
-        remaining_ads: Number(item.remaining_ads || item.ad_limit || item.postlimit || 1),
-        isactive: Boolean(item.isactive ?? item.is_active)
-      }));
+    this.api.get<any>(
+      '/subscription-plans/active'
+    )
+    .subscribe({
 
-      if (!this.plans.length) {
-        this.setFallbackPlans();
+      next:(res:any)=>{
+
+
+        this.plans =
+        (res.data || []).map((item:any)=>({
+
+          subscriptionplanid:
+          item.subscriptionplanid,
+
+          plan_id:
+          item.plan_id,
+
+          planname:
+          item.planname,
+
+          price:
+          Number(item.price || 0),
+
+          description:
+          item.description || '',
+
+          validitydays:
+          Number(item.validitydays || 30),
+
+          postlimit:
+          Number(item.postlimit || item.ad_limit || 1),
+
+          ad_limit:
+          Number(item.ad_limit || item.postlimit || 1),
+
+          remaining_ads:
+          Number(
+            item.remaining_ads ||
+            item.ad_limit ||
+            item.postlimit ||
+            1
+          ),
+
+          isactive:
+          item.isactive
+
+        }));
+
+
+        this.isLoadingPlans = false;
+
+        this.cd.detectChanges();
+
+
+      },
+
+
+      error:(err)=>{
+
+        console.error(
+          "PLAN LOAD ERROR",
+          err
+        );
+
+        this.isLoadingPlans=false;
+
       }
-    } catch (err) {
-      console.error('Error loading subscription plans:', err);
-      this.setFallbackPlans();
-    } finally {
-      this.isLoadingPlans = false;
-      this.cd.detectChanges();
-    }
+
+    });
+
+
+  }
+  catch(err){
+
+    console.error(err);
+
+    this.isLoadingPlans=false;
+
   }
 
-  private setFallbackPlans(): void {
-    this.plans = [
-      {
-        subscriptionplanid: 7,
-        plan_id: 'basic_plan',
-        planname: 'Basic Plan',
-        price: 0,
-        description: 'Access to core features',
-        validitydays: 30,
-        postlimit: 1,
-        ad_limit: 1,
-        remaining_ads: 1,
-        isactive: true
-      },
-      {
-        subscriptionplanid: 8,
-        plan_id: 'starter_plan',
-        planname: 'Starter Plan',
-        price: 500,
-        description: 'Priority support and better visibility',
-        validitydays: 30,
-        postlimit: 5,
-        ad_limit: 5,
-        remaining_ads: 5,
-        isactive: true
-      },
-      {
-        subscriptionplanid: 9,
-        plan_id: 'premium_plan',
-        planname: 'Premium Plan',
-        price: 1500,
-        description: 'Dedicated support and extended usage',
-        validitydays: 60,
-        postlimit: 15,
-        ad_limit: 15,
-        remaining_ads: 15,
-        isactive: true
-      },
-      {
-        subscriptionplanid: 10,
-        plan_id: 'pro_plan',
-        planname: 'Pro Plan',
-        price: 2500,
-        description: 'Maximum ads and full access',
-        validitydays: 90,
-        postlimit: 999,
-        ad_limit: 999,
-        remaining_ads: 999,
-        isactive: true
-      }
-    ];
-  }
+}
 
   getPlanFeatures(planName: string): string[] {
     const name = (planName || '').toLowerCase();
