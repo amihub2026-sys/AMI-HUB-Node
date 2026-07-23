@@ -8,8 +8,7 @@ import {
 } from '@angular/core';
 
 import { CommonModule } from '@angular/common';
-import { SupabaseService } from '../../services/supabase.service';
-// import { ApiService } from '../../services/api.service';
+import { ApiService } from '../../services/api.service';
 
 
 @Component({
@@ -39,7 +38,7 @@ new EventEmitter<void>();
   subcategories:any[] = [];
   isLoading = false;
 constructor(
-  private supabaseService: SupabaseService
+  private api: ApiService
 ){}
 
 
@@ -59,41 +58,71 @@ constructor(
   }
 
 
-async loadSubcategories(){
+loadSubcategories(){
+
   const categoryId =
-    this.selectedCategory?.categoryid;
+  this.selectedCategory?._id;
+
+
   if(!categoryId){
     return;
   }
+
+
   this.isLoading = true;
-  try {
-   const data =
-await this.supabaseService
-.getSubcategoriesByCategory(categoryId);
-    console.log(
-      "SUBCATEGORIES:",
-      data
-    );
-    this.subcategories =
-    data || [];
-  }
-  catch(error){
 
-    console.error(
-      "Subcategory error",
-      error
-    );
-    this.subcategories=[];
-  }
-  finally{
 
-    this.isLoading=false;
+  this.api.get<any>(
+    `/subcategories/category/${categoryId}`
+  )
+  .subscribe({
 
-  }
+    next:(res)=>{
+
+      console.log(
+        "MONGO SUBCATEGORIES:",
+        res
+      );
+
+
+      this.subcategories =
+      (res.data || [])
+      .map((item:any)=>({
+
+        ...item,
+
+        // keep old html names
+        subcategoryname:
+        item.subcategoryName,
+
+        iconurl:
+        item.icon
+
+      }));
+
+
+      this.isLoading=false;
+
+    },
+
+
+    error:(err)=>{
+
+      console.error(
+        "SUBCATEGORY ERROR:",
+        err
+      );
+
+
+      this.subcategories=[];
+
+      this.isLoading=false;
+
+    }
+
+  });
 
 }
-
-
 
   selectSubcategory(sub:any){
 
