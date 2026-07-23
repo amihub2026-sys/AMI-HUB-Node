@@ -33,6 +33,8 @@ type AdminMenuKey =
  imports: [
   CommonModule,
   FormsModule,
+
+  Service,   
   AdminSidebar,
   AdminTopbar,
   AdminDashboard,
@@ -47,8 +49,7 @@ type AdminMenuKey =
   AdminUserBoostPlansComponent,
   AdminPaymentsComponent,
   AdminCustomFields,
-  AdminCustomFieldAssignment,
-  Service
+  AdminCustomFieldAssignment
 ],
   templateUrl: './admin-page.html',
   styleUrls: ['./admin-page.css'],

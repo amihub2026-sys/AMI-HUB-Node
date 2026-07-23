@@ -5,7 +5,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../services/api.service';
-import { SupabaseService } from '../../services/supabase.service';
+
 import {
   PostDraftService,
   ServiceBlockDraft
@@ -22,11 +22,6 @@ import {
 } from '../../services/category.types';
 
 
-import {
-  StateItem,
-  CityItem,
-  AreaItem
-} from '../../services/supabase.service';
 @Component({
   selector: 'app-service',
   standalone: true,
@@ -113,10 +108,6 @@ export class Service implements OnInit {
 
   selectedMapLocation: AppLocationResult | null = null;
 
-  statesList: StateItem[] = [];
-  citiesList: CityItem[] = [];
-  areasList: AreaItem[] = [];
-
   existingMainImageUrl = '';
   existingImageUrls: string[] = [];
   existingVideoUrls: string[] = [];
@@ -150,7 +141,6 @@ export class Service implements OnInit {
     { title: '', price: null, image: null }
   ];
 constructor(
-  private supabaseService: SupabaseService,
   private router: Router,
   private postDraftService: PostDraftService,
   private api: ApiService,
@@ -159,7 +149,7 @@ constructor(
   private cdr: ChangeDetectorRef,
   private ngZone: NgZone,
   private location: Location,
-  private snackbar: SnackbarService   
+  private snackbar: SnackbarService
 ) {}
 
   private isBrowser(): boolean {
@@ -226,25 +216,7 @@ this.categories = categoriesResult.data || [];
 
 }
 
-      try {
-        const statesResult = await Promise.race([
-          this.supabaseService.getStates(1),
-          new Promise<StateItem[]>((_, reject) =>
-            setTimeout(() => reject(new Error('States load timeout')), 10000)
-          )
-        ]);
-
-        this.ngZone.run(() => {
-          this.statesList = Array.isArray(statesResult) ? statesResult : [];
-          this.cdr.detectChanges();
-        });
-      } catch (err) {
-        console.error('Error loading states:', err);
-        this.ngZone.run(() => {
-          this.statesList = [];
-          this.cdr.detectChanges();
-        });
-      }
+    
 
       // CREATE MODE
       if (!id) {
@@ -262,19 +234,12 @@ this.categories = categoriesResult.data || [];
       let error: any = null;
 
       try {
-        const postResult: any = await Promise.race([
-          this.supabaseService.supabase
-            .from('post')
-            .select('*')
-            .eq('postid', Number(id))
-            .maybeSingle(),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Post load timeout')), 10000)
-          )
-        ]);
+const postResult:any = await this.api
+  .get(`/posts/${id}`)
+  .toPromise();
 
-        data = postResult?.data ?? null;
-        error = postResult?.error ?? null;
+data = postResult?.data;
+      
       } catch (err) {
         console.error('Error loading post for edit:', err);
         error = err;
@@ -450,56 +415,14 @@ const selectedSubcategory =
     s => s.subcategoryName === this.mainAd.subcategory
   );
 
-    if (selectedSubcategory) {
-      this.mainAd.subcategory =selectedSubcategory.subcategoryName;
-    }
+ if (selectedSubcategory) {
+  this.mainAd.subcategory =
+    selectedSubcategory.subcategoryName;
+}
 
-    const selectedState =
-      this.statesList.find(s => s.statename === this.mainAd.state) ||
-      this.statesList.find(s => String(s.stateid) === String(data.stateid ?? ''));
+}   // <-- ADD THIS
 
-    if (selectedState) {
-      this.mainAd.state = selectedState.statename;
-      try {
-        this.citiesList = await this.supabaseService.getCitiesByState(
-          selectedState.stateid
-        );
-      } catch (err) {
-        console.error('Error loading cities:', err);
-        this.citiesList = [];
-      }
-    } else {
-      this.citiesList = [];
-    }
-
-    const selectedCity =
-      this.citiesList.find(c => c.cityid === data.cityid) ||
-      this.citiesList.find(c => c.cityname === this.mainAd.district);
-
-    if (selectedCity) {
-      this.mainAd.district = selectedCity.cityname;
-      try {
-        this.areasList = await this.supabaseService.getAreasByCity(
-          selectedCity.cityid
-        );
-      } catch (err) {
-        console.error('Error loading areas:', err);
-        this.areasList = [];
-      }
-    } else {
-      this.areasList = [];
-    }
-
-    const selectedArea =
-      this.areasList.find(a => a.areaid === data.areaid) ||
-      this.areasList.find(a => a.areaname === this.mainAd.area);
-
-    if (selectedArea) {
-      this.mainAd.area = selectedArea.areaname;
-    }
-  }
-
-  private rebuildSelectedMapLocation(): void {
+private rebuildSelectedMapLocation(): void {
     if (
       this.mainAd.latitude != null &&
       this.mainAd.longitude != null &&
@@ -603,47 +526,6 @@ this.subcategoriesList = subcategories.map((s:any)=>({
 }
   }
 
-  async onCountryChange() {
-    this.mainAd.state = '';
-    this.mainAd.district = '';
-    this.mainAd.area = '';
-    this.citiesList = [];
-    this.areasList = [];
-    this.statesList = await this.supabaseService.getStates(1);
-  }
-
-  async onStateChange() {
-    this.mainAd.district = '';
-    this.mainAd.area = '';
-    this.citiesList = [];
-    this.areasList = [];
-
-    const selectedState = this.statesList.find(
-      s => s.statename === this.mainAd.state
-    );
-
-    if (selectedState) {
-      this.citiesList = await this.supabaseService.getCitiesByState(
-        selectedState.stateid
-      );
-    }
-  }
-
-  async onDistrictChange() {
-    this.mainAd.area = '';
-    this.areasList = [];
-
-    const selectedCity = this.citiesList.find(
-      c => c.cityname === this.mainAd.district
-    );
-
-    if (selectedCity) {
-      this.areasList = await this.supabaseService.getAreasByCity(
-        selectedCity.cityid
-      );
-    }
-  }
-
   addAnotherService() {
     if (this.adType !== 'service') {
       return;
@@ -741,33 +623,32 @@ onOtherImagesChange(e: Event) {
     this.existingVideoUrls = [...this.existingVideoUrls];
   }
 private async uploadToR2(
-  file: File,
-  folder: string
+ file: File,
+ folder: string
 ): Promise<string | null> {
 
-  const formData = new FormData();
+try {
 
-  formData.append('file', file);
+  const response:any =
+    await this.api
+      .uploadImage(file, folder)
+      .toPromise();
 
-  formData.append('folder', folder);
 
-  const { data, error } =
-    await this.supabaseService.supabase.functions.invoke(
-      'upload-r2',
-      {
-        body: formData,
-      }
-    );
+  return response?.url || null;
 
-  if (error) {
 
-    console.error('R2 Upload Error:', error);
+}
+catch(error){
 
-    return null;
+ console.error(
+  "R2 Upload Error:",
+  error
+ );
 
-  }
+ return null;
 
-  return data?.url || null;
+}
 
 }
 
@@ -921,19 +802,47 @@ if (this.mainAd.whatsappnumber && !/^\d{10}$/.test(this.mainAd.whatsappnumber)) 
     return true;
   }
 
-  private buildCatalogDraft() {
-    if (this.adType !== 'service') {
-      return [];
+private async buildCatalogDraft() {
+
+  if (this.adType !== 'service') {
+    return [];
+  }
+
+  const catalog:any[] = [];
+
+  for (const block of this.serviceBlocks) {
+
+    let imageUrl = '';
+
+    if(block.image){
+
+      const uploaded = await this.uploadToR2(
+        block.image,
+        'service-catalog'
+      );
+
+      if(uploaded){
+        imageUrl = uploaded;
+      }
+
     }
 
-    return this.serviceBlocks
-      .map(block => ({
-        title: block.title?.trim() || '',
-        price: block.price ?? null,
-        imageName: block.image?.name || ''
-      }))
-      .filter(item => item.title || item.price !== null || item.imageName);
+
+    catalog.push({
+
+      title: block.title?.trim() || '',
+
+      price: block.price ?? null,
+
+      image: imageUrl
+
+    });
+
   }
+
+
+  return catalog;
+}
 
   async submitByType(flowType: 'normal' | 'featured' = 'normal') {
     if (this.isSubmitting) return;
@@ -976,13 +885,6 @@ const selectedSubcategory = this.subcategoriesList.find(
   s => s.subcategoryName === this.mainAd.subcategory
 );
 
-      const selectedCity = this.citiesList.find(
-        c => c.cityname === this.mainAd.district
-      );
-
-      const selectedArea = this.areasList.find(
-        a => a.areaname === this.mainAd.area
-      );
 
       if (this.isEditMode && this.editPostId) {
   const finalType = this.lockedAdType || this.adType;
@@ -1037,8 +939,6 @@ subcategoryId: selectedSubcategory?._id ?? null,
     currencycode: 'INR',
     adtype: finalType,
     conditiontype: finalType,
-    cityid: selectedCity?.cityid ?? null,
-    areaid: selectedArea?.areaid ?? null,
     contactphone: this.mainAd.contactphone || '',
     whatsappnumber: this.mainAd.whatsappnumber || '',
     category: this.mainAd.category || '',
@@ -1060,7 +960,10 @@ subcategoryId: selectedSubcategory?._id ?? null,
     video_url: updatedVideoUrls[0] || '',
     video_urls: updatedVideoUrls,
 
-    catalog: finalType === 'service' ? this.buildCatalogDraft() : [],
+    catalog:
+ finalType === 'service'
+ ? await this.buildCatalogDraft()
+ : [],
     custom_fields: {
       country: this.mainAd.country,
       state: this.mainAd.state,
@@ -1073,16 +976,33 @@ subcategoryId: selectedSubcategory?._id ?? null,
     }
   };
 
-  const { error } = await this.supabaseService.supabase
-    .from('post')
-    .update(updatePayload)
-    .eq('postid', this.editPostId);
+try {
 
-  if (error) {
-    console.error('Error updating post:', error);
-    this.showAlert('Error updating post', 'error');
-    return;
-  }
+ await this.api
+ .put(
+   `/posts/${this.editPostId}`,
+   updatePayload
+ )
+ .toPromise();
+
+
+}
+catch(error){
+
+ console.error(
+   "UPDATE ERROR:",
+   error
+ );
+
+ this.showAlert(
+   "Post update failed",
+   "error"
+ );
+
+ return;
+
+}
+
 
   this.showAlert('Post updated successfully', 'success');
 
@@ -1154,8 +1074,6 @@ subcategoryId: selectedSubcategory?._id ?? null,
         featured_plan_name: null,
         isactive: false,
 
-        cityid: selectedCity?.cityid ?? null,
-        areaid: selectedArea?.areaid ?? null,
 
 contactname:
   this.adminUser?.name ||
@@ -1197,7 +1115,7 @@ video_urls: videoUrls,
         district: this.mainAd.district,
         area: this.mainAd.area,
 
-        catalog: this.buildCatalogDraft(),
+       catalog: await this.buildCatalogDraft(),
         custom_fields: {
           country: this.mainAd.country,
           state: this.mainAd.state,
