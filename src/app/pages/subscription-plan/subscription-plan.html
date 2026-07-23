@@ -19,27 +19,27 @@
     <div
       class="plan-card"
       *ngFor="let plan of plans"
-      [class.featured]="isFeaturedCard(plan.planname)"
+      [class.featured]="isFeaturedCard(plan.planName)"
     >
-      <h2>{{ plan.planname }}</h2>
-      <p class="price">₹{{ plan.price }} / {{ plan.validitydays }} days</p>
+      <h2>{{ plan.planName }}</h2>
+      <p class="price">₹{{ plan.price }} / {{ plan.validity }} days</p>
 
       <ul>
-        <li *ngFor="let feature of getPlanFeatures(plan.planname)">
+        <li *ngFor="let feature of getPlanFeatures(plan.planName)">
           {{ feature }}
         </li>
       </ul>
 
       <button
         class="btn"
-        [class.btn-primary]="isFeaturedCard(plan.planname)"
+        [class.btn-primary]="isFeaturedCard(plan.planName)"
         [disabled]="isSaving"
         (click)="selectPlan(plan)"
       >
         {{
-          isSaving && selectedPlan === plan.planname
+          isSaving && selectedPlan === plan.planName
             ? 'Processing...'
-            : ('Choose ' + plan.planname)
+            : ('Choose ' + plan.planName)
         }}
       </button>
     </div>
