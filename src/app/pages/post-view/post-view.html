@@ -415,7 +415,10 @@
       </button>
 
       <!-- SELLER -->
-      <div class="seller-card">
+     <div 
+ class="seller-card"
+ (click)="openUserPage(postData()?.userid)"
+>
 
         <img
           [src]="postData()?.sellerImage"

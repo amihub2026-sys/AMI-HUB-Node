@@ -103,7 +103,11 @@ export const routes: Routes = [
   { path: 'cart', component: Cart },
   { path: 'favt', component: Favt },
   { path: 'chats', component: Chats },
-
+{
+ path:'user-page/:id',
+ loadComponent:()=>import('./pages/user-page/user-page')
+ .then(m=>m.UserPage)
+},
   {
   path: 'news',
   loadComponent: () =>

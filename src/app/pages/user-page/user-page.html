@@ -1,0 +1,346 @@
+<div class="user-page">
+
+
+<!-- LOADING -->
+
+<div class="loading" *ngIf="loading()">
+
+  Loading user details...
+
+</div>
+
+
+
+<div *ngIf="!loading() && user()">
+
+
+
+<!-- USER PROFILE -->
+
+<section class="profile-card">
+
+
+<img
+[src]="user()?.image"
+alt="User"
+>
+
+
+<div class="profile-info">
+
+
+<h1>
+{{user()?.name}}
+</h1>
+
+
+<span class="trusted">
+
+<i class="fas fa-shield-alt"></i>
+Trusted Seller
+
+</span>
+
+
+<p>
+<i class="fas fa-map-marker-alt"></i>
+
+{{user()?.address}}
+
+</p>
+
+
+
+<div class="action-buttons">
+
+
+<button
+(click)="callUser()"
+class="call-btn"
+>
+
+<i class="fas fa-phone"></i>
+
+Call
+
+</button>
+
+
+
+<button
+(click)="whatsapp()"
+class="whatsapp-btn"
+>
+
+<i class="fab fa-whatsapp"></i>
+
+WhatsApp
+
+</button>
+
+
+</div>
+
+
+</div>
+
+
+</section>
+
+
+
+
+
+<!-- PRODUCTS -->
+
+<section 
+class="post-section"
+*ngIf="products().length > 0"
+>
+
+
+<div class="section-title">
+
+<h2>
+Products
+</h2>
+
+<span>
+{{products().length}}
+</span>
+
+</div>
+
+
+
+<div class="post-grid">
+
+
+<div
+class="post-card"
+*ngFor="let item of products()"
+(click)="openPost(item.postid)"
+>
+
+
+<img
+
+[src]="
+item.image_url ||
+item.image_urls?.[0] ||
+'assets/no-image.png'
+"
+
+>
+
+
+<div class="card-content">
+
+
+<h3>
+{{item.title}}
+</h3>
+
+
+<p class="price"
+*ngIf="item.price"
+>
+₹ {{item.price}}
+</p>
+
+
+
+<p>
+{{item.location}}
+</p>
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+</section>
+
+
+
+
+
+
+
+<!-- SERVICES -->
+
+
+<section 
+class="post-section"
+*ngIf="services().length > 0"
+>
+
+
+<div class="section-title">
+
+<h2>
+Services
+</h2>
+
+<span>
+{{services().length}}
+</span>
+
+</div>
+
+
+
+<div class="post-grid">
+
+
+<div
+class="post-card"
+*ngFor="let item of services()"
+(click)="openPost(item.postid)"
+>
+
+
+<img
+
+[src]="
+item.image_url ||
+item.image_urls?.[0] ||
+'assets/no-image.png'
+"
+
+>
+
+
+<div class="card-content">
+
+
+<h3>
+{{item.title}}
+</h3>
+
+
+<p>
+{{item.location}}
+</p>
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+</section>
+
+
+
+
+
+
+
+<!-- JOBS -->
+
+
+<section 
+class="post-section"
+*ngIf="jobs().length > 0"
+>
+
+
+<div class="section-title">
+
+<h2>
+Jobs
+</h2>
+
+<span>
+{{jobs().length}}
+</span>
+
+</div>
+
+
+
+
+<div class="post-grid">
+
+
+<div
+
+class="post-card job-card"
+
+*ngFor="let item of jobs()"
+
+(click)="openPost(item.postid)"
+
+>
+
+
+
+<div class="job-icon">
+
+<i class="fas fa-briefcase"></i>
+
+</div>
+
+
+
+<div class="card-content">
+
+
+<h3>
+{{item.title}}
+</h3>
+
+
+<p>
+{{item.description}}
+</p>
+
+
+
+</div>
+
+
+
+</div>
+
+
+</div>
+
+
+</section>
+
+
+
+
+<!-- NO POSTS -->
+
+<div 
+class="no-posts"
+
+*ngIf="
+products().length===0 &&
+services().length===0 &&
+jobs().length===0
+"
+>
+
+No posts available
+
+</div>
+
+
+
+</div>
+
+
+</div>
