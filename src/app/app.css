@@ -1005,13 +1005,17 @@ PROFILE BUTTON
 .location-modal-header h3 {
   margin: 0;
 
-  color: var(--navy-blue);
+  color: #2563eb;
 }
 
 .close-location-btn {
-  border: none;
+  border: 2px solid rgb(91, 91, 247)  ;
+  border-radius: 10px;
+  height: 30px;
+  width: 50px;
+  align-items: center;
 
-  background: transparent;
+  background: rgb(91, 91, 247);
 
   color: var(--navy-blue);
 
@@ -1034,6 +1038,8 @@ PROFILE BUTTON
   border-radius: 12px;
 
   background: #f4f6fb;
+
+  color: #111;
 }
 
 .location-modal-actions {
@@ -1041,6 +1047,7 @@ PROFILE BUTTON
 
   display: flex;
   justify-content: flex-end;
+  color: #111;
 }
 
 .clear-location-btn {
@@ -1053,7 +1060,7 @@ PROFILE BUTTON
   border-radius: 9px;
 
   background: var(--navy-blue);
-  color: #ffffff;
+  color: #111;
 
   font-size: 13px;
   font-weight: 600;
