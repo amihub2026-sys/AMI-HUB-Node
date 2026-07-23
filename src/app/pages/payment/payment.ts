@@ -1,10 +1,9 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
-import { supabase } from '../../../supabaseClient';
-import { SupabaseService } from '../../services/supabase.service';
 import { PostDraftService } from '../../services/post-draft.service';
 import { SnackbarService } from '../../services/snackbar.service';
+import { ApiService } from '../../services/api.service';
 declare global {
   interface Window {
     Razorpay: any;
@@ -21,9 +20,9 @@ declare global {
 export class Payment implements OnInit {
   private router = inject(Router);
   private platformId = inject(PLATFORM_ID);
-  private supabaseService = inject(SupabaseService);
   private postDraftService = inject(PostDraftService);
 private snackbar = inject(SnackbarService);
+private api = inject(ApiService);
   private isBrowser = isPlatformBrowser(this.platformId);
 
   isPaying = signal(false);
@@ -102,27 +101,29 @@ private snackbar = inject(SnackbarService);
     }
   }
 
-  private async fetchPostById(postId: number): Promise<any | null> {
-    try {
-      if (!postId) return null;
+private async fetchPostById(postId:number):Promise<any|null>{
 
-      const { data, error } = await this.supabaseService.supabase
-        .from('post')
-        .select('*')
-        .eq('postid', postId)
-        .maybeSingle();
+  try{
 
-      if (error) {
-        console.error('Error fetching post by id:', error);
-        return null;
-      }
+    const res:any = await this.api
+    .get(`/posts/${postId}`)
+    .toPromise();
 
-      return data || null;
-    } catch (error) {
-      console.error('Error fetching post by id:', error);
-      return null;
-    }
+    return res?.data || null;
+
   }
+  catch(error){
+
+    console.error(
+      "FETCH POST ERROR",
+      error
+    );
+
+    return null;
+
+  }
+
+}
 
   private restoreVerifiedPaymentState(): void {
     try {
@@ -178,14 +179,18 @@ private snackbar = inject(SnackbarService);
     document.body.appendChild(script);
   }
 
-  private getSelectedPlanId(): string | null {
-    return (
-      this.planData?.boost_plan_id ||
-      this.planData?.featured_plan_id ||
-      this.planData?.plan_id ||
-      null
-    );
-  }
+private getSelectedPlanId(): string | null {
+
+  return (
+    this.planData?.subscriptionplanid ||
+    this.planData?._id ||
+    this.planData?.boost_plan_id ||
+    this.planData?.featured_plan_id ||
+    this.planData?.plan_id ||
+    null
+  );
+
+}
 
   private getSelectedPlanName(): string {
     return (
@@ -261,32 +266,12 @@ private snackbar = inject(SnackbarService);
   private isValidFile(file: unknown): file is File {
     return !!file && file instanceof File;
   }
+private async getAccessToken(): Promise<string | null> {
 
-  private async getAccessToken(): Promise<string | null> {
-  const effectiveSession = await this.supabaseService.getEffectiveAuthUser();
+ return localStorage.getItem('token');
 
-  if (!effectiveSession.isAuthenticated) {
-    return null;
-  }
-
-  // FIX: use your stored login identity instead of supabase session
-  return localStorage.getItem('supabase_uid');
 }
 
-  private async getEffectiveUserUuid(): Promise<string | null> {
-    const effectiveSession = await this.supabaseService.getEffectiveAuthUser();
-
-    if (!effectiveSession.isAuthenticated) {
-      return null;
-    }
-
-    const resolvedUuid = await this.supabaseService.resolveEffectiveUserUuid();
-    if (resolvedUuid) {
-      return resolvedUuid;
-    }
-
-    return effectiveSession.authUser?.id || effectiveSession.supabase_uid || null;
-  }
 
   private parseJsonArray<T = any>(value: any): T[] {
     if (Array.isArray(value)) {
@@ -349,7 +334,13 @@ private snackbar = inject(SnackbarService);
       return '';
     }
 
-    const url = await this.supabaseService.uploadFile(file, 'main-images');
+    const response:any =
+await this.api
+.uploadImage(file,'main-images')
+.toPromise();
+
+
+const url = response?.publicUrl;
 
     if (!url) {
       throw new Error('Main image upload failed');
@@ -373,16 +364,33 @@ private snackbar = inject(SnackbarService);
 
     const urls: string[] = [];
 
-    for (const file of files) {
-      const url = await this.supabaseService.uploadFile(file, 'additional-images');
+for (const file of files) {
 
-      if (!url) {
-        throw new Error('Additional image upload failed');
-      }
+  const response:any = await this.api
+    .uploadImage(
+      file,
+      'additional-images'
+    )
+    .toPromise();
 
-      uploadedFiles.push({ bucket: 'additional-images', url });
-      urls.push(url);
-    }
+
+  const url = response?.publicUrl;
+
+
+  if (!url) {
+    throw new Error('Additional image upload failed');
+  }
+
+
+  uploadedFiles.push({
+    bucket:'additional-images',
+    url:url
+  });
+
+
+  urls.push(url);
+
+}
 
     return urls;
   }
@@ -402,7 +410,15 @@ private snackbar = inject(SnackbarService);
     const urls: string[] = [];
 
     for (const file of files) {
-      const url = await this.supabaseService.uploadFile(file, 'videos');
+     const response:any = await this.api
+.uploadImage(
+ file,
+ 'videos'
+)
+.toPromise();
+
+
+const url = response?.publicUrl;
 
       if (!url) {
         throw new Error('Video upload failed');
@@ -428,17 +444,34 @@ private snackbar = inject(SnackbarService);
 
       let imageUrl = '';
 
-      if (this.isValidFile(block.image)) {
-        const url = await this.supabaseService.uploadFile(block.image, 'service-images');
+if (this.isValidFile(block.image)) {
 
-        if (!url) {
-          throw new Error('Catalog image upload failed');
-        }
+  const response:any = await this.api
+    .uploadImage(
+      block.image,
+      'service-images'
+    )
+    .toPromise();
 
-        uploadedFiles.push({ bucket: 'service-images', url });
-        imageUrl = url;
-      }
 
+  const url = response?.publicUrl;
+
+
+  if (!url) {
+    throw new Error(
+      'Catalog image upload failed'
+    );
+  }
+
+
+  uploadedFiles.push({
+    bucket:'service-images',
+    url:url
+  });
+
+
+  imageUrl = url;
+}
       result.push({
         title: block.title,
         price: Number(block.price),
@@ -448,93 +481,52 @@ private snackbar = inject(SnackbarService);
 
     return result;
   }
+private async saveUserSubscription(paymentPayload:any){
 
-  private async saveUserSubscription(
-    paymentPayload: {
-      razorpay_payment_id?: string;
-      razorpay_order_id?: string;
-      razorpay_signature?: string;
-    }
-  ): Promise<void> {
-    const selectedPlan = this.planData || {};
+  const expiryDate = new Date();
 
-    const userUuid = await this.getEffectiveUserUuid();
-    if (!userUuid) {
-      throw new Error('Authenticated user not found');
-    }
+  expiryDate.setDate(
+    expiryDate.getDate() +
+    Number(this.planData?.duration_days || 30)
+  );
 
-    const { data: dbUser, error: dbUserError } = await this.supabaseService.supabase
-      .from('users')
-      .select('userid')
-      .or(`supabase_uid.eq.${userUuid},auth_user_id.eq.${userUuid},user_id.eq.${userUuid}`)
-      .maybeSingle();
 
-    if (dbUserError || !dbUser) {
-      throw new Error(dbUserError?.message || 'User mapping not found');
-    }
+  const payload = {
 
-    const planKey = this.getSelectedPlanId();
+    planId:
+      this.getSelectedPlanId(),
 
-    if (!planKey) {
-      throw new Error('Selected plan not found');
-    }
+    remainingPosts:
+      Number(this.planData?.total_ads || 1),
 
-    const { data: subscriptionPlans, error: subscriptionPlanError } =
-      await this.supabaseService.supabase
-        .from('subscription_plans')
-        .select('subscriptionplanid')
-        .eq('plan_id', planKey);
+    remainingAds:
+      Number(this.planData?.total_ads || 1),
 
-    if (subscriptionPlanError) {
-      throw new Error(
-        subscriptionPlanError.message || 'Subscription plan lookup failed'
-      );
-    }
+    expiryDate:
+      expiryDate.toISOString()
 
-    if (!subscriptionPlans || subscriptionPlans.length === 0) {
-      throw new Error(`No subscription plan found for plan_id: ${planKey}`);
-    }
+  };
 
-    if (subscriptionPlans.length > 1) {
-      throw new Error(`Multiple subscription plans found for plan_id: ${planKey}`);
-    }
 
-    const subscriptionPlan = subscriptionPlans[0];
+console.log(
+ "SUBSCRIPTION PAYLOAD",
+ payload
+);
 
-    const startDate = new Date();
-    const endDate = new Date();
-    endDate.setDate(startDate.getDate() + Number(selectedPlan.duration_days || 0));
+console.log(
+ "PLAN DATA",
+ this.planData
+);
 
-    const totalAds = Number(selectedPlan.total_ads ?? 1);
-    const remainingAds = Number(selectedPlan.remaining_ads ?? totalAds);
 
-    const { error: insertSubscriptionError } = await this.supabaseService.supabase
-      .from('user_subscriptions')
-      .insert([
-        {
-          userid: dbUser.userid,
-          subscriptionplanid: subscriptionPlan.subscriptionplanid,
-          startdate: startDate.toISOString(),
-          enddate: endDate.toISOString(),
-          amountpaid: Number(selectedPlan.amount || selectedPlan.price || 0),
-          paymentstatus: 'paid',
-          isactive: true,
-          createdon: new Date().toISOString(),
-          total_ads: totalAds,
-          remaining_ads: remainingAds,
-          plan_uuid: null,
-          razorpay_payment_id: paymentPayload.razorpay_payment_id || null,
-          razorpay_order_id: paymentPayload.razorpay_order_id || null,
-          razorpay_signature: paymentPayload.razorpay_signature || null,
-          auth_user_id: userUuid
-        }
-      ]);
+  await this.api
+  .post(
+    '/subscriptions/create',
+    payload
+  )
+  .toPromise();
 
-    if (insertSubscriptionError) {
-      throw insertSubscriptionError;
-    }
-  }
-
+}
   private async saveBoostEntry(
   paymentPayload: {
     razorpay_payment_id?: string;
@@ -570,27 +562,12 @@ private snackbar = inject(SnackbarService);
     startDate.getDate() + durationDays
   );
 
-const userUuid = await this.getEffectiveUserUuid();
+const numericUserId =
+  Number(localStorage.getItem('userId')) || null;
 
-let numericUserId: number | null = null;
-
-if (userUuid) {
-  const { data: dbUser, error: dbUserError } = await this.supabaseService.supabase
-    .from('users')
-    .select('userid')
-    .or(`supabase_uid.eq.${userUuid},auth_user_id.eq.${userUuid},user_id.eq.${userUuid}`)
-    .maybeSingle();
-
-  if (!dbUserError && dbUser?.userid) {
-    numericUserId = Number(dbUser.userid);
-  }
-}
-
-  const boostPayload = {
-   userid: numericUserId,
-    auth_user_id: userUuid,
-
-    post_id: postId,
+const boostPayload = {
+ userid: numericUserId,
+ post_id: postId,
 
     ad_type:
       this.postData?.adtype ||
@@ -620,19 +597,12 @@ if (userUuid) {
     createdon: new Date().toISOString()
   };
 
-  const { error } =
-    await this.supabaseService.supabase
-      .from('user_boost_purchases')
-      .insert([boostPayload]);
-
-  if (error) {
-    console.error(
-      'user_boost_purchases insert failed:',
-      error
-    );
-
-    throw error;
-  }
+await this.api
+.post(
+ '/boost-plans/purchase',
+ boostPayload
+)
+.toPromise();
 }
   private async updateExistingPostAsFeatured(
     paymentPayload: {
@@ -660,15 +630,12 @@ if (userUuid) {
       isactive: true
     };
 
-    const { error } = await this.supabaseService.supabase
-      .from('post')
-      .update(updatePayload)
-      .eq('postid', postId);
-
-    if (error) {
-      throw error;
-    }
-
+await this.api
+  .put(
+    `/posts/${postId}`,
+    updatePayload
+  )
+  .toPromise();
     await this.saveBoostEntry(paymentPayload);
   }
 
@@ -703,39 +670,63 @@ const catalog = this.parseJsonArray<any>(
       // const oldVideoUrls = this.parseJsonArray<string>(pendingPost.video_urls);
       // const oldCatalog = this.parseJsonArray<any>(pendingPost.catalog);
 
-      const finalPayload: any = {
-        ...pendingPost,
+const finalPayload:any = {
 
-        image_url: mainPhoto || pendingPost.image_url || '',
-        video_url: videos[0] || pendingPost.video_url || '',
-      image_urls: otherImages,
-video_urls: videos,
-catalog: catalog,
-        isfeatured: selectedIsFeatured,
-        is_featured: selectedIsFeatured,
-        featured_plan_id: selectedPlanId,
-        featured_plan_name: selectedPlanName,
+title:
+pendingPost.title,
 
-        adtype: pendingPost.conditiontype || pendingPost.adtype || null,
-        conditiontype: pendingPost.conditiontype || pendingPost.adtype || null,
+categoryId:
+pendingPost.categoryId,
 
-        status: 'Active',
-        isactive: true,
-        currencycode: pendingPost.currencycode || 'INR'
-      };
+subcategoryId:
+pendingPost.subcategoryId || null,
 
+listingType:
+pendingPost.listingType || 'service',
+
+description:
+pendingPost.description || '',
+
+
+price:
+Number(pendingPost.price || 0),
+
+
+images:[
+ mainPhoto,
+ ...otherImages
+].filter(Boolean),
+
+
+videos:
+videos,
+
+
+location:
+pendingPost.location || {},
+
+
+customFields:
+pendingPost.customFields || {},
+
+
+isFeatured:
+selectedIsFeatured,
+
+
+status:
+"approved"
+
+};
       delete finalPayload.postid;
       delete finalPayload.id;
 
-
-
-      const { error } = await supabase
-        .from('post')
-        .insert([finalPayload]);
-
-      if (error) {
-        throw error;
-      }
+await this.api
+.post(
+  '/posts',
+  finalPayload
+)
+.toPromise();
 
       if (this.isSubscriptionPlanFlow()) {
         await this.saveUserSubscription(paymentPayload);
@@ -745,7 +736,10 @@ catalog: catalog,
 
       for (const file of uploadedFiles.reverse()) {
         try {
-          await this.supabaseService.deleteFileByPublicUrl(file.url, file.bucket);
+         console.log(
+"R2 cleanup skipped:",
+file.url
+);
         } catch (deleteErr) {
           console.error('Failed to cleanup uploaded file:', deleteErr);
         }
@@ -801,20 +795,11 @@ this.snackbar.show(msg, 'error');
     razorpay_signature: string;
   }): Promise<void> {
     const accessToken = await this.getAccessToken();
-    const userUuid = await this.getEffectiveUserUuid();
+   const userUuid = null;
     const selectedPlanId = this.getSelectedPlanId();
     const selectedPlanName = this.getSelectedPlanName();
-    let numericUserId: number | null = null;
-
-if (userUuid) {
-  const { data: dbUser } = await this.supabaseService.supabase
-    .from('users')
-    .select('userid')
-    .or(`supabase_uid.eq.${userUuid},auth_user_id.eq.${userUuid},user_id.eq.${userUuid}`)
-    .maybeSingle();
-
-  numericUserId = dbUser?.userid ?? null;
-}
+const numericUserId =
+Number(localStorage.getItem('userId')) || null;
 
     const verifyPayload = {
   plan_id: selectedPlanId,
@@ -827,7 +812,7 @@ if (userUuid) {
   razorpay_signature: payload.razorpay_signature,
 
   user_id: numericUserId,
-  auth_user_id: userUuid,
+ 
 
   post_payload: this.postData || {},
   plan_payload: this.planData || {},
@@ -849,33 +834,31 @@ if (accessToken) {
   invokeOptions.headers.Authorization = `Bearer ${accessToken}`;
 }
 
-    const { data, error } = await supabase.functions.invoke('verify-payment', invokeOptions);
+const data:any =
+await this.api
+.post(
+'/payment/verify-payment',
+verifyPayload
+)
+.toPromise();
 
 
 
-    if (error) {
-      const detailedMessage = await this.readEdgeFunctionError(error);
+if (!data || data.success !== true) {
 
-      if (this.isFeaturedPlanFlow()) {
-        console.warn('Featured/Boost verification skipped due to backend error:', detailedMessage);
-        return;
-      }
+  if (this.isFeaturedPlanFlow()) {
+    console.warn(
+      'Featured verification failed, continuing'
+    );
+    return;
+  }
 
-      throw new Error(detailedMessage || 'Payment verification failed');
-    }
+  throw new Error(
+    data?.message ||
+    'Payment verification failed'
+  );
 
-    if (!data || data.success !== true) {
-      if (this.isFeaturedPlanFlow()) {
-        console.warn('Featured/Boost verification returned no success. Continuing post save.');
-        return;
-      }
-
-      throw new Error(
-        data?.error?.toString() ||
-        data?.message?.toString() ||
-        'Payment verification failed'
-      );
-    }
+}
   }
 
   async payNow(): Promise<void> {
@@ -921,16 +904,18 @@ this.snackbar.show(msg, 'error');
     this.errorMessage.set('');
 
     try {
-      const effectiveSession = await this.supabaseService.getEffectiveAuthUser();
       const accessToken = await this.getAccessToken();
+
+if (!accessToken) {
+  throw new Error(
+    'Login required. Please login again.'
+  );
+}
       const selectedPlanId = this.getSelectedPlanId();
       const selectedPlanName = this.getSelectedPlanName();
 
 
 
-      if (!effectiveSession.isAuthenticated) {
-        throw new Error('Login session expired. Please login again.');
-      }
 
       const invokeOptions: any = {
         headers: {
@@ -949,25 +934,32 @@ this.snackbar.show(msg, 'error');
         invokeOptions.headers.Authorization = `Bearer ${accessToken}`;
       }
 
-      const { data, error } = await supabase.functions.invoke('create-order', invokeOptions);
+      const data:any = await this.api.post(
+'/payment/create-order',
+{
+ amount:this.amount
+}
+).toPromise();
 
+if (!data?.order?.id) {
 
+  console.log(
+    "RAZORPAY RESPONSE ERROR",
+    data
+  );
 
-      if (error) {
-        throw new Error(error.message || 'Unable to create order');
-      }
+  throw new Error(
+    'Failed to create Razorpay order'
+  );
 
-      if (!data || !data.orderId) {
-        throw new Error('Failed to create Razorpay order');
-      }
-
+}
       const options = {
         key: this.razorpayKey,
         amount: Math.round(this.amount * 100),
         currency: 'INR',
         name: 'AmiHub',
         description: this.planName,
-        order_id: data.orderId,
+        order_id: data.order.id,
         prefill: {
           name: this.sellerName,
           email: this.sellerEmail,

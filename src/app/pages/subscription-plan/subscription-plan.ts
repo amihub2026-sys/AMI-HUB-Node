@@ -11,18 +11,26 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { SnackbarService } from '../../services/snackbar.service';
 import { ApiService } from '../../services/api.service';
 interface SubscriptionPlanItem {
-  subscriptionplanid: number;
-  plan_id: string;
-  planname: string;
-  price: number;
-  description: string;
-  validitydays: number;
-  postlimit: number;
-  ad_limit: number;
-  remaining_ads: number;
-  isactive: boolean;
-}
 
+  subscriptionplanid: string;
+
+  planId: string;
+
+  planName: string;
+
+  price: number;
+
+  validity: number;
+
+  postLimit: number;
+
+  adLimit: number;
+
+  remaining: number;
+
+  isActive: boolean;
+
+}
 @Component({
   selector: 'app-subscription-plan',
   standalone: true,
@@ -83,45 +91,28 @@ private loadPlans(): void {
       next:(res:any)=>{
 
 
-        this.plans =
-        (res.data || []).map((item:any)=>({
+this.plans =
+(res.data || []).map((item:any)=>({
 
-          subscriptionplanid:
-          item.subscriptionplanid,
+subscriptionplanid:item._id,
 
-          plan_id:
-          item.plan_id,
+planId:item.planId,
 
-          planname:
-          item.planname,
+planName:item.planName,
 
-          price:
-          Number(item.price || 0),
+price:Number(item.price || 0),
 
-          description:
-          item.description || '',
+validity:Number(item.validity || 30),
 
-          validitydays:
-          Number(item.validitydays || 30),
+postLimit:Number(item.postLimit || 0),
 
-          postlimit:
-          Number(item.postlimit || item.ad_limit || 1),
+adLimit:Number(item.adLimit || 0),
 
-          ad_limit:
-          Number(item.ad_limit || item.postlimit || 1),
+remaining:Number(item.remaining || 0),
 
-          remaining_ads:
-          Number(
-            item.remaining_ads ||
-            item.ad_limit ||
-            item.postlimit ||
-            1
-          ),
+isActive:Boolean(item.isActive)
 
-          isactive:
-          item.isactive
-
-        }));
+}));
 
 
         this.isLoadingPlans = false;
@@ -202,31 +193,59 @@ private loadPlans(): void {
 
     this.ngZone.run(() => {
       this.isSaving = true;
-      this.selectedPlan = plan.planname;
+      this.selectedPlan = plan.planName;
       this.showSuccess = false;
       this.cd.detectChanges();
     });
 
     try {
-      const planId = plan.plan_id;
+      const planId = plan.planId;
 
-      const planPayload = {
-        subscriptionplanid: plan.subscriptionplanid,
-        plan_id: planId,
-        plan_name: plan.planname,
-        amount: plan.price,
-        price: plan.price,
-        duration_days: plan.validitydays,
-        validitydays: plan.validitydays,
+const planPayload = {
 
-        total_ads: plan.ad_limit || plan.postlimit || 1,
-        remaining_ads: plan.remaining_ads || plan.ad_limit || plan.postlimit || 1,
+  subscriptionplanid: plan.subscriptionplanid,
 
-        isfeatured: this.flowType === 'featured',
-        featured_plan_id: this.flowType === 'featured' ? planId : null,
-        featured_plan_name: this.flowType === 'featured' ? plan.planname : null,
-        flow_type: this.flowType
-      };
+  plan_id: plan.planId,
+
+  plan_name: plan.planName,
+
+  amount: plan.price,
+
+  price: plan.price,
+
+  duration_days: plan.validity,
+
+  validitydays: plan.validity,
+
+
+  total_ads:
+    plan.adLimit || plan.postLimit || 1,
+
+
+  remaining_ads:
+    plan.remaining || 0,
+
+
+  isfeatured:
+    this.flowType === 'featured',
+
+
+  featured_plan_id:
+    this.flowType === 'featured'
+      ? planId
+      : null,
+
+
+  featured_plan_name:
+    this.flowType === 'featured'
+      ? plan.planName
+      : null,
+
+
+  flow_type:
+    this.flowType
+
+};
 
       localStorage.setItem('selected_plan_payload', JSON.stringify(planPayload));
 
