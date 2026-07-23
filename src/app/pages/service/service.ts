@@ -947,23 +947,21 @@ if (this.mainAd.whatsappnumber && !/^\d{10}$/.test(this.mainAd.whatsappnumber)) 
     this.isSubmitting = true;
 
     try {
-      const session = await this.supabaseService.getEffectiveAuthUser();
+const token = localStorage.getItem('token');
+const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-      if (!session.isAuthenticated) {
-       this.showAlert('Please login first', 'error');
-        this.router.navigate(['/login']);
-        return;
-      }
 
-      const authUserId = session.authUser?.id || '';
-      const localUserId = session.userid || '';
-      const resolvedUuid = await this.supabaseService.resolveEffectiveUserUuid();
-  const effectiveUserId =
-  this.adminUser?.auth_user_id ||
-  this.adminUser?.supabase_uid ||
-  authUserId ||
-  resolvedUuid ||
-  localUserId;
+if (!token || !user?._id) {
+
+  this.showAlert('Please login first', 'error');
+
+  this.router.navigate(['/login']);
+
+  return;
+}
+
+
+const effectiveUserId = user._id;
 
       if (!effectiveUserId) {
         this.showAlert('User id not found');
@@ -1159,11 +1157,9 @@ subcategoryId: selectedSubcategory?._id ?? null,
         cityid: selectedCity?.cityid ?? null,
         areaid: selectedArea?.areaid ?? null,
 
-      contactname:
+contactname:
   this.adminUser?.name ||
-  session.name ||
-  session.authUser?.user_metadata?.['full_name'] ||
-  session.authUser?.user_metadata?.['name'] ||
+  user.fullName ||
   '',
 
 contactphone:
@@ -1173,10 +1169,8 @@ contactphone:
 
 contactemail:
   this.adminUser?.email ||
-  session.email ||
-  session.authUser?.email ||
+  user.email ||
   '',
-
 whatsappnumber:
   this.adminUser?.phone ||
   this.mainAd.whatsappnumber ||
