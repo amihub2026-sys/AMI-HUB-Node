@@ -33,11 +33,14 @@ interface AdminUserItem {
 }
 
 @Component({
-  selector: 'app-admin-users',
-  standalone: true,
-imports: [CommonModule, Service],
-  templateUrl: './admin-users.html',
-  styleUrls: ['./admin-users.css'],
+ selector: 'app-admin-users',
+ standalone: true,
+ imports: [
+   CommonModule,
+   Service
+ ],
+ templateUrl: './admin-users.html',
+ styleUrls: ['./admin-users.css'],
 })
 export class AdminUsers implements OnInit {
   private supabaseService = inject(SupabaseService);
