@@ -1,7 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { SupabaseService } from '../../services/supabase.service';
+import { ApiService } from '../../services/api.service';
 import { SnackbarService } from '../../services/snackbar.service';
 @Component({
   selector: 'app-my-posts',
@@ -16,7 +16,7 @@ export class MyPosts implements OnInit {
 
  constructor(
   private router: Router,
-  private supabaseService: SupabaseService,
+   private api: ApiService,
   private snackbar: SnackbarService   // 🔥 ADD THIS
 ) {}
 
@@ -73,7 +73,7 @@ getDistrict(post: any): string {
 
     for (const list of postLists) {
       for (const post of list || []) {
-        const key = post?.postid;
+        const key = post?._id;
         if (key != null && !map.has(key)) {
           map.set(key, post);
         }
@@ -98,73 +98,67 @@ getDescription(post:any):string {
   );
 
 }
-  async loadCurrentUserPosts(): Promise<void> {
-    this.isLoading.set(true);
+async loadCurrentUserPosts(): Promise<void> {
 
-    try {
-      const session = await this.supabaseService.getEffectiveAuthUser();
+this.isLoading.set(true);
 
-      if (!session.isAuthenticated) {
-        this.posts.set([]);
-        this.showAlert('Please login first', 'error');
-        this.router.navigate(['/login'], {
-          state: { redirectTo: 'my-posts' }
-        });
-        return;
-      }
+this.api.get<any>('/posts/my-posts')
+.subscribe({
 
-      const authUserId = session.authUser?.id || '';
-      const localUserId = session.userid || '';
-      const resolvedUuid = await this.supabaseService.resolveEffectiveUserUuid();
+next:(res)=>{
 
-      const results: any[][] = [];
+console.log(
+"MY POSTS FROM MONGO:",
+res
+);
 
-      if (localUserId) {
-        const data = await this.supabaseService.getPostsByUserId(localUserId, 0, 100);
-        results.push(Array.isArray(data) ? data : []);
-      }
 
-      if (resolvedUuid && resolvedUuid !== localUserId) {
-        const data = await this.supabaseService.getPostsByUserId(resolvedUuid, 0, 100);
-        results.push(Array.isArray(data) ? data : []);
-      }
+this.posts.set(
+res.data || []
+);
 
-      if (
-        authUserId &&
-        authUserId !== localUserId &&
-        authUserId !== resolvedUuid
-      ) {
-        const data = await this.supabaseService.getPostsByUserId(authUserId, 0, 100);
-        results.push(Array.isArray(data) ? data : []);
-      }
 
-    const mergedPosts = this.mergePosts(...results);
+this.isLoading.set(false);
 
-console.log("FINAL MY POSTS:", mergedPosts);
-console.log("FIRST DESCRIPTION:", mergedPosts[0]?.description);
+},
 
-this.posts.set(mergedPosts);
-    } catch (error) {
-      console.error('Error loading my posts:', error);
-      this.posts.set([]);
-    } finally {
-      this.isLoading.set(false);
-    }
-  }
 
-  getMainImage(post: any): string {
-    const imageUrl =
-      post?.image_url ||
-      (Array.isArray(post?.image_urls) && post.image_urls.length > 0
-        ? post.image_urls[0]
-        : '');
+error:(err)=>{
 
-    if (!imageUrl || typeof imageUrl !== 'string') {
-      return 'assets/no-image.png';
-    }
+console.error(
+"LOAD POSTS ERROR:",
+err
+);
 
-    return imageUrl;
-  }
+
+this.posts.set([]);
+
+this.isLoading.set(false);
+
+}
+
+
+});
+
+
+}
+
+getMainImage(post:any):string{
+
+if(
+post?.images &&
+Array.isArray(post.images) &&
+post.images.length > 0
+){
+
+return post.images[0];
+
+}
+
+
+return 'assets/no-image.png';
+
+}
 
   getAdType(post: any): string {
     const type = String(
@@ -186,11 +180,11 @@ this.posts.set(mergedPosts);
   }
 
   openDetails(post: any): void {
-    if (!post?.postid) {
+    if (!post?._id){
       return;
     }
 
-    this.router.navigate(['/details', String(post.postid)]);
+    this.router.navigate(['/details', String(post._id)]);
   }
 
   async editPost(post: any, event: MouseEvent): Promise<void> {
@@ -198,7 +192,7 @@ this.posts.set(mergedPosts);
     event.stopPropagation();
     event.stopImmediatePropagation?.();
 
-    if (!post?.postid) {
+    if (!post?._id) {
       console.warn('Missing postid for edit:', post);
       this.showAlert('Post id not found');
       return;
@@ -206,7 +200,7 @@ this.posts.set(mergedPosts);
 
 
 
-    const success = await this.router.navigate(['/edit-post', String(post.postid)]);
+    const success = await this.router.navigate(['/edit-post', String(post._id)]);
 
     if (!success) {
       console.error('Navigation failed for edit post:', post.postid);
@@ -217,7 +211,7 @@ this.posts.set(mergedPosts);
   private buildFeaturePostPayload(post: any): any {
     return {
       ...post,
-      postid: Number(post?.postid),
+      postid: Number(post?._id),
       userid: post?.userid ?? null,
       title: post?.title ?? '',
       description: post?.description ?? '',
@@ -256,7 +250,7 @@ this.posts.set(mergedPosts);
     event.stopPropagation();
     event.stopImmediatePropagation?.();
 
-    if (!post?.postid) {
+    if (!post?._id) {
       console.warn('Missing postid for feature:', post);
       this.showAlert('Post id not found');
       return;
@@ -289,14 +283,14 @@ this.posts.set(mergedPosts);
 
       const success = await this.router.navigate(['/featured-plan'], {
         state: {
-          postId: Number(post.postid),
+          postId: Number(post._id),
           adType: adType,
           postDetails: featurePayload
         }
       });
 
       if (!success) {
-        console.error('Navigation failed for featured post:', post.postid);
+        console.error('Navigation failed for featured post:', post._id);
         this.showAlert('Failed to open featured plan');
       }
     } catch (error) {
@@ -305,61 +299,85 @@ this.posts.set(mergedPosts);
     }
   }
 
-  async removePost(post: any, event: MouseEvent): Promise<void> {
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation?.();
+async removePost(post:any, event:MouseEvent):Promise<void>{
 
-    if (!post?.postid) {
-      this.showAlert('Post id not found');
-      return;
-    }
-
-    const confirmed = this.showConfirm('Are you sure you want to remove this post?');
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      const session = await this.supabaseService.getEffectiveAuthUser();
-
-      if (!session.isAuthenticated) {
-        this.showAlert('Please login first');
-        this.router.navigate(['/login']);
-        return;
-      }
-
-      const { data, error } = await this.supabaseService.supabase
-        .from('post')
-        .delete()
-        .eq('postid', Number(post.postid))
-        .select('postid, userid');
+event.preventDefault();
+event.stopPropagation();
+event.stopImmediatePropagation?.();
 
 
+if(!post?._id){
 
-      if (error) {
-        console.error('Delete error:', error);
-        this.showAlert(error.message || 'Failed to remove post');
-        return;
-      }
+  this.showAlert(
+    'Post id not found',
+    'error'
+  );
 
-      if (!data || data.length === 0) {
-        this.showAlert('Delete blocked in Supabase. Fix RLS policy / userid match.');
-        return;
-      }
+  return;
 
-      this.posts.set(
-        this.posts().filter(item => item.postid !== post.postid)
-      );
+}
 
-      this.snackbar.show('Post removed successfully', 'success');
-    } catch (error) {
-      console.error('Error removing post:', error);
-      this.showAlert('Failed to remove post');
-    }
-  }
 
-  trackByPostId(index: number, post: any): any {
-    return post?.postid ?? index;
-  }
+const confirmed =
+this.showConfirm(
+'Are you sure you want to remove this post?'
+);
+
+
+if(!confirmed){
+  return;
+}
+
+
+
+this.api.delete(
+`/posts/${post._id}`
+)
+.subscribe({
+
+next:(res:any)=>{
+
+
+this.posts.set(
+this.posts().filter(
+(item)=>item._id !== post._id
+)
+);
+
+
+this.snackbar.show(
+'Post removed successfully',
+'success'
+);
+
+
+},
+
+
+error:(err)=>{
+
+console.error(
+"DELETE ERROR:",
+err
+);
+
+
+this.snackbar.show(
+'Failed to remove post',
+'error'
+);
+
+
+}
+
+
+});
+
+
+}
+trackByPostId(index:number, post:any){
+
+return post?._id || index;
+
+}
 }
