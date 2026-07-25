@@ -10,11 +10,11 @@ import {
   inject,
 } from '@angular/core';
 
-import { SupabaseService } from '../../../../../services/supabase.service';
-
+import { ApiService } from '../../../../../services/api.service';
+import { firstValueFrom } from 'rxjs';
 
 interface AdminPostItem {
-  id: number;
+  id: string;
   userId: string;
   title: string;
   price: number;
@@ -38,12 +38,13 @@ interface AdminPostItem {
   styleUrls: ['./admin-posts.css'],
 })
 export class AdminPosts implements OnInit {
-  private supabaseService = inject(SupabaseService);
+  private apiService = inject(ApiService);
   private cdr = inject(ChangeDetectorRef);
   
 
   @Input() searchQuery = '';
-  @Output() adminEditPost = new EventEmitter<number>();
+  selectedPostType = 'all';
+  @Output() adminEditPost = new EventEmitter<string>();
 
   isLoading = true;
   errorMessage = '';
@@ -69,74 +70,87 @@ editForm: any = {
     await this.loadPosts();
   }
 
-  async loadPosts(): Promise<void> {
-    this.isLoading = true;
-    this.errorMessage = '';
+async loadPosts(): Promise<void> {
+  this.isLoading = true;
+  this.errorMessage = '';
+  this.cdr.detectChanges();
+
+  try {
+    const response: any = await firstValueFrom(
+      this.apiService.get('/posts/admin/all')
+    );
+
+    const data = response?.data || [];
+
+    this.posts = data.map((row: any) => ({
+      id: String(row._id),
+
+      userId:
+        row.sellerId?.fullName ||
+        row.sellerId?.username ||
+        row.sellerId?._id ||
+        '-',
+
+      title: row.title || 'Untitled Post',
+
+      price: Number(row.price || 0),
+
+      category:
+        row.categoryId?.categoryName ||
+        '-',
+
+      subcategory:
+        row.subcategoryId?.subcategoryName ||
+        '-',
+
+      type:
+        row.listingType ||
+        '-',
+
+      adType:
+        row.priceType ||
+        '-',
+
+      status:
+        row.status ||
+        'pending',
+
+      isActive:
+        row.status === 'approved',
+
+      isFeatured:
+        row.isFeatured === true,
+
+      createdOn:
+        this.formatDate(row.createdAt),
+
+      imageUrl:
+        row.images?.[0] || '',
+
+      rawCreatedOn:
+        row.createdAt || '',
+    }));
+
+  } catch (error: any) {
+    console.error('Posts page error:', error);
+
+    this.errorMessage =
+      error?.error?.message ||
+      'Something went wrong while loading posts.';
+
+    this.posts = [];
+  } finally {
+    this.isLoading = false;
     this.cdr.detectChanges();
-
-    try {
-      const { data, error } = await this.supabaseService.supabase
-        .from('post')
-        .select(`
-          postid,
-          userid,
-          title,
-          price,
-          category,
-          subcategory,
-          conditiontype,
-          adtype,
-          status,
-          isactive,
-          isfeatured,
-          createdon,
-          image_url
-        `)
-        .order('createdon', { ascending: false });
-
-      if (error) {
-        console.error('Load posts error:', error);
-        this.errorMessage = 'Failed to load posts.';
-        this.posts = [];
-        this.cdr.detectChanges();
-        return;
-      }
-
-      this.posts = (data || []).map((row: any) => ({
-        id: Number(row.postid),
-        userId: String(row.userid || '-'),
-        title: row.title || 'Untitled Post',
-        price: Number(row.price || 0),
-        category: row.category || '-',
-        subcategory: row.subcategory || '-',
-        type: row.conditiontype || '-',
-        adType: row.adtype || '-',
-        status: row.status || 'Unknown',
-        isActive: !!row.isactive,
-        isFeatured: !!row.isfeatured,
-        createdOn: this.formatDate(row.createdon),
-        imageUrl: row.image_url || '',
-        rawCreatedOn: row.createdon || '',
-      }));
-
-      this.cdr.detectChanges();
-    } catch (error) {
-      console.error('Posts page error:', error);
-      this.errorMessage = 'Something went wrong while loading posts.';
-      this.posts = [];
-      this.cdr.detectChanges();
-    } finally {
-      this.isLoading = false;
-      this.cdr.detectChanges();
-    }
   }
+}
+get filteredPosts(): AdminPostItem[] {
+  const q = this.searchQuery.trim().toLowerCase();
 
-  get filteredPosts(): AdminPostItem[] {
-    const q = this.searchQuery.trim().toLowerCase();
+  return this.posts.filter((post) => {
 
-    if (!q) return this.posts;
-
-    return this.posts.filter((post) =>
+    const matchesSearch =
+      !q ||
       String(post.id).includes(q) ||
       post.title.toLowerCase().includes(q) ||
       post.category.toLowerCase().includes(q) ||
@@ -144,10 +158,19 @@ editForm: any = {
       post.type.toLowerCase().includes(q) ||
       post.adType.toLowerCase().includes(q) ||
       post.status.toLowerCase().includes(q) ||
-      String(post.userId).toLowerCase().includes(q)
-    );
-  }
+      String(post.userId).toLowerCase().includes(q);
 
+    const matchesType =
+      this.selectedPostType === 'all' ||
+      post.type.toLowerCase() === this.selectedPostType;
+
+    return matchesSearch && matchesType;
+
+  });
+}
+onPostTypeChange(): void {
+  this.currentPage = 1;
+}
   get totalPosts(): number {
     return this.posts.length;
   }
@@ -164,89 +187,113 @@ editForm: any = {
     return this.posts.filter((p) => !p.isActive).length;
   }
 
-  async togglePostStatus(post: AdminPostItem): Promise<void> {
-    const previousValue = post.isActive;
-    post.isActive = !post.isActive;
+async togglePostStatus(post: AdminPostItem): Promise<void> {
+
+  const previousValue = post.isActive;
+
+  post.isActive = !post.isActive;
+
+  this.cdr.detectChanges();
+
+  try {
+
+    await firstValueFrom(
+
+      this.apiService.patch(
+        `/posts/admin/${post.id}/status`,
+        {
+          isActive: post.isActive
+        }
+      )
+
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    post.isActive = previousValue;
+
+    this.errorMessage =
+      'Failed to update post status.';
+
+  } finally {
+
     this.cdr.detectChanges();
 
-    try {
-      const { error } = await this.supabaseService.supabase
-        .from('post')
-        .update({
-          isactive: post.isActive,
-          status: post.isActive ? 'Active' : 'Inactive',
-        })
-        .eq('postid', post.id);
-
-      if (error) {
-        console.error('Toggle post status error:', error);
-        post.isActive = previousValue;
-        this.errorMessage = 'Failed to update post status.';
-      }
-    } catch (error) {
-      console.error('Toggle post status exception:', error);
-      post.isActive = previousValue;
-      this.errorMessage = 'Failed to update post status.';
-    } finally {
-      this.cdr.detectChanges();
-    }
   }
 
-  async toggleFeatured(post: AdminPostItem): Promise<void> {
-    const previousValue = post.isFeatured;
-    post.isFeatured = !post.isFeatured;
+}
+
+async toggleFeatured(post: AdminPostItem): Promise<void> {
+
+  const previousValue = post.isFeatured;
+
+  post.isFeatured = !post.isFeatured;
+
+  this.cdr.detectChanges();
+
+  try {
+
+    await firstValueFrom(
+      this.apiService.patch(
+        `/posts/admin/${post.id}/featured`,
+        {
+          isFeatured: post.isFeatured
+        }
+      )
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    post.isFeatured = previousValue;
+
+    this.errorMessage =
+      'Failed to update featured status.';
+
+  } finally {
+
     this.cdr.detectChanges();
 
-    try {
-      const { error } = await this.supabaseService.supabase
-        .from('post')
-        .update({
-          isfeatured: post.isFeatured,
-        })
-        .eq('postid', post.id);
-
-      if (error) {
-        console.error('Toggle featured error:', error);
-        post.isFeatured = previousValue;
-        this.errorMessage = 'Failed to update featured status.';
-      }
-    } catch (error) {
-      console.error('Toggle featured exception:', error);
-      post.isFeatured = previousValue;
-      this.errorMessage = 'Failed to update featured status.';
-    } finally {
-      this.cdr.detectChanges();
-    }
   }
 
-  async deletePost(post: AdminPostItem): Promise<void> {
-    const confirmed = window.confirm(`Delete post "${post.title}"?`);
-    if (!confirmed) return;
+}
+async deletePost(post: AdminPostItem): Promise<void> {
+  const confirmed = window.confirm(
+    `Delete post "${post.title}"?`
+  );
 
-    const previousPosts = [...this.posts];
-    this.posts = this.posts.filter((p) => p.id !== post.id);
+  if (!confirmed) return;
+
+  const previousPosts = [...this.posts];
+
+  this.posts = this.posts.filter(
+    (item) => item.id !== post.id
+  );
+
+  this.cdr.detectChanges();
+
+  try {
+    await firstValueFrom(
+      this.apiService.delete(
+        `/posts/admin/${post.id}`
+      )
+    );
+
+  } catch (error) {
+    console.error('Delete post error:', error);
+
+    this.posts = previousPosts;
+
+    this.errorMessage =
+      'Failed to delete post.';
+
+  } finally {
     this.cdr.detectChanges();
-
-    try {
-      const { error } = await this.supabaseService.supabase
-        .from('post')
-        .delete()
-        .eq('postid', post.id);
-
-      if (error) {
-        console.error('Delete post error:', error);
-        this.posts = previousPosts;
-        this.errorMessage = 'Failed to delete post.';
-      }
-    } catch (error) {
-      console.error('Delete post exception:', error);
-      this.posts = previousPosts;
-      this.errorMessage = 'Failed to delete post.';
-    } finally {
-      this.cdr.detectChanges();
-    }
   }
-
+}
   getStatusLabel(post: AdminPostItem): string {
     return post.isActive ? 'Active' : 'Inactive';
   }
@@ -255,7 +302,7 @@ editForm: any = {
     return post.isActive ? 'status-active' : 'status-inactive';
   }
 
- trackByPost(index: number, post: AdminPostItem): number {
+trackByPost(index: number, post: AdminPostItem): string {
   return post.id;
 }
 
