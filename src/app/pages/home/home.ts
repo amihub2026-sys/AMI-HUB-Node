@@ -13,8 +13,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { SupabaseService } from '../../services/supabase.service';
-import { supabase } from '../../../supabaseClient';
+import { ApiService } from '../../services/api.service';
 import { Category } from '../categories/categories';
 interface CategoryItem {
   categoryid: number;
@@ -34,12 +33,12 @@ interface CategoryItem {
 export class Home implements OnInit, AfterViewInit, OnDestroy {
 @ViewChild('categorySlider')
 categorySlider!: ElementRef<HTMLDivElement>;
-  constructor(
-     public router: Router,
-    private supabaseService: SupabaseService,
-    private cdr: ChangeDetectorRef,
-    private ngZone: NgZone
-  ) {}
+constructor(
+  public router: Router,
+  private api: ApiService,
+  private cdr: ChangeDetectorRef,
+  private ngZone: NgZone
+) {}
 
   goToAllCategories() {
     this.router.navigate(['/all-categories']);
@@ -99,11 +98,18 @@ currentUserId = signal<string>('');
   private trendingInterval: any;
   readonly visibleTrendingCount = 5;
 
- async ngOnInit() {
-  const user = await this.supabaseService.getCurrentUser();
-  this.currentUserId.set(user?.id || '');
- this.loadLatestJobs();
- 
+async ngOnInit(): Promise<void> {
+
+  const user = JSON.parse(
+    localStorage.getItem('user') || '{}'
+  );
+
+  this.currentUserId.set(
+    String(user?._id || user?.id || '')
+  );
+
+  this.loadLatestJobs();
+
   this.startAutoSlide();
 
   await this.loadBrowseCategories();
@@ -123,60 +129,51 @@ currentUserId = signal<string>('');
   }
   
 
-async loadLatestJobs(){
+async loadLatestJobs(): Promise<void> {
+  try {
+    const result: any = await this.api
+      .get('/posts?listingType=job')
+      .toPromise();
 
-  try{
+    const jobs = result?.data || [];
 
-    const { data, error } = await supabase
-      .from('job_vacancies')
-      .select(`
-        id,
-        job_title,
-        company_name,
-        location,
-        salary,
-        experience,
-        vacancies,
-        skills,
-        description,
-        contact_email,
-        contact_phone,
-        job_type,
-        work_mode
-      `)
-      .order('created_at', {
-        ascending:false
-      })
-      .limit(5);
+    this.latestJobs = jobs.slice(0, 5).map((job: any) => ({
+      ...job,
 
+      id: String(job._id || job.id || ''),
+      job_title: job.job_title || job.title || '',
+      company_name:
+        job.company_name ||
+        job.contactname ||
+        job.sellerId?.fullName ||
+        '',
+      location:
+        job.full_address ||
+        job.location?.address ||
+        job.location ||
+        job.address ||
+        '',
+      salary: job.salary || job.price || 0,
+      contact_email:
+        job.contact_email ||
+        job.contactemail ||
+        job.sellerId?.email ||
+        '',
+      contact_phone:
+        job.contact_phone ||
+        job.contactphone ||
+        job.sellerId?.mobile ||
+        '',
+      job_type: job.job_type || job.conditiontype || 'job',
+      work_mode: job.work_mode || ''
+    }));
 
-    if(error){
-
-      console.error(
-        "Jobs loading error:",
-        error
-      );
-
-      return;
-
-    }
-
-
-    this.latestJobs = data || [];
-
-
+    this.cdr.detectChanges();
+  } catch (error) {
+    console.error('Latest jobs error:', error);
+    this.latestJobs = [];
   }
-  catch(error){
-
-    console.error(
-      "Latest jobs error:",
-      error
-    );
-
-  }
-
 }
-
 openJobDetails(job:any): void {
 
   console.log("Selected Job:", job);
@@ -188,137 +185,246 @@ openJobDetails(job:any): void {
   ]);
 
 }
-  async loadBrowseCategories() {
-    this.isCategoriesLoading.set(true);
+async loadBrowseCategories(): Promise<void> {
 
-    try {
-      const data = await this.supabaseService.getAllBrowseCategories();
-      const allCategories = (data || []).filter((item: any) => item?.isactive === true);
+  this.isCategoriesLoading.set(true);
 
-      this.browseCategories.set(allCategories);
-      this.productCategories.set(
-        allCategories.filter((item: any) => item?.category_type === 'product')
-      );
-      this.serviceCategories.set(
-        allCategories.filter((item: any) => item?.category_type === 'service')
-      );
-    } catch (error) {
-      console.error('Error loading browse categories:', error);
-      this.browseCategories.set([]);
-      this.productCategories.set([]);
-      this.serviceCategories.set([]);
-    } finally {
-      this.isCategoriesLoading.set(false);
-    }
+  try {
+
+    const response: any = await this.api
+      .get('/categories')
+      .toPromise();
+
+    const allCategories = (response?.data || []).filter(
+      (item: any) => item.isActive === true
+    );
+
+    this.browseCategories.set(allCategories);
+
+    this.productCategories.set(
+      allCategories.filter((item: any) =>
+        item.availableIn?.includes('product')
+      )
+    );
+
+    this.serviceCategories.set(
+      allCategories.filter((item: any) =>
+        item.availableIn?.includes('service')
+      )
+    );
+
+  } catch (error) {
+
+    console.error('Error loading categories', error);
+
+    this.browseCategories.set([]);
+    this.productCategories.set([]);
+    this.serviceCategories.set([]);
+
+  } finally {
+
+    this.isCategoriesLoading.set(false);
+
   }
 
-  async loadTrendingPosts() {
+}
+async loadTrendingPosts(): Promise<void> {
+
   this.isTrendingLoading.set(true);
 
   try {
-    const data = await this.supabaseService.getServicePosts(0, 20);
 
-    this.trendingPosts.set(data || []);
+    const response: any = await this.api
+      .get('/posts?listingType=service&sort=popular')
+      .toPromise();
+
+    const posts = (response?.data || []).map((post: any) => ({
+      ...post,
+
+      postid: String(post._id || post.id || ''),
+
+      image_url:
+        post.image_url ||
+        (Array.isArray(post.images) && post.images.length > 0
+          ? post.images[0]
+          : ''),
+
+      image_urls:
+        post.image_urls ||
+        post.images ||
+        [],
+
+      location:
+        post.location?.city ||
+        post.location?.state ||
+        post.location ||
+        post.address ||
+        '',
+
+      userid:
+        post.sellerId?._id ||
+        post.sellerId ||
+        ''
+    }));
+
+    this.trendingPosts.set(posts);
     this.trendingOffset.set(0);
+
   } catch (error) {
+
     console.error('Error loading service posts:', error);
     this.trendingPosts.set([]);
+
   } finally {
+
     this.isTrendingLoading.set(false);
+
   }
 }
+async loadFeaturedBusinesses(): Promise<void> {
 
-  async loadFeaturedBusinesses() {
-    this.isFeaturedLoading.set(true);
+  this.isFeaturedLoading.set(true);
 
-    try {
-      const data = await this.supabaseService.getFeaturedPosts(0, 8);
-      this.featuredBusinesses.set(data || []);
-    } catch (error) {
-      console.error('Error loading featured businesses:', error);
-      this.featuredBusinesses.set([]);
-    } finally {
-      this.isFeaturedLoading.set(false);
-    }
+  try {
+
+    const response: any = await this.api
+      .get('/posts?isFeatured=true')
+      .toPromise();
+
+    const posts = (response?.data || [])
+      .slice(0, 8)
+      .map((post: any) => ({
+        ...post,
+
+        postid: String(post._id || post.id || ''),
+
+        image_url:
+          post.image_url ||
+          (Array.isArray(post.images) && post.images.length > 0
+            ? post.images[0]
+            : ''),
+
+        image_urls:
+          post.image_urls ||
+          post.images ||
+          [],
+
+        location:
+          post.location?.city ||
+          post.location?.state ||
+          post.location ||
+          post.address ||
+          '',
+
+        userid:
+          post.sellerId?._id ||
+          post.sellerId ||
+          ''
+      }));
+
+    this.featuredBusinesses.set(posts);
+
+  } catch (error) {
+
+    console.error('Error loading featured businesses:', error);
+    this.featuredBusinesses.set([]);
+
+  } finally {
+
+    this.isFeaturedLoading.set(false);
+
   }
+}
  goToJobs() {
   this.router.navigate(['/job']);
 }
-  async loadNewProducts() {
-    this.isLatestLoading.set(true);
+async loadNewProducts(): Promise<void> {
 
-    try {
-      const data = await this.supabaseService.getPosts(0, 12);
+  this.isLatestLoading.set(true);
 
-      const featuredIds = new Set(
-        (this.featuredBusinesses() || []).map((item: any) =>
-          (item?.postid ?? item?.id ?? '').toString()
-        )
-      );
+  try {
 
-      const hotIds = new Set(
-        (this.trendingPosts() || []).map((item: any) =>
-          (item?.postid ?? item?.id ?? '').toString()
-        )
-      );
+    const response: any = await this.api
+      .get('/posts?listingType=product')
+      .toPromise();
 
-      const filtered = (data || []).filter((item: any) => {
-        const id = (item?.postid ?? item?.id ?? '').toString();
-        return !featuredIds.has(id) && !hotIds.has(id);
-      });
+    const data = (response?.data || []).map((item: any) => ({
 
-      this.latestProducts.set(filtered);
-    } catch (error) {
-      console.error('Error loading latest products:', error);
-      this.latestProducts.set([]);
-    } finally {
-      this.isLatestLoading.set(false);
-    }
+      ...item,
+
+      postid: String(item._id || item.id || ''),
+
+      image_url:
+        item.image_url ||
+        (Array.isArray(item.images) && item.images.length
+          ? item.images[0]
+          : ''),
+
+      image_urls:
+        item.image_urls ||
+        item.images ||
+        [],
+
+      userid:
+        item.sellerId?._id ||
+        item.sellerId ||
+        ''
+
+    }));
+
+    const featuredIds = new Set(
+      this.featuredBusinesses().map(x => String(x.postid))
+    );
+
+    const hotIds = new Set(
+      this.trendingPosts().map(x => String(x.postid))
+    );
+
+    this.latestProducts.set(
+      data.filter((x: any) =>
+        !featuredIds.has(String(x.postid)) &&
+        !hotIds.has(String(x.postid))
+      )
+    );
+
+  } catch (error) {
+
+    console.error(error);
+    this.latestProducts.set([]);
+
+  } finally {
+
+    this.isLatestLoading.set(false);
+
   }
-  async applyFavoriteStatus() {
-  const session = await this.supabaseService.getEffectiveAuthUser();
 
-  if (!session.isAuthenticated) return;
+}
+async applyFavoriteStatus(): Promise<void> {
 
-  const userId =
-    session.authUser?.id ||
-    session.supabase_uid ||
-    this.currentUserId();
+  const userId = this.currentUserId();
 
-  if (!userId) return;
-
-  const { data, error } = await supabase
-    .from('favorite_items')
-    .select('product_id')
-    .eq('user_id', userId);
-
-  if (error) {
-    console.error('Favorite status load error:', error);
+  if (!userId) {
     return;
   }
 
-  const favoriteIds = new Set(
-    (data || []).map((x: any) => String(x.product_id))
-  );
-
-  this.featuredBusinesses.update(items =>
-    items.map(item => ({
+  this.featuredBusinesses.update((items: any[]) =>
+    items.map((item: any) => ({
       ...item,
-      isFavourite: favoriteIds.has(String(item.postid))
+      isFavourite: false
     }))
   );
 
-  this.trendingPosts.update(items =>
-    items.map(item => ({
+  this.trendingPosts.update((items: any[]) =>
+    items.map((item: any) => ({
       ...item,
-      isFavourite: favoriteIds.has(String(item.postid))
+      isFavourite: false
     }))
   );
 
-  this.latestProducts.update(items =>
-    items.map(item => ({
+  this.latestProducts.update((items: any[]) =>
+    items.map((item: any) => ({
       ...item,
-      isFavourite: favoriteIds.has(String(item.postid))
+      isFavourite: false
     }))
   );
 
@@ -441,63 +547,18 @@ openJobDetails(job:any): void {
     if (!post?.postid) return;
     this.router.navigate(['/details', post.postid]);
   }
+async toggleFavourite(item: any, event: Event): Promise<void> {
 
- async toggleFavourite(item: any, event: Event) {
   event.stopPropagation();
 
-  const session = await this.supabaseService.getEffectiveAuthUser();
+  const userId = this.currentUserId();
 
-  if (!session.isAuthenticated) {
+  if (!userId) {
     this.router.navigate(['/login']);
     return;
   }
 
-  const userId =
-    session.authUser?.id ||
-    session.supabase_uid ||
-    this.currentUserId();
-
-  if (!userId) {
-    return;
-  }
-
-  const productId = String(item.postid || item.id || '');
-
-  if (!productId) {
-    return;
-  }
-
-  if (!item.isFavourite) {
-    const { error } = await supabase
-      .from('favorite_items')
-      .insert({
-        user_id: userId,
-        product_id: productId,
-        name: item.title || 'Product',
-        price: Number(item.price || 0),
-        location: item.location || item.address || 'Location not available',
-        image:
-          item.image_url ||
-          (Array.isArray(item.image_urls) && item.image_urls.length
-            ? item.image_urls[0]
-            : 'assets/no-image.png')
-      });
-
-    if (!error) {
-      item.isFavourite = true;
-    }
-
-  } else {
-    const { error } = await supabase
-      .from('favorite_items')
-      .delete()
-      .eq('user_id', userId)
-      .eq('product_id', productId);
-
-    if (!error) {
-      item.isFavourite = false;
-    }
-  }
+  item.isFavourite = !item.isFavourite;
 
   this.cdr.detectChanges();
 }
