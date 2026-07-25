@@ -68,23 +68,31 @@ private api = inject(ApiService);
         if (featureEditContext?.postData) {
           this.postData = featureEditContext.postData;
         } else if (featureEditContext?.postId) {
-          const fetchedPost = await this.fetchPostById(Number(featureEditContext.postId));
+          const fetchedPost = await this.fetchPostById(
+  String(featureEditContext.postId)
+);
           if (fetchedPost) {
             this.postData = fetchedPost;
           }
         }
       }
 
-      if ((!this.postData || !this.postData?.postid) && isFeaturedFlow) {
-        const postIdFromPlan = Number(
-          this.planData?.postId ||
-          this.planData?.post_id ||
-          this.planData?.selected_post_id ||
-          0
-        );
+      const existingPostId =
+  this.postData?._id ||
+  this.postData?.postid ||
+  this.postData?.id ||
+  '';
 
-        if (postIdFromPlan) {
-          const fetchedPost = await this.fetchPostById(postIdFromPlan);
+if ((!this.postData || !existingPostId) && isFeaturedFlow) {
+const postIdFromPlan = String(
+  this.planData?.postId ||
+  this.planData?.post_id ||
+  this.planData?.selected_post_id ||
+  ''
+);
+
+if (postIdFromPlan) {
+  const fetchedPost = await this.fetchPostById(postIdFromPlan);
           if (fetchedPost) {
             this.postData = fetchedPost;
           }
@@ -101,7 +109,7 @@ private api = inject(ApiService);
     }
   }
 
-private async fetchPostById(postId:number):Promise<any|null>{
+private async fetchPostById(postId: string): Promise<any | null> {
 
   try{
 
@@ -192,15 +200,15 @@ private getSelectedPlanId(): string | null {
 
 }
 
-  private getSelectedPlanName(): string {
-    return (
-      this.planData?.boost_name ||
-      this.planData?.featured_plan_name ||
-      this.planData?.plan_name ||
-      'Selected Plan'
-    );
-  }
-
+private getSelectedPlanName(): string {
+  return (
+    this.planData?.boostName ||
+    this.planData?.boost_name ||
+    this.planData?.featured_plan_name ||
+    this.planData?.plan_name ||
+    'Selected Plan'
+  );
+}
   private getSelectedPlanIsFeatured(): boolean {
     if (typeof this.planData?.isfeatured === 'boolean') {
       return this.planData.isfeatured;
@@ -226,9 +234,16 @@ private getSelectedPlanId(): string | null {
     );
   }
 
-  private isExistingPostFeaturedFlow(): boolean {
-    return this.isFeaturedPlanFlow() && !!this.postData?.postid;
-  }
+private isExistingPostFeaturedFlow(): boolean {
+  const postId =
+    this.postData?._id ||
+    this.postData?.postid ||
+    this.postData?.id ||
+    this.planData?.postId ||
+    '';
+
+  return this.isFeaturedPlanFlow() && !!postId;
+}
 
   private isSubscriptionPlanFlow(): boolean {
     return !this.isFeaturedPlanFlow();
@@ -247,32 +262,53 @@ private getSelectedPlanId(): string | null {
     return this.postData?.title || 'Your Ad';
   }
 
-  get adType(): string {
-    return this.postData?.conditiontype || this.postData?.adtype || 'post';
-  }
+get adType(): string {
+  return (
+    this.postData?.listingType ||
+    this.postData?.adtype ||
+    this.postData?.conditiontype ||
+    this.planData?.ad_type ||
+    'post'
+  );
+}
+get sellerName(): string {
+  return (
+    this.postData?.sellerId?.fullName ||
+    this.postData?.fullName ||
+    this.postData?.contactname ||
+    this.postData?.name ||
+    'User'
+  );
+}
 
-  get sellerName(): string {
-    return this.postData?.contactname || this.postData?.name || 'User';
-  }
+get sellerEmail(): string {
+  return (
+    this.postData?.sellerId?.email ||
+    this.postData?.email ||
+    this.postData?.contactemail ||
+    ''
+  );
+}
 
-  get sellerEmail(): string {
-    return this.postData?.contactemail || '';
-  }
-
-  get sellerPhone(): string {
-    return this.postData?.contactphone || this.postData?.whatsappnumber || '';
-  }
+get sellerPhone(): string {
+  return (
+    this.postData?.sellerId?.mobile ||
+    this.postData?.mobile ||
+    this.postData?.contactphone ||
+    this.postData?.whatsappnumber ||
+    ''
+  );
+}
 
   private isValidFile(file: unknown): file is File {
     return !!file && file instanceof File;
   }
 private async getAccessToken(): Promise<string | null> {
-
- return localStorage.getItem('token');
-
+  return (
+    localStorage.getItem('adminToken') ||
+    localStorage.getItem('token')
+  );
 }
-
-
   private parseJsonArray<T = any>(value: any): T[] {
     if (Array.isArray(value)) {
       return value;
@@ -487,7 +523,11 @@ private async saveUserSubscription(paymentPayload:any){
 
   expiryDate.setDate(
     expiryDate.getDate() +
-    Number(this.planData?.duration_days || 30)
+    Number(
+  this.planData?.durationDays ||
+  this.planData?.duration_days ||
+  30
+)
   );
 
 
@@ -535,18 +575,26 @@ console.log(
   } = {}
 ): Promise<void> {
 
-  const postId = Number(this.postData?.postid || 0);
+const postId = String(
+  this.postData?._id ||
+  this.postData?.postid ||
+  this.postData?.id ||
+  this.planData?.postId ||
+  ''
+);
 
-  if (!postId) {
-    throw new Error('Post id not found for featured ad');
-  }
+if (!postId) {
+  throw new Error('Post id not found for featured ad');
+}
 
   const planId = this.getSelectedPlanId();
   const planName = this.getSelectedPlanName();
 
-  const durationDays = Number(
-    this.planData?.duration_days || 0
-  );
+const durationDays = Number(
+  this.planData?.durationDays ||
+  this.planData?.duration_days ||
+  1
+);
 
   const amount = Number(
     this.planData?.amount ||
@@ -562,12 +610,14 @@ console.log(
     startDate.getDate() + durationDays
   );
 
-const numericUserId =
-  Number(localStorage.getItem('userId')) || null;
+const userId =
+  localStorage.getItem('userId') ||
+  localStorage.getItem('userid') ||
+  null;
 
 const boostPayload = {
- userid: numericUserId,
- post_id: postId,
+userId: userId,
+postId: postId,
 
     ad_type:
       this.postData?.adtype ||
@@ -611,24 +661,29 @@ await this.api
       razorpay_signature?: string;
     } = {}
   ): Promise<void> {
-    const postId = Number(this.postData?.postid || 0);
+const postId = String(
+  this.postData?._id ||
+  this.postData?.postid ||
+  this.postData?.id ||
+  this.planData?.postId ||
+  ''
+);
 
-    if (!postId) {
-      throw new Error('Post id not found');
-    }
+if (!postId) {
+  throw new Error('Post id not found');
+}
 
     const selectedPlanId = this.getSelectedPlanId();
     const selectedPlanName = this.getSelectedPlanName();
     const selectedIsFeatured = this.getSelectedPlanIsFeatured();
 
-    const updatePayload: any = {
-      isfeatured: selectedIsFeatured,
-      is_featured: selectedIsFeatured,
-      featured_plan_id: selectedPlanId,
-      featured_plan_name: selectedPlanName,
-      status: this.postData?.status || 'Active',
-      isactive: true
-    };
+const updatePayload: any = {
+  isFeatured: selectedIsFeatured,
+  featuredPlanId: selectedPlanId,
+  featuredPlanName: selectedPlanName,
+  status: this.postData?.status || 'approved',
+  isActive: true
+};
 
 await this.api
   .put(
@@ -798,8 +853,10 @@ this.snackbar.show(msg, 'error');
    const userUuid = null;
     const selectedPlanId = this.getSelectedPlanId();
     const selectedPlanName = this.getSelectedPlanName();
-const numericUserId =
-Number(localStorage.getItem('userId')) || null;
+const userId =
+  localStorage.getItem('userId') ||
+  localStorage.getItem('userid') ||
+  null;
 
     const verifyPayload = {
   plan_id: selectedPlanId,
@@ -811,7 +868,7 @@ Number(localStorage.getItem('userId')) || null;
   razorpay_order_id: payload.razorpay_order_id,
   razorpay_signature: payload.razorpay_signature,
 
-  user_id: numericUserId,
+  userId: userId,
  
 
   post_payload: this.postData || {},
