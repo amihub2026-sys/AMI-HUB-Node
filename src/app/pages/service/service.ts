@@ -32,7 +32,7 @@ import {
 })
 export class Service implements OnInit {
 
-    @Input() adminEditPostId: number | null = null;
+@Input() adminEditPostId: string | null = null;
   @Input() adminUser: any = null;
   goToSubscriptionPlans() {
     this.router.navigate(['/subscription-plan']);

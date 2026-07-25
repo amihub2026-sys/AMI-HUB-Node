@@ -59,7 +59,7 @@ export class AdminPage {
   sidebarOpen = false;
   searchQuery = '';
   activeMenu: AdminMenuKey = 'dashboard';
-  editingPostId: number | null = null;
+  editingPostId: string | null = null;
 
 
 
@@ -69,7 +69,7 @@ export class AdminPage {
     this.searchQuery = '';
     this.activeMenu = menu;
   }
-openAdminEditPost(postId: number): void {
+openAdminEditPost(postId: string): void {
   this.editingPostId = postId;
   this.activeMenu = 'edit-post';
 }

@@ -59,16 +59,31 @@
  
 
   <div class="section-card">
-    <div class="section-head">
-      <div>
-        <h3>Posts List</h3>
-        <p>Live data from Supabase post table</p>
-      </div>
+<div class="section-head">
+  <div>
+    <h3>Posts List</h3>
+    <p>Live marketplace posts</p>
+  </div>
 
-      <div class="count-badge">
-        {{ filteredPosts.length }} record(s)
-      </div>
+  <div class="posts-filter-area">
+
+    <select
+      class="post-type-select"
+      [(ngModel)]="selectedPostType"
+      (change)="onPostTypeChange()"
+    >
+      <option value="all">All Posts</option>
+      <option value="product">Products</option>
+      <option value="service">Services</option>
+      <option value="job">Jobs</option>
+    </select>
+
+    <div class="count-badge">
+      {{ filteredPosts.length }} record(s)
     </div>
+
+  </div>
+</div>
 
     <div class="table-wrap" *ngIf="!isLoading; else loadingBlock">
       <table>
@@ -88,12 +103,16 @@
 
         <tbody>
           <tr *ngFor="let post of paginatedPosts; trackBy: trackByPost">
-            <td class="id-cell">#{{ post.id }}</td>
+           <td class="id-cell">#{{ post.id.slice(-6) }}</td>
 
             <td>
               <div class="post-cell">
                 <div class="post-thumb" *ngIf="post.imageUrl; else noImage">
-                  <img [src]="post.imageUrl" [alt]="post.title" />
+                  <img
+  [src]="post.imageUrl"
+  [alt]="post.title"
+  loading="lazy"
+/>
                 </div>
 
                 <ng-template #noImage>
