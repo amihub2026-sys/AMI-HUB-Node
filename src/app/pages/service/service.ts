@@ -346,17 +346,25 @@ data = postResult?.data;
     this.mainAd.district = data.district || '';
     this.mainAd.area = data.area || '';
 
-    this.existingImageUrls = this.safeParseArray(data.image_urls);
-    this.existingVideoUrls = this.safeParseArray(data.video_urls);
+this.existingImageUrls =
+  Array.isArray(data.images)
+  ? data.images
+  : [];
 
-    this.existingMainImageUrl =
-      typeof data.image_url === 'string' && data.image_url.trim()
-        ? data.image_url
-        : (this.existingImageUrls.length > 0 ? this.existingImageUrls[0] : '');
+this.existingVideoUrls =
+  Array.isArray(data.videos)
+  ? data.videos
+  : [];
 
-    const dbType = String(
-      data.adtype || data.conditiontype || 'service'
-    ).trim().toLowerCase();
+
+this.existingMainImageUrl =
+  this.existingImageUrls.length > 0
+  ? this.existingImageUrls[0]
+  : '';
+
+const dbType = String(
+      data.listingType || data.adtype || data.conditiontype || 'service'
+).trim().toLowerCase();
 
     this.adType = dbType === 'product' ? 'product' : 'service';
     this.lockedAdType = this.adType;
@@ -378,7 +386,7 @@ data = postResult?.data;
 
   private async rebuildEditDropdowns(data: any): Promise<void> {
 const selectedCategory =
-  this.categories.find(c => c._id === data.categoryid) ||
+  this.categories.find(c => c._id === data.categoryId) ||
   this.categories.find(c => c.categoryName === this.mainAd.category);
 
     if (selectedCategory) {
@@ -410,7 +418,7 @@ this.subcategoriesList = subcategories.map((s:any)=>({
     }
 
 const selectedSubcategory =
-  this.subcategoriesList.find(s => s._id === data.subcategoryid) ||
+  this.subcategoriesList.find(s => s._id ===data.subcategoryId) ||
   this.subcategoriesList.find(
     s => s.subcategoryName === this.mainAd.subcategory
   );
@@ -846,7 +854,13 @@ private async buildCatalogDraft() {
 
   async submitByType(flowType: 'normal' | 'featured' = 'normal') {
     if (this.isSubmitting) return;
-    if (!this.validateForm()) return;
+    if (!this.isEditMode) {
+
+  if (!this.validateForm()) {
+    return;
+  }
+
+}
 
     if (!this.isEditMode && flowType === 'featured') {
       this.showAlert('Please post your product or service first. After posting, you can feature the ad later.');
@@ -976,43 +990,40 @@ subcategoryId: selectedSubcategory?._id ?? null,
     }
   };
 
-try {
+if (this.isEditMode && this.editPostId) {
 
- await this.api
- .put(
-   `/posts/${this.editPostId}`,
-   updatePayload
- )
- .toPromise();
+  localStorage.setItem(
+    'edit_post_payload',
+    JSON.stringify({
+      postId: this.editPostId,
+      payload: updatePayload,
+      flow: 'edit'
+    })
+  );
 
+this.router.navigate(
+  ['/custom-fields'],
+  {
+    state:{
+      flow:'edit',
 
-}
-catch(error){
+      postId:this.editPostId,
 
- console.error(
-   "UPDATE ERROR:",
-   error
- );
+      categoryId:selectedCategory?._id,
+      categoryName:this.mainAd.category,
 
- this.showAlert(
-   "Post update failed",
-   "error"
- );
+      subcategoryId:selectedSubcategory?._id,
+      subcategoryName:this.mainAd.subcategory,
 
- return;
-
-}
-
-
-  this.showAlert('Post updated successfully', 'success');
-
-  if (this.adminEditPostId) {
-    return;
+      listingType:finalType,
+      type:finalType
+    }
   }
+);
 
-  this.router.navigate(['/my-posts']);
   return;
 }
+      }
 let mainImageUrl = '';
 
 let otherImageUrls: string[] = [];
