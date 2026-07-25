@@ -3,8 +3,6 @@ import { Component, ChangeDetectorRef } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { supabase } from '../../../supabaseClient';
-import { SupabaseService } from '../../services/supabase.service';
 import { SearchResults } from '../search-results/search-results';
 import { Category } from '../categories/categories';
 import { Subcategories } from '../subcategories/subcategories';
@@ -12,13 +10,13 @@ import { Filters } from '../filters/filters';
 import { Router } from '@angular/router';
 
 interface CategoryItem {
-  categoryid: number;
+  _id?: string;
+  categoryid: string;
   categoryname: string;
   category_type?: string | null;
   isactive?: boolean | null;
   sortorder?: number | null;
 }
-
 
 @Component({
   selector: 'app-service-list',
@@ -46,19 +44,48 @@ isLoading = false;
 filteredServices: any[] = [];
 
 isLoadingServices = false;
-onCategorySelected(category:any){
+onCategorySelected(category: any): void {
 
   console.log(
-    "Selected Service Category",
+    'Selected Service Category:',
     category
   );
 
   this.selectedCategory = category;
-
   this.showSubcategories = true;
 
-}
+  const selectedCategoryId =
+    String(
+      category?._id ||
+      category?.categoryid ||
+      category?.id ||
+      ''
+    );
 
+  if (!selectedCategoryId) {
+    this.filteredServices = [
+      ...this.services
+    ];
+
+    return;
+  }
+
+  this.filteredServices =
+    this.services.filter((service: any) => {
+
+      const serviceCategoryId =
+        String(
+          service?.categoryId?._id ||
+          service?.categoryId ||
+          ''
+        );
+
+      return (
+        serviceCategoryId ===
+        selectedCategoryId
+      );
+    });
+}
 private readonly apiUrl = environment.apiUrl;
 
   toggleFilter(): void {
@@ -69,28 +96,146 @@ private readonly apiUrl = environment.apiUrl;
     this.isFilterOpen = false;
   }
 
-  onFiltersApplied(filters: any): void {
-    console.log('Service filters:', filters);
-  }
+onFiltersApplied(filters: any): void {
 
-  onFiltersReset(): void {
-    console.log('Service filters reset');
-  }
+  const searchText =
+    String(filters?.searchText || '')
+      .trim()
+      .toLowerCase();
 
+  const selectedCategoryId =
+    String(filters?.selectedCategoryId || '');
+
+  const minPrice =
+    Number(filters?.minPrice || 0);
+
+  const maxPrice =
+    Number(filters?.maxPrice || 0);
+
+  const locationText =
+    String(filters?.locationText || '')
+      .trim()
+      .toLowerCase();
+
+  this.filteredServices =
+    this.services.filter((service: any) => {
+
+      const title =
+        String(
+          service?.title ||
+          service?.displayTitle ||
+          ''
+        ).toLowerCase();
+
+      const description =
+        String(
+          service?.description ||
+          service?.serviceDescription ||
+          ''
+        ).toLowerCase();
+
+      const categoryId =
+        String(
+          service?.categoryId?._id ||
+          service?.categoryId ||
+          ''
+        );
+
+      const subcategoryId =
+        String(
+          service?.subcategoryId?._id ||
+          service?.subcategoryId ||
+          ''
+        );
+
+      const price =
+        Number(
+          service?.price ||
+          service?.displayPrice ||
+          0
+        );
+
+      const location =
+        [
+          service?.location?.address,
+          service?.location?.area,
+          service?.location?.city,
+          service?.location?.district,
+          service?.location?.state,
+          service?.displayLocation
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+
+      const matchesSearch =
+        !searchText ||
+        title.includes(searchText) ||
+        description.includes(searchText);
+
+      const matchesCategory =
+        !selectedCategoryId ||
+        categoryId === selectedCategoryId ||
+        subcategoryId === selectedCategoryId;
+
+      const matchesMinPrice =
+        !minPrice ||
+        price >= minPrice;
+
+      const matchesMaxPrice =
+        !maxPrice ||
+        price <= maxPrice;
+
+      const matchesLocation =
+        !locationText ||
+        location.includes(locationText);
+
+      return (
+        matchesSearch &&
+        matchesCategory &&
+        matchesMinPrice &&
+        matchesMaxPrice &&
+        matchesLocation
+      );
+    });
+
+  this.isFilterOpen = false;
+}
+
+
+onFiltersReset(): void {
+
+  this.filteredServices = [
+    ...this.services
+  ];
+
+  this.isFilterOpen = false;
+}
 constructor(
   private router: Router,
-  private supabaseService: SupabaseService,
+  private http: HttpClient,
   private cdr: ChangeDetectorRef
 ) {}
 
 viewService(service: any): void {
-  const id = service?._id || service?.id;
+  const id =
+    service?._id ||
+    service?.postid ||
+    service?.id;
 
   if (!id) {
+    console.error(
+      'Service ID missing:',
+      service
+    );
+
     return;
   }
 
-  this.router.navigate(['/post-view', id]);
+  this.router.navigate([
+    '/details',
+    id
+  ]);
 }
 ngOnInit(): void {
   this.loadServices();
@@ -101,50 +246,34 @@ async loadServices(): Promise<void> {
   this.isLoadingServices = true;
 
   try {
-    const { data, error } = await supabase
-      .from('post')
-      .select(`
-        postid,
-        title,
-        description,
-        price,
-        location,
-        areaid,
-        cityid,
-        image_url,
-        image_urls,
-        category,
-        categoryid,
-        subcategoryid,
-        adtype,
-        isactive,
-        status,
-        createdon
-      `)
-      .eq('adtype', 'service')
-      .eq('isactive', true)
-      .eq('status', 'Active')
-      .order('createdon', {
-        ascending: false
-      });
+    const response: any = await this.http
+      .get<any>(
+        `${this.apiUrl}/posts?listingType=service`
+      )
+      .toPromise();
 
-    if (error) {
-      throw error;
-    }
+    const services =
+      this.extractServiceArray(response);
 
-    console.log('SERVICE DATA:', data);
-
-    this.services = (data || []).map(
+    this.services = services.map(
       (service: any) => ({
         ...service,
 
-        mainImage: this.getServiceImage(service),
+        postid:
+          service?._id ||
+          service?.postid ||
+          '',
+
+        mainImage:
+          this.getServiceImage(service),
 
         displayTitle:
           service?.title ||
           'Untitled Service',
 
         displayCategory:
+          service?.subcategoryId?.subcategoryName ||
+          service?.categoryId?.categoryName ||
           service?.category ||
           'Service',
 
@@ -152,7 +281,13 @@ async loadServices(): Promise<void> {
           Number(service?.price || 0),
 
         displayLocation:
-          service?.location ||
+          [
+            service?.location?.city,
+            service?.location?.state
+          ]
+            .filter(Boolean)
+            .join(', ') ||
+          service?.location?.address ||
           'Location',
 
         displayType: 'service'
@@ -162,38 +297,58 @@ async loadServices(): Promise<void> {
     this.filteredServices = [
       ...this.services
     ];
+
+    console.log(
+      'Mongo service data:',
+      this.services
+    );
   } catch (error) {
     console.error(
-      'Error loading services:',
+      'Error loading Mongo services:',
       error
     );
 
     this.services = [];
     this.filteredServices = [];
   } finally {
-
-  this.isLoadingServices = false;
-
-  this.cdr.detectChanges();
-
-}
+    this.isLoadingServices = false;
+    this.cdr.detectChanges();
+  }
 }
 
 getServiceImage(service: any): string {
+
   if (
-    Array.isArray(service?.image_urls) &&
-    service.image_urls.length > 0
+    Array.isArray(service?.images) &&
+    service.images.length > 0
   ) {
-    return service.image_urls[0];
+    return this.getMediaUrl(service.images[0]);
   }
 
-  return (
-    service?.image_url ||
-    'assets/images/no-image.png'
-  );
+  if (service?.image_url) {
+    return this.getMediaUrl(service.image_url);
+  }
+
+  return 'assets/images/no-image.png';
 }
+private getMediaUrl(url: string): string {
 
+  if (!url) {
+    return 'assets/images/no-image.png';
+  }
 
+  if (
+    url.startsWith('http://') ||
+    url.startsWith('https://')
+  ) {
+    return url;
+  }
+
+  const backendUrl =
+    this.apiUrl.replace('/api', '');
+
+  return `${backendUrl}${url.startsWith('/') ? url : '/' + url}`;
+}
 getServiceTitle(service: any): string {
   return (
     service?.displayTitle ||
@@ -213,23 +368,23 @@ getServiceCategory(service: any): string {
 
 getServiceLocation(service: any): string {
 
-  const location =
-    service?.location ||
+  const city =
+    service?.location?.city || '';
+
+  const state =
+    service?.location?.state || '';
+
+  const address =
+    service?.location?.address || '';
+
+  return (
+    [city, state]
+      .filter(Boolean)
+      .join(', ') ||
+    address ||
     service?.displayLocation ||
-    '';
-
-  if (!location) {
-    return 'Location';
-  }
-
-  const parts = location.split(',');
-
-  // show district only
-  if (parts.length >= 3) {
-    return parts[2].trim();
-  }
-
-  return parts[0].trim();
+    'Location'
+  );
 
 }
 
@@ -243,10 +398,10 @@ getServicePrice(service: any): number {
 
 
 openServiceDetails(service: any): void {
-  const serviceId =
-    service?.postid ||
-    service?._id ||
-    service?.id;
+const serviceId =
+  service?._id ||
+  service?.postid ||
+  service?.id;
 
   if (!serviceId) {
     console.error(
@@ -257,10 +412,10 @@ openServiceDetails(service: any): void {
     return;
   }
 
-  this.router.navigate([
-    '/post-view',
-    serviceId
-  ]);
+this.router.navigate([
+  '/details',
+  serviceId
+]);
 }
 
 
@@ -276,10 +431,10 @@ onServiceImageError(event: Event): void {
 trackByService(
   index: number,
   service: any
-): string | number {
-  return (
-    service?.postid ||
+): string {
+  return String(
     service?._id ||
+    service?.postid ||
     service?.id ||
     index
   );
@@ -313,6 +468,51 @@ private extractServiceArray(response: any): any[] {
   return [];
 }
 
+onSubcategorySelected(subcategory: any): void {
 
+  console.log(
+    'Selected Service Subcategory:',
+    subcategory
+  );
+
+  const selectedSubcategoryId =
+    String(
+      subcategory?._id ||
+      subcategory?.subcategoryid ||
+      subcategory?.id ||
+      ''
+    );
+
+  if (!selectedSubcategoryId) {
+    return;
+  }
+
+  this.filteredServices =
+    this.services.filter((service: any) => {
+
+      const serviceSubcategoryId =
+        String(
+          service?.subcategoryId?._id ||
+          service?.subcategoryId ||
+          ''
+        );
+
+      return (
+        serviceSubcategoryId ===
+        selectedSubcategoryId
+      );
+    });
+}
+
+
+onSubcategoryBack(): void {
+
+  this.showSubcategories = false;
+  this.selectedCategory = null;
+
+  this.filteredServices = [
+    ...this.services
+  ];
+}
 
 }

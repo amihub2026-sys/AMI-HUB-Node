@@ -24,15 +24,11 @@ categoryType="service"
 <!-- SUBCATEGORY -->
 
 <app-subcategories
-
-*ngIf="showSubcategories"
-
-categoryType="service"
-
-[selectedCategory]="selectedCategory"
-
-(back)="showSubcategories=false">
-
+  *ngIf="showSubcategories"
+  categoryType="service"
+  [selectedCategory]="selectedCategory"
+  (subcategorySelected)="onSubcategorySelected($event)"
+  (back)="onSubcategoryBack()">
 </app-subcategories>
 
 
