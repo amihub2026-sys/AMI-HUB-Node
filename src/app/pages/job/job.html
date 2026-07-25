@@ -1,292 +1,426 @@
-
 <app-search-results
-[results]="jobs"
-type="job">
+  [results]="jobs"
+  type="job">
 </app-search-results>
 
 <section class="job-area">
 
   <div class="job-left">
-  <h2>Available Jobs</h2>
 
-  <div class="job-tabs">
-    <button type="button" [class.active]="selectedType === 'All'" (click)="selectedType='All'">All</button>
-    <button type="button" [class.active]="selectedType === 'Full Time'" (click)="selectedType='Full Time'">Full Time</button>
-    <button type="button" [class.active]="selectedType === 'Part Time'" (click)="selectedType='Part Time'">Part Time</button>
-    <button type="button" [class.active]="selectedType === 'Internship'" (click)="selectedType='Internship'">Internship</button>
-  </div>
+    <h2>Available Jobs</h2>
 
-<div class="job-card" *ngFor="let job of paginatedJobs">
- <h3>{{ job.job_title }}</h3>
-<p><strong>Company:</strong> {{ job.company_name }}</p>
-    <p><strong>Location:</strong> {{ job.location }}</p>
-    <p><strong>Salary:</strong> {{ job.salary }}</p>
-<div class="job-card-actions">
+    <div class="job-tabs">
 
-  <button
-    type="button"
-    class="view-details-btn"
-    (click)="openJobDetails(job)">
+      <button
+        type="button"
+        [class.active]="selectedType === 'All'"
+        (click)="selectJobType('All')">
+        All
+      </button>
 
-    View Details
+      <button
+        type="button"
+        [class.active]="selectedType === 'Full Time'"
+        (click)="selectJobType('Full Time')">
+        Full Time
+      </button>
 
-  </button>
+      <button
+        type="button"
+        [class.active]="selectedType === 'Part Time'"
+        (click)="selectJobType('Part Time')">
+        Part Time
+      </button>
 
-  <div class="contact-buttons">
+      <button
+        type="button"
+        [class.active]="selectedType === 'Internship'"
+        (click)="selectJobType('Internship')">
+        Internship
+      </button>
 
-    <a
-      class="whatsapp-btn"
-      [href]="'https://wa.me/' + job.contact_phone"
-      target="_blank">
-
-      <i class="fab fa-whatsapp"></i>
-
-    </a>
-
-    <a
-      class="call-btn"
-      [href]="'tel:' + job.contact_phone">
-    <i class="fas fa-phone-alt"></i>
-
-</a>
-
-  </div>
-
-</div>
-
-<div class="job-details-overlay" *ngIf="showJobDetails" (click)="showJobDetails=false">
-  <div class="job-details-popup" (click)="$event.stopPropagation()">
-
-    <button type="button" class="close-popup-btn" (click)="showJobDetails=false">✕</button>
-
-    <h2>{{ selectedJob?.title }}</h2>
-
-    <div class="details-grid">
-
-  <div class="detail-item">
-    <div class="detail-icon">🏢</div>
-    <div>
-      <span>Company Name</span>
-      <h4>{{ selectedJob?.company_name }}</h4>
     </div>
-  </div>
 
-  <div class="detail-item">
-    <div class="detail-icon">📍</div>
-    <div>
-      <span>Location</span>
-      <h4>{{ selectedJob?.location }}</h4>
+    <div
+      class="loading-text"
+      *ngIf="isLoading">
+      Loading jobs...
     </div>
-  </div>
 
-  <div class="detail-item">
-    <div class="detail-icon">💰</div>
-    <div>
-      <span>Salary</span>
-      <h4>{{ selectedJob?.salary }}</h4>
+    <div
+      class="loading-text"
+      *ngIf="!isLoading && filteredJobs().length === 0">
+      No jobs available.
     </div>
-  </div>
 
-  <div class="detail-item">
-    <div class="detail-icon">📈</div>
-    <div>
-      <span>Experience</span>
-      <h4>{{ selectedJob?.experience || '1 - 3 Years' }}</h4>
+    <div
+      class="job-card"
+      *ngFor="
+        let job of paginatedJobs;
+        trackBy: trackByJobId
+      ">
+
+      <h3>{{ job.job_title }}</h3>
+
+      <p>
+        <strong>Company:</strong>
+        {{ job.company_name }}
+      </p>
+
+      <p>
+        <strong>Location:</strong>
+        {{ job.location }}
+      </p>
+
+      <p>
+        <strong>Salary:</strong>
+        {{ job.salary }}
+      </p>
+
+      <div class="job-card-actions">
+
+        <button
+          type="button"
+          class="view-details-btn"
+          (click)="openJobDetails(job)">
+          View Details
+        </button>
+
+        <div class="contact-buttons">
+
+          <a
+            class="whatsapp-btn"
+            [href]="getWhatsAppUrl(job)"
+            target="_blank"
+            rel="noopener noreferrer"
+            [class.disabled]="!job.contact_phone"
+            [attr.aria-label]="'WhatsApp ' + job.company_name">
+
+            <i class="fab fa-whatsapp"></i>
+
+          </a>
+
+          <a
+            class="call-btn"
+            [href]="getCallUrl(job)"
+            [class.disabled]="!job.phone && !job.contact_phone"
+            [attr.aria-label]="'Call ' + job.company_name">
+
+            <i class="fas fa-phone-alt"></i>
+
+          </a>
+
+        </div>
+
+      </div>
+
     </div>
-  </div>
 
-  <div class="detail-item">
-    <div class="detail-icon">👥</div>
-    <div>
-      <span>Vacancies</span>
-      <h4>{{ selectedJob?.vacancies || '5' }}</h4>
+    <div
+      class="job-pagination"
+      *ngIf="!isLoading && filteredJobs().length > 0">
+
+      <button
+        type="button"
+        (click)="previousPage()"
+        [disabled]="currentPage === 1">
+        ← Previous
+      </button>
+
+      <span>
+        {{ currentPage }} / {{ totalPages }}
+      </span>
+
+      <button
+        type="button"
+        (click)="nextPage()"
+        [disabled]="currentPage === totalPages">
+        Next →
+      </button>
+
     </div>
+
   </div>
 
-  <div class="detail-item">
-    <div class="detail-icon">🛠️</div>
-    <div>
-      <span>Skills Required</span>
-      <h4>{{ selectedJob?.skills || 'Angular, Flutter, Supabase' }}</h4>
+  <div class="job-right">
+
+    <div class="job-post-top">
+
+      <button
+        type="button"
+        class="post-job-btn"
+        (click)="goToAddJob()">
+        🚀 Post Your Job Now
+      </button>
+
     </div>
-  </div>
 
-  <div class="detail-item full">
-    <div class="detail-icon">📝</div>
-    <div>
-      <span>Job Description</span>
-      <h4>
-        {{ selectedJob?.description || 'Candidate should have good knowledge and work experience.' }}
-      </h4>
+    <div class="add-job-highlight">
+
+      <h3>
+        Find the Perfect Employee for Your Business
+      </h3>
+
+      <p>
+        Post your jobs and connect with thousands of skilled
+        candidates instantly.
+      </p>
+
+      <div class="job-features">
+
+        <div class="feature-item">
+          ✅ Reach More Candidates
+        </div>
+
+        <div class="feature-item">
+          ⚡ Fast Hiring Process
+        </div>
+
+        <div class="feature-item">
+          💼 Trusted Job Platform
+        </div>
+
+      </div>
+
     </div>
-  </div>
-
-  <div class="detail-item">
-    <div class="detail-icon">📧</div>
-    <div>
-      <span>Email</span>
-      <h4>{{ selectedJob?.contactEmail || 'hr@company.com' }}</h4>
-    </div>
-  </div>
-
-  <div class="detail-item">
-    <div class="detail-icon">📞</div>
-    <div>
-      <span>Phone</span>
-      <h4>{{ selectedJob?.phone || '+91 98765 43210' }}</h4>
-    </div>
-  </div>
-
-</div>
 
   </div>
-</div>
 
-  
-<!-- <div
-  class="apply-popup-overlay"
-  *ngIf="showApplyForm"
-  (click)="showApplyForm=false">
+</section>
+
+<div
+  class="job-details-overlay"
+  *ngIf="showJobDetails"
+  (click)="closeJobDetails()">
 
   <div
-    class="apply-popup"
+    class="job-details-popup"
     (click)="$event.stopPropagation()">
 
     <button
       type="button"
       class="close-popup-btn"
-      (click)="showApplyForm=false">
-
+      (click)="closeJobDetails()">
       ✕
-
     </button>
 
-    <h3>
-      Apply for {{ selectedJob?.title }}
-    </h3>
+    <h2>
+      {{ selectedJob?.title || selectedJob?.job_title }}
+    </h2>
 
-    <form
-      class="apply-form"
-      (ngSubmit)="submitApplication()">
+    <div class="details-grid">
 
-      <input
-        type="text"
-        placeholder="Your Name"
-        [(ngModel)]="application.name"
-        name="name">
+      <div class="detail-item">
 
-      <input
-        type="email"
-        placeholder="Email Address"
-        [(ngModel)]="application.email"
-        name="email">
+        <div class="detail-icon">
+          🏢
+        </div>
 
-      <input
-        type="tel"
-        placeholder="Phone Number"
-        [(ngModel)]="application.phone"
-        name="phone">
+        <div>
+          <span>Company Name</span>
 
-      <textarea
-        placeholder="Message / Experience"
-        [(ngModel)]="application.message"
-        name="message">
-      </textarea>
+          <h4>
+            {{ selectedJob?.company_name || 'Company not specified' }}
+          </h4>
+        </div>
 
-      <div class="resume-upload">
-        <label>Upload Resume</label>
-
-        <input
-          type="file"
-          accept=".pdf,.doc,.docx"
-          (change)="onResumeSelected($event)">
       </div>
 
-      <button type="submit">
-        Submit Application
-      </button>
+      <div class="detail-item">
 
-    </form>
+        <div class="detail-icon">
+          📍
+        </div>
 
-  </div>
+        <div>
+          <span>Location</span>
 
-</div> -->
+          <h4>
+            {{ selectedJob?.location || 'Location not specified' }}
+          </h4>
+        </div>
 
-  </div>
-  </div>
-  
-  <div class="job-right">
+      </div>
 
-  <div class="job-post-top">
-    <button
-      type="button"
-      class="post-job-btn"
-      (click)="goToAddJob()">
-      🚀 Post Your Job Now
-    </button>
-  </div>
+      <div class="detail-item">
 
-  <div class="add-job-highlight">
-    <h3>Find the Perfect Employee for Your Business</h3>
+        <div class="detail-icon">
+          💰
+        </div>
 
-    <p>
-      Post your jobs and connect with thousands of skilled candidates instantly.
-    </p>
+        <div>
+          <span>Salary</span>
 
-    <div class="job-features">
-      <div class="feature-item">✅ Reach More Candidates</div>
-      <div class="feature-item">⚡ Fast Hiring Process</div>
-      <div class="feature-item">💼 Trusted Job Platform</div>
+          <h4>
+            {{ selectedJob?.salary || 'Not specified' }}
+          </h4>
+        </div>
+
+      </div>
+
+      <div class="detail-item">
+
+        <div class="detail-icon">
+          📈
+        </div>
+
+        <div>
+          <span>Experience</span>
+
+          <h4>
+            {{ selectedJob?.experience || 'Not specified' }}
+          </h4>
+        </div>
+
+      </div>
+
+      <div class="detail-item">
+
+        <div class="detail-icon">
+          👥
+        </div>
+
+        <div>
+          <span>Vacancies</span>
+
+          <h4>
+            {{ selectedJob?.vacancies || 'Not specified' }}
+          </h4>
+        </div>
+
+      </div>
+
+      <div class="detail-item">
+
+        <div class="detail-icon">
+          🛠️
+        </div>
+
+        <div>
+          <span>Skills Required</span>
+
+          <h4>
+            {{ selectedJob?.skills || 'Not specified' }}
+          </h4>
+        </div>
+
+      </div>
+
+      <div class="detail-item">
+
+        <div class="detail-icon">
+          ⏰
+        </div>
+
+        <div>
+          <span>Job Type</span>
+
+          <h4>
+            {{ selectedJob?.job_type || 'Not specified' }}
+          </h4>
+        </div>
+
+      </div>
+
+      <div class="detail-item">
+
+        <div class="detail-icon">
+          🏠
+        </div>
+
+        <div>
+          <span>Work Mode</span>
+
+          <h4>
+            {{ selectedJob?.work_mode || 'Not specified' }}
+          </h4>
+        </div>
+
+      </div>
+
+      <div class="detail-item full">
+
+        <div class="detail-icon">
+          📝
+        </div>
+
+        <div>
+          <span>Job Description</span>
+
+          <h4>
+            {{
+              selectedJob?.description ||
+              'Job description not available.'
+            }}
+          </h4>
+        </div>
+
+      </div>
+
+      <div class="detail-item">
+
+        <div class="detail-icon">
+          📧
+        </div>
+
+        <div>
+          <span>Email</span>
+
+          <h4>
+            {{ selectedJob?.contactEmail || 'Not provided' }}
+          </h4>
+        </div>
+
+      </div>
+
+      <div class="detail-item">
+
+        <div class="detail-icon">
+          📞
+        </div>
+
+        <div>
+          <span>Phone</span>
+
+          <h4>
+            {{
+              selectedJob?.phone ||
+              selectedJob?.contact_phone ||
+              'Not provided'
+            }}
+          </h4>
+        </div>
+
+      </div>
+
     </div>
+
+    <div class="popup-contact-actions">
+
+      <a
+        class="whatsapp-btn"
+        [href]="getWhatsAppUrl(selectedJob)"
+        target="_blank"
+        rel="noopener noreferrer"
+        *ngIf="selectedJob?.contact_phone">
+
+        <i class="fab fa-whatsapp"></i>
+        WhatsApp
+
+      </a>
+
+      <a
+        class="call-btn"
+        [href]="getCallUrl(selectedJob)"
+        *ngIf="selectedJob?.phone || selectedJob?.contact_phone">
+
+        <i class="fas fa-phone-alt"></i>
+        Call
+
+      </a>
+
+    </div>
+
   </div>
 
 </div>
-<!-- 
-    <form class="job-form" *ngIf="showJobForm" (ngSubmit)="saveJob()">
-      <h3>Add New Job</h3>
-
-      <input type="text" placeholder="Job Title" [(ngModel)]="newJob.title" name="title">
-      <input type="text" placeholder="Company Name" [(ngModel)]="newJob.company" name="company">
-      <input type="text" placeholder="Location" [(ngModel)]="newJob.location" name="location">
-      <input type="text" placeholder="Salary" [(ngModel)]="newJob.salary" name="salary">
-
-      <select [(ngModel)]="newJob.type" name="type">
-        <option value="">Select Job Type</option>
-        <option value="Full Time">Full Time</option>
-        <option value="Part Time">Part Time</option>
-        <option value="Work From Home">Work From Home</option>
-      </select>
-
-      <button type="submit">Save Job</button>
-    </form> -->
-
-<div class="job-pagination">
-
-
-<button
-type="button"
-(click)="previousPage()"
-[disabled]="currentPage === 1">
-
-← Previous
-
-</button>
-
-
-<span>
-{{currentPage}} / {{totalPages}}
-</span>
-
-
-<button
-type="button"
-(click)="nextPage()"
-[disabled]="currentPage === totalPages">
-
-Next →
-
-</button>
-
-
-</div>
-</section>
