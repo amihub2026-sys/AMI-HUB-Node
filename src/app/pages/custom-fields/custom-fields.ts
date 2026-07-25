@@ -67,7 +67,8 @@ interface DynamicCustomField {
   styleUrls: ['./custom-fields.css']
 })
 export class CustomFields implements OnInit {
-
+flowType = '';
+postId = '';
   private router = inject(Router);
 
   private route = inject(ActivatedRoute);
@@ -128,7 +129,11 @@ export class CustomFields implements OnInit {
       ...historyState,
       ...navigationState
     };
+this.flowType =
+  state['flow'] || '';
 
+this.postId =
+  state['postId'] || '';
 
     this.categoryId =
       state['categoryId'] ||
@@ -547,53 +552,52 @@ return {
 
     this.isSubmitting = true;
 
+if(this.flowType === 'edit'){
 
-    /*
-      The custom field values are passed to the
-      subscription page.
-
-      When the final post is submitted, include
-      customFieldValues in the post API payload.
-    */
-
-    this.router.navigate(
-      ['/subscription-plan'],
-      {
-        state: {
-
-          categoryId:
-            this.categoryId,
-
-          categoryName:
-            this.categoryName,
-
-          subcategoryId:
-            this.subcategoryId,
-
-          subcategoryName:
-            this.subcategoryName,
-
-          customFieldValues:
-            customFieldValues
-        }
+  this.router.navigate(
+    ['/edit-post', this.postId],
+    {
+      state:{
+        flow:'edit',
+        postId:this.postId,
+        customFieldValues:customFieldValues
       }
-    )
-    .then(() => {
+    }
+  );
 
-      this.isSubmitting = false;
+  this.isSubmitting = false;
 
-    })
-    .catch(() => {
+}
+else{
 
-      this.isSubmitting = false;
+  this.router.navigate(
+    ['/subscription-plan'],
+    {
+      state:{
+        categoryId:this.categoryId,
+        categoryName:this.categoryName,
+        subcategoryId:this.subcategoryId,
+        subcategoryName:this.subcategoryName,
+        customFieldValues:customFieldValues
+      }
+    }
+  )
+  .then(() => {
 
-      this.submitError =
-        'Unable to continue. Please try again.';
+    this.isSubmitting = false;
 
-    });
+  })
+  .catch(() => {
+
+    this.isSubmitting = false;
+
+    this.submitError =
+      'Unable to continue. Please try again.';
+
+  });
+
+}
   }
-
-
   private buildCustomFieldValues(): any[] {
 
     return this.fields.map(

@@ -150,7 +150,10 @@
     </section>
 
   <!-- REVIEWS -->
-    <section class="content-card reviews-card">
+    <section
+  class="content-card reviews-card"
+  *ngIf="false"
+>
 
       <div class="section-heading">
         <h2>Customer Reviews</h2>
@@ -320,18 +323,18 @@
       </div>
 
       <!-- RATING -->
-      <div class="rating-row">
+<div class="rating-row">
 
-        <span class="rating-badge">
-          {{ averageRating() }}
-          <i class="fas fa-star"></i>
-        </span>
+  <span class="rating-badge">
+    {{ postData()?.ratingAverage || 0 }}
+    <i class="fas fa-star"></i>
+  </span>
 
-        <span class="rating-text">
-          ({{ reviews().length }} Reviews)
-        </span>
+  <span class="rating-text">
+    ({{ postData()?.reviewsCount || 0 }} Reviews)
+  </span>
 
-      </div>
+</div>
 
       <!-- PRICE -->
       <div
@@ -440,7 +443,7 @@
           </div>
 
           <p>
-            {{ postData()?.displayAddress || postData()?.location }}
+            {{ postData()?.displayAddress || postData()?.locationText }}
           </p>
         </div>
 
@@ -468,14 +471,14 @@
       <!-- LOCATION -->
       <div
         class="location-card"
-        *ngIf="postData()?.displayAddress || postData()?.location"
+        *ngIf="postData()?.displayAddress || postData()?.locationText"
       >
 
         <h3>Posted in</h3>
 
         <p>
           <i class="fas fa-map-marker-alt"></i>
-          {{ postData()?.displayAddress || postData()?.location }}
+          {{ postData()?.displayAddress || postData()?.locationText }}
         </p>
 
         <div

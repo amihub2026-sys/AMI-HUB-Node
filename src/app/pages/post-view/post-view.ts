@@ -4,8 +4,8 @@ import { Location } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { SupabaseService } from '../../services/supabase.service';
-import { supabase } from '../../../supabaseClient';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 import { SnackbarService } from '../../services/snackbar.service';
 @Component({
   selector: 'app-post-view',
@@ -16,9 +16,22 @@ import { SnackbarService } from '../../services/snackbar.service';
 })
 export class PostViewComponent implements OnInit {
 
-private showAlert(message: string, type: 'success' | 'error' | 'info' = 'info') {
-  this.snackbar.show(message, type);
-}
+  private readonly apiUrl = `${environment.apiUrl}/posts`;
+
+  private getAuthHeaders(): HttpHeaders {
+    const token = localStorage.getItem('token');
+
+    return new HttpHeaders({
+      Authorization: token ? `Bearer ${token}` : ''
+    });
+  }
+
+  private showAlert(
+    message: string,
+    type: 'success' | 'error' | 'info' = 'info'
+  ) {
+    this.snackbar.show(message, type);
+  }
 selectMedia(type: 'image' | 'video', url: string) {
   this.selectedMedia.set({ type, url });
 
@@ -113,7 +126,7 @@ showAllReviews = false;
  constructor(
   private route: ActivatedRoute,
   private router: Router,
-  private supabaseService: SupabaseService,
+  private http: HttpClient,
   private sanitizer: DomSanitizer,
   private snackbar: SnackbarService,
   private location: Location
@@ -123,15 +136,33 @@ async ngOnInit(): Promise<void> {
 
   if (!this.postId) {
     console.error('Post id not found in route');
+    this.loadFailed.set(true);
     return;
   }
 
-  const userId = await this.supabaseService.resolveEffectiveUserUuid();
-  this.currentUserId.set(userId || '');
+  this.loadCurrentUser();
 
   await this.loadPost();
 }
+private loadCurrentUser(): void {
+  const userData = localStorage.getItem('user');
 
+  if (!userData) {
+    this.currentUserId.set('');
+    return;
+  }
+
+  try {
+    const user = JSON.parse(userData);
+
+    this.currentUserId.set(
+      String(user?._id || user?.id || '')
+    );
+  } catch (error) {
+    console.error('Invalid user data in localStorage:', error);
+    this.currentUserId.set('');
+  }
+}
 
   setRating(star: number) {
     this.selectedRating = star;
@@ -163,33 +194,60 @@ async ngOnInit(): Promise<void> {
     const total = ratings.reduce((sum: number, value: number) => sum + value, 0);
     this.averageRating.set(Math.round(total / ratings.length));
   }
-  async removePost() {
-
+async removePost(): Promise<void> {
   const post = this.postData();
 
   if (!post?.postid) {
-    alert('Post not found');
+    this.showAlert('Post not found', 'error');
     return;
   }
 
-  const confirmDelete = confirm('Are you sure you want to remove this post?');
+  const confirmDelete = confirm(
+    'Are you sure you want to remove this post?'
+  );
 
   if (!confirmDelete) return;
 
-  const { error } = await supabase
-    .from('post')
-    .delete()
-    .eq('postid', post.postid);
+  const token = localStorage.getItem('token');
 
-  if (error) {
-    console.error(error);
-    alert('Failed to remove post');
+  if (!token) {
+    this.showAlert('Please login first', 'error');
+    this.router.navigate(['/login']);
     return;
   }
 
-  alert('Post removed successfully');
+  try {
+    const response: any = await this.http
+      .delete<any>(
+        `${this.apiUrl}/${post.postid}`,
+        {
+          headers: this.getAuthHeaders()
+        }
+      )
+      .toPromise();
 
-  this.router.navigate(['/my-posts']);
+    if (!response?.success) {
+      throw new Error(
+        response?.message || 'Failed to remove post'
+      );
+    }
+
+    this.showAlert(
+      'Post removed successfully',
+      'success'
+    );
+
+    this.router.navigate(['/my-posts']);
+  } catch (error: any) {
+    console.error('Delete post error:', error);
+
+    this.showAlert(
+      error?.error?.message ||
+      error?.message ||
+      'Failed to remove post',
+      'error'
+    );
+  }
 }
 isMyPost(): boolean {
 
@@ -203,181 +261,208 @@ toggleReviews(): void {
 toggleDescription(): void {
   this.showFullDescription = !this.showFullDescription;
 }
-  async loadReviews() {
-    const post = this.postData();
-
-    if (!post?.postid) {
-      this.reviews.set([]);
-      this.averageRating.set(0);
-      return;
-    }
-
-    this.isReviewsLoading.set(true);
-
-    try {
-      const { data, error } = await supabase
-        .from('reviews')
-        .select('*')
-        .eq('postid', post.postid)
-        .order('createdat', { ascending: false });
-
-      if (error) throw error;
-
-      const reviewList = data || [];
-      this.reviews.set(reviewList);
-      this.calculateAverageRating(reviewList);
-    } catch (error) {
-      console.error('Error loading reviews:', error);
-      this.reviews.set([]);
-      this.averageRating.set(0);
-    } finally {
-      this.isReviewsLoading.set(false);
-    }
-  }
-
-  async loadPost(): Promise<void> {
-
+async loadReviews(): Promise<void> {
+  this.isReviewsLoading.set(false);
+  this.reviews.set([]);
+  this.averageRating.set(0);
+}
+async loadPost(): Promise<void> {
   this.isLoading.set(true);
   this.loadFailed.set(false);
   this.postData.set(null);
 
   try {
+    const response: any = await this.http
+      .get<any>(`${this.apiUrl}/${this.postId}`)
+      .toPromise();
 
-    const data = await this.supabaseService.getPostById(this.postId);
+    const data = response?.data;
 
-    console.log('POST ID:', this.postId);
-    console.log('POST RESPONSE:', data);
-
-    if (!data) {
+    if (!response?.success || !data) {
       this.loadFailed.set(true);
       return;
     }
 
-    const imageList: string[] = Array.isArray(data?.image_urls)
-      ? data.image_urls.filter(
-          (x: any) => typeof x === 'string' && x
-        )
+    const imageList: string[] = Array.isArray(data.images)
+      ? data.images.map((url: string) => this.getMediaUrl(url))
       : [];
 
-    if (data?.image_url && !imageList.includes(data.image_url)) {
-      imageList.unshift(data.image_url);
-    }
-
-    const videoList: string[] = Array.isArray(data?.video_urls)
-      ? data.video_urls.filter(
-          (x: any) => typeof x === 'string' && x
-        )
+    const videoList: string[] = Array.isArray(data.videos)
+      ? data.videos.map((url: string) => this.getMediaUrl(url))
       : [];
 
-    if (data?.video_url && !videoList.includes(data.video_url)) {
-      videoList.unshift(data.video_url);
-    }
+    const seller =
+      typeof data.sellerId === 'object'
+        ? data.sellerId
+        : null;
 
-    const catalogItems = this.getNormalizedCatalog(data?.catalog);
+    const category =
+      typeof data.categoryId === 'object'
+        ? data.categoryId
+        : null;
+
+    const subcategory =
+      typeof data.subcategoryId === 'object'
+        ? data.subcategoryId
+        : null;
 
     const mappedPost = {
       ...data,
 
+      postid: data._id,
+      userid: seller?._id || data.sellerId,
+
       images: imageList,
       videos: videoList,
-      catalogItems,
 
-      sellerName: data?.contactname || 'Seller',
-      sellerImage: 'assets/icons/user.png',
-      sellerPhone: data?.contactphone || '',
-      sellerEmail: data?.contactemail || '',
+      sellerName:
+        seller?.fullName ||
+        data.contact?.name ||
+        'Seller',
 
-      whatsappNumber:
-        data?.whatsappnumber ||
-        data?.contactphone ||
+sellerImage: seller?.profileImage
+  ? this.getMediaUrl(seller.profileImage)
+  : 'assets/icons/user.png',
+
+      sellerPhone:
+        data.contact?.mobile ||
+        seller?.mobile ||
         '',
 
-      location: this.buildLocation(data),
-      displayAddress: this.buildDisplayAddress(data),
-      categoryText: this.buildCategoryText(data),
-      detailItems: this.buildDetailItems(data),
+      sellerEmail:
+        data.contact?.email ||
+        seller?.email ||
+        '',
 
-      latitude: this.toNumberOrNull(data?.latitude),
-      longitude: this.toNumberOrNull(data?.longitude)
+      whatsappNumber:
+        data.contact?.whatsapp ||
+        data.contact?.mobile ||
+        seller?.mobile ||
+        '',
+
+      category:
+        category?.categoryName ||
+        '',
+
+      subcategory:
+        subcategory?.subcategoryName ||
+        '',
+
+      locationText: this.buildLocation(data),
+
+      displayAddress: this.buildDisplayAddress(data),
+
+      categoryText: this.buildCategoryText({
+        category: category?.categoryName,
+        subcategory: subcategory?.subcategoryName
+      }),
+
+      detailItems: this.buildMongoDetailItems(
+        data,
+        category,
+        subcategory,
+        seller
+      ),
+
+      latitude:
+        this.toNumberOrNull(data.location?.latitude),
+
+      longitude:
+        this.toNumberOrNull(data.location?.longitude)
     };
 
     this.postData.set(mappedPost);
-    this.loadFailed.set(false);
-
-    await this.loadReviews();
 
     if (mappedPost.images.length > 0) {
-
       this.selectedMedia.set({
         type: 'image',
         url: mappedPost.images[0]
       });
-
     } else if (mappedPost.videos.length > 0) {
-
       this.selectedMedia.set({
         type: 'video',
         url: mappedPost.videos[0]
       });
-
     } else {
-
       this.selectedMedia.set({
         type: 'image',
-        url: 'assets/icons/user.png'
+        url: 'assets/no-image.png'
       });
-
     }
 
-  } catch (error) {
+    await this.countPostView();
 
+    // Enable after creating the reviews API.
+    // await this.loadReviews();
+
+  } catch (error) {
     console.error('Error loading post details:', error);
 
     this.postData.set(null);
     this.loadFailed.set(true);
-
   } finally {
-
     this.isLoading.set(false);
-
   }
 }
-
-  buildLocation(data: any): string {
-    const location = String(data?.location || '').trim();
-    const address = String(data?.address || '').trim();
-    const fullAddress = String(data?.full_address || '').trim();
-    const placeName = String(data?.place_name || '').trim();
-
-    if (location) return location;
-    if (placeName) return placeName;
-    if (address) return address;
-    if (fullAddress) return fullAddress;
-
-    return 'Location not available';
+private getMediaUrl(url: string): string {
+  if (!url) {
+    return 'assets/no-image.png';
   }
 
-  buildDisplayAddress(data: any): string {
-    const fullAddress = String(data?.full_address || '').trim();
-    const address = String(data?.address || '').trim();
-    const placeName = String(data?.place_name || '').trim();
-    const location = String(data?.location || '').trim();
-    const area = String(data?.area || '').trim();
-    const district = String(data?.district || '').trim();
-    const state = String(data?.state || '').trim();
-    const country = String(data?.country || '').trim();
-
-    if (fullAddress) return fullAddress;
-    if (address) return address;
-    if (placeName) return placeName;
-    if (location) return location;
-
-    const parts = [area, district, state, country].filter(Boolean);
-    if (parts.length) return parts.join(', ');
-
-    return 'Location not available';
+  if (
+    url.startsWith('http://') ||
+    url.startsWith('https://')
+  ) {
+    return url;
   }
 
+  const backendUrl =
+    environment.apiUrl.replace('/api', '');
+
+  return `${backendUrl}${
+    url.startsWith('/') ? url : `/${url}`
+  }`;
+}
+private async countPostView(): Promise<void> {
+  try {
+    await this.http.post(
+      `${this.apiUrl}/${this.postId}/view`,
+      {},
+      {
+        headers: this.getAuthHeaders()
+      }
+    ).toPromise();
+  } catch (error) {
+    console.error('View count error:', error);
+  }
+}
+buildLocation(data: any): string {
+  const city = data?.location?.city || '';
+  const state = data?.location?.state || '';
+  const address = data?.location?.address || '';
+
+  if (city && state) {
+    return `${city}, ${state}`;
+  }
+
+  return city || state || address || 'Location not available';
+}
+
+buildDisplayAddress(data: any): string {
+  const location = data?.location || {};
+
+  const parts = [
+    location.address,
+    location.city,
+    location.state,
+    location.country,
+    location.pincode
+  ].filter(Boolean);
+
+  return parts.length
+    ? parts.join(', ')
+    : 'Location not available';
+}
   buildCategoryText(data: any): string {
     const category = String(data?.category || '').trim();
     const subcategory = String(data?.subcategory || '').trim();
@@ -389,44 +474,79 @@ toggleDescription(): void {
     return '';
   }
 
-  buildDetailItems(data: any): Array<{ label: string; value: string }> {
-    const items: Array<{ label: string; value: string }> = [];
+buildMongoDetailItems(
+  data: any,
+  category: any,
+  subcategory: any,
+  seller: any
+): Array<{ label: string; value: string }> {
+  const items: Array<{ label: string; value: string }> = [];
 
-    const categoryText = this.buildCategoryText(data);
-    if (categoryText) {
-      items.push({ label: 'Category', value: categoryText });
-    }
+  const categoryText = [
+    category?.categoryName,
+    subcategory?.subcategoryName
+  ]
+    .filter(Boolean)
+    .join(' • ');
 
-    const adType = String(data?.conditiontype || data?.adtype || '').trim();
-    if (adType) {
-      items.push({
-        label: 'Type',
-        value: adType.charAt(0).toUpperCase() + adType.slice(1)
-      });
-    }
-
-    const status = String(data?.status || '').trim();
-    if (status) {
-      items.push({ label: 'Status', value: status });
-    }
-
-    const seller = String(data?.contactname || '').trim();
-    if (seller) {
-      items.push({ label: 'Seller', value: seller });
-    }
-
-    const phone = String(data?.contactphone || '').trim();
-    if (phone) {
-      items.push({ label: 'Phone', value: phone });
-    }
-
-    const displayAddress = this.buildDisplayAddress(data);
-    if (displayAddress && displayAddress !== 'Location not available') {
-      items.push({ label: 'Address', value: displayAddress });
-    }
-
-    return items;
+  if (categoryText) {
+    items.push({
+      label: 'Category',
+      value: categoryText
+    });
   }
+
+  if (data?.listingType) {
+    items.push({
+      label: 'Type',
+      value:
+        String(data.listingType).charAt(0).toUpperCase() +
+        String(data.listingType).slice(1)
+    });
+  }
+
+  if (data?.status) {
+    items.push({
+      label: 'Status',
+      value:
+        String(data.status).charAt(0).toUpperCase() +
+        String(data.status).slice(1)
+    });
+  }
+
+  const sellerName =
+    seller?.fullName ||
+    data?.contact?.name;
+
+  if (sellerName) {
+    items.push({
+      label: 'Seller',
+      value: sellerName
+    });
+  }
+
+  const phone =
+    data?.contact?.mobile ||
+    seller?.mobile;
+
+  if (phone) {
+    items.push({
+      label: 'Phone',
+      value: phone
+    });
+  }
+
+  const address = this.buildDisplayAddress(data);
+
+  if (address !== 'Location not available') {
+    items.push({
+      label: 'Address',
+      value: address
+    });
+  }
+
+  return items;
+}
 
   getNormalizedCatalog(catalog: any): Array<{ title: string; price: number | null; imageUrl: string }> {
     if (!Array.isArray(catalog)) return [];
@@ -443,12 +563,11 @@ toggleDescription(): void {
       .filter((item: any) => item.title || item.price !== null || item.imageUrl);
   }
 
-  isServicePost(): boolean {
-    const post = this.postData();
-    const type = String(post?.conditiontype || post?.adtype || '').toLowerCase();
-    return type === 'service';
-  }
-
+isServicePost(): boolean {
+  return String(
+    this.postData()?.listingType || ''
+  ).toLowerCase() === 'service';
+}
   hasCatalog(): boolean {
     const post = this.postData();
     return Array.isArray(post?.catalogItems) && post.catalogItems.length > 0;
@@ -535,7 +654,11 @@ prevMedia() {
       return;
     }
 
-    const query = encodeURIComponent(post.displayAddress || post.location || '');
+    const query = encodeURIComponent(
+  post.displayAddress ||
+  post.locationText ||
+  ''
+);
     if (query) {
       window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
     } else {
@@ -552,19 +675,30 @@ prevMedia() {
 
     window.location.href = 'tel:' + post.sellerPhone;
   }
+whatsappSeller(): void {
+  const post = this.postData();
 
-  whatsappSeller() {
-    const post = this.postData();
-    const phone = post?.whatsappNumber;
+  let phone = String(
+    post?.whatsappNumber || ''
+  ).replace(/\D/g, '');
 
-    if (!phone) {
-      alert('WhatsApp number not available');
-      return;
-    }
-
-    window.location.href = 'https://wa.me/' + phone;
+  if (!phone) {
+    this.showAlert(
+      'WhatsApp number not available',
+      'error'
+    );
+    return;
   }
 
+  if (phone.length === 10) {
+    phone = `91${phone}`;
+  }
+
+  window.open(
+    `https://wa.me/${phone}`,
+    '_blank'
+  );
+}
   sharePost() {
     const post = this.postData();
     const shareUrl = window.location.href;
@@ -582,147 +716,37 @@ prevMedia() {
     navigator.clipboard.writeText(shareUrl);
     this.showAlert('Link copied successfully!', 'success');
   }
+async addToCart(): Promise<void> {
+  const token = localStorage.getItem('token');
 
-  async addToCart(): Promise<void> {
-    try {
-      const post = this.postData();
-
-      if (!post) {
-      this.showAlert('Product data not available', 'error');
-        return;
-      }
-
-      const userId = await this.supabaseService.resolveEffectiveUserUuid();
-
-      if (!userId) {
-        alert('Please login first');
-        this.router.navigate(['/login']);
-        return;
-      }
-
-      const productId = String(
-        post.postid || post.id || post.product_id || post.title || post.name || this.postId
-      );
-
-      const { data: existing, error: existingError } = await supabase
-        .from('cart_items')
-        .select('cart_id, qty')
-        .eq('user_id', userId)
-        .eq('product_id', productId)
-        .maybeSingle();
-
-      if (existingError) throw existingError;
-
-      if (existing) {
-        const { error: updateError } = await supabase
-          .from('cart_items')
-          .update({ qty: Number(existing.qty || 1) + 1 })
-          .eq('cart_id', existing.cart_id);
-
-        if (updateError) throw updateError;
-      } else {
-        const { error: insertError } = await supabase
-          .from('cart_items')
-          .insert({
-            user_id: userId,
-            product_id: productId,
-            name: post.title || post.name || 'Product',
-            price: Number(post.price || 0),
-            qty: 1,
-            image:
-              post.image_url ||
-              (Array.isArray(post.images) && post.images.length > 0 ? post.images[0] : '') ||
-              'assets/no-image.png'
-          });
-
-        if (insertError) throw insertError;
-      }
-
-      this.showAlert('Added to cart successfully!', 'success');
-      this.router.navigate(['/cart']);
-    } catch (error) {
-      console.error('Add to cart error:', error);
-      alert('Failed to add cart item');
-    }
+  if (!token) {
+    this.showAlert('Please login first', 'error');
+    this.router.navigate(['/login']);
+    return;
   }
 
+  this.showAlert(
+    'Cart API will be connected next',
+    'info'
+  );
+}
 async addToFavorites(): Promise<void> {
-  try {
-    const post = this.postData();
+  const token = localStorage.getItem('token');
 
-   if (!post) {
-  this.showAlert('Product data not available', 'error');
-  return;
-}
-
-    const userId = await this.supabaseService.resolveEffectiveUserUuid();
-
-    if (!userId) {
-      this.showAlert('Please login first', 'error');
-      this.router.navigate(['/login']);
-      return;
-    }
-
-    const productId = String(
-      post.postid || post.id || post.product_id || post.title || post.name || this.postId
-    );
-
-    const { data: existing, error: existingError } = await supabase
-      .from('favorite_items')
-      .select('favorite_id')
-      .eq('user_id', userId)
-      .eq('product_id', productId)
-      .maybeSingle();
-
-    if (existingError) {
-      console.error('Favorite existing check error:', existingError);
-      alert(existingError.message || 'Failed checking favorites');
-      return;
-    }
-
-    if (existing) {
-      this.showAlert('Already added to favorites!', 'info');
-      this.router.navigate(['/favt']);
-      return;
-    }
-
-    const payload = {
-      user_id: userId,
-      product_id: productId,
-      name: post.title || post.name || 'Product',
-      price: Number(post.price || 0),
-      location: post.displayAddress || post.location || 'Location not available',
-      image:
-        post.image_url ||
-        (Array.isArray(post.images) && post.images.length > 0 ? post.images[0] : '') ||
-        'assets/no-image.png'
-    };
-
-    const { error: insertError } = await supabase
-      .from('favorite_items')
-      .insert(payload);
-
-    if (insertError) {
-      console.error('Favorite insert error:', insertError);
-      this.showAlert('Failed to add favorite item', 'error');
-      return;
-    }
-
-this.snackbar.show('Added to favorites successfully!', 'success');
-
-setTimeout(() => {
-  this.router.navigate(['/favt']);
-}, 1200);
-
-  } catch (error: any) {
-    console.error('Add to favorites error:', error);
-    alert(error?.message || 'Failed to add favorite item');
+  if (!token) {
+    this.showAlert('Please login first', 'error');
+    this.router.navigate(['/login']);
+    return;
   }
+
+  this.showAlert(
+    'Favorites API will be connected next',
+    'info'
+  );
 }
 
- async chatSeller() {
-
-  const userId = await this.supabaseService.resolveEffectiveUserUuid();
+async chatSeller(): Promise<void> {
+  const userId = this.currentUserId();
 
   if (!userId) {
     this.showAlert('Please login first', 'error');
@@ -733,10 +757,17 @@ setTimeout(() => {
   const post = this.postData();
 
   if (!post?.userid) {
-    alert('Seller not available');
+    this.showAlert('Seller not available', 'error');
     return;
   }
 
+  if (String(post.userid) === String(userId)) {
+    this.showAlert(
+      'You cannot chat with your own post',
+      'info'
+    );
+    return;
+  }
 
   this.router.navigate(['/chats'], {
     queryParams: {
@@ -744,9 +775,7 @@ setTimeout(() => {
       sellerId: post.userid
     }
   });
-
 }
-
   onImageSelected(event: any) {
     const files = event?.target?.files;
     this.reviewImages = [];
@@ -776,85 +805,20 @@ setTimeout(() => {
 
     reader.readAsDataURL(file);
   }
+async submitReview(): Promise<void> {
+  const token = localStorage.getItem('token');
 
-  async submitReview() {
-    if (!this.reviewText.trim()) {
-      alert('Please enter review');
-      return;
-    }
-
-    if (this.selectedRating === 0) {
-      alert('Please select star rating');
-      return;
-    }
-
-    const post = this.postData();
-
-    if (!post?.postid) {
-      alert('Post not found');
-      return;
-    }
-
-    this.isReviewSubmitting.set(true);
-
-    try {
-      const userId = await this.supabaseService.resolveEffectiveUserUuid();
-
-      if (!userId) {
-       this.showAlert('Please login first', 'error');
-        this.router.navigate(['/login']);
-        return;
-      }
-
-      const { error } = await supabase
-        .from('reviews')
-        .insert({
-          postid: post.postid,
-          userid: userId,
-          rating: this.selectedRating,
-          reviewtext: this.reviewText,
-          reviewimages: this.reviewImages,
-          reviewvideo: this.reviewVideo
-        });
-
-      if (error) throw error;
-
-      try {
-        const sellerUserId = String(post.userid || '').trim();
-
-        if (sellerUserId && sellerUserId !== userId) {
-          await this.supabaseService.createNotification({
-            userid: sellerUserId,
-            title: 'New Review Received',
-            message: `Someone reviewed your post "${post.title || ''}".`,
-            type: 'review',
-            refid: String(post.postid)
-          });
-
-        } else {
-
-        }
-      } catch (notificationError) {
-
-      }
-
-      alert('Review submitted successfully!');
-
-      this.reviewText = '';
-      this.reviewImages = [];
-      this.reviewVideo = null;
-      this.selectedRating = 0;
-      this.hoverRating = 0;
-      this.showReviewForm.set(false);
-
-      await this.loadReviews();
-    } catch (error) {
-      console.error(error);
-      alert('Failed to submit review');
-    } finally {
-      this.isReviewSubmitting.set(false);
-    }
+  if (!token) {
+    this.showAlert('Please login first', 'error');
+    this.router.navigate(['/login']);
+    return;
   }
+
+  this.showAlert(
+    'Review API will be connected next',
+    'info'
+  );
+}
 goBack(): void {
   if (window.history.length > 1) {
     this.location.back();

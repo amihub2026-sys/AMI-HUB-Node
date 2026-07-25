@@ -3,8 +3,13 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { SupabaseService } from '../../services/supabase.service';
-import { supabase } from '../../../supabaseClient';
+import {
+  HttpClient,
+  HttpHeaders,
+  HttpParams
+} from '@angular/common/http';
+
+import { environment } from '../../../environments/environment';
 import { Category } from '../categories/categories';
 import { Subcategories } from '../subcategories/subcategories';
 import { Router } from '@angular/router';
@@ -17,25 +22,29 @@ import {
 
 
 interface ProductCardItem {
-  postid: number;
+  _id: string;
+  postid?: string;
 
   title?: string | null;
   description?: string | null;
   price?: number | string | null;
-  location?: string | null;
 
-  areaid?: number | null;
-  cityid?: number | null;
+  images?: string[];
+  videos?: string[];
 
-  image_url?: string | null;
-  image_urls?: string[] | null;
+  categoryId?: any;
+  subcategoryId?: any;
+  sellerId?: any;
 
-  category?: string | null;
-  categoryid?: number | null;
-  subcategoryid?: number | null;
+  listingType?: string | null;
+  status?: string | null;
+  isActive?: boolean;
 
-  adtype?: string | null;
-  createdon?: string | null;
+  location?: any;
+  contact?: any;
+
+  createdAt?: string | null;
+  updatedAt?: string | null;
 
   mainImage: string;
   displayTitle: string;
@@ -44,24 +53,49 @@ interface ProductCardItem {
   displayLocation: string;
   displayType: string;
 
+  categoryid?: string | null;
+  subcategoryid?: string | null;
+  categoryname?: string | null;
+  subcategoryname?: string | null;
+
   district?: string | null;
+  userid?: string | null;
+
+  latitude?: number | null;
+  longitude?: number | null;
+  distanceKm?: number | null;
 }
 
 interface CategoryItem {
-  categoryid: number;
+  _id: string;
+  categoryid: string;
   categoryname: string;
+  categoryName?: string;
   category_type?: string | null;
+  categoryType?: string | null;
   isactive?: boolean | null;
+  isActive?: boolean | null;
   sortorder?: number | null;
+  sortOrder?: number | null;
 }
 
 interface SubcategoryItem {
-  subcategoryid: number;
-  categoryid: number;
+  _id: string;
+  subcategoryid: string;
+  categoryid: string;
   subcategoryname: string;
+
+  subcategoryName?: string;
+  categoryId?: string | any;
+
   iconurl?: string | null;
+  icon?: string | null;
+
   isactive?: boolean | null;
+  isActive?: boolean | null;
+
   sortorder?: number | null;
+  sortOrder?: number | null;
 }
 
 @Component({
@@ -80,6 +114,22 @@ imports: [
   styleUrl: './product-list.css',
 })
 export class ProductList implements OnInit {
+  private readonly postsApiUrl =
+  `${environment.apiUrl}/posts`;
+
+private readonly categoriesApiUrl =
+  `${environment.apiUrl}/categories`;
+
+private readonly subcategoriesApiUrl =
+  `${environment.apiUrl}/subcategories`;
+
+private getAuthHeaders(): HttpHeaders {
+  const token = localStorage.getItem('token');
+
+  return new HttpHeaders({
+    Authorization: token ? `Bearer ${token}` : ''
+  });
+}
   
   showSubcategories = false;
   isFilterOpen = false;
@@ -127,16 +177,14 @@ selectedCategoryId: string | number | null = null;
   selectedCategoryName = '';
 
 constructor(
-  private supabaseService: SupabaseService,
   private route: ActivatedRoute,
-  private location: Location, private router: Router,
-  private cdr: ChangeDetectorRef
+  private location: Location,
+  private router: Router,
+  private cdr: ChangeDetectorRef,
+  private http: HttpClient
 ) {}
-
-
   async ngOnInit(): Promise<void> {
-    const user = await this.supabaseService.getCurrentUser();
-this.currentUserId.set(user?.id || '');
+this.loadCurrentUser();
     this.loadSelectedLocationAndRadius();
    await Promise.all([
   this.loadCategories(),
@@ -144,107 +192,234 @@ this.currentUserId.set(user?.id || '');
   this.loadResults()
 ]);
 
-    this.route.queryParams.subscribe(async (params) => {
-      this.selectedCategoryId = params['category']
-        ? Number(params['category'])
-        : null;
+this.route.queryParams.subscribe(async (params) => {
+  this.selectedCategoryId = params['category']
+    ? String(params['category'])
+    : null;
 
-this.selectedSubcategoryId =
-  params['subcategory'] 
-  ? String(params['subcategory'])
-  : null;
+  this.selectedSubcategoryId =
+    params['subcategory']
+      ? String(params['subcategory'])
+      : null;
 
-      this.searchText = (params['q'] || '').toString().trim();
+  this.searchText =
+    (params['q'] || '').toString().trim();
 
-      this.page = 0;
-      this.posts.set([]);
-      this.displayedPosts.set([]);
-      this.hasMore.set(true);
-      this.subcategories.set([]);
-      this.selectedCategoryName = '';
+  this.subcategories.set([]);
+  this.selectedCategoryName = '';
 
-      if (this.selectedCategoryId) {
-        const selectedCategory = this.categoriesData.find(
-          (c) => Number(c.categoryid) === Number(this.selectedCategoryId)
-        );
+  if (this.selectedCategoryId) {
+    const selectedCategory =
+      this.categoriesData.find(
+        (c) =>
+          String(c.categoryid) ===
+          String(this.selectedCategoryId)
+      );
 
-        this.selectedCategoryName = selectedCategory?.categoryname || '';
-        await this.loadSubcategories(this.selectedCategoryId);
-      }
+    this.selectedCategoryName =
+      selectedCategory?.categoryname || '';
 
-      await this.loadMorePosts();
-
-      if (this.searchText) {
-        await this.syncSearchWithCategoryAndSubcategory();
-        this.applyFilters();
-      }
-    });
+    await this.loadSubcategories(
+      this.selectedCategoryId
+    );
   }
 
+  if (this.searchText) {
+    await this.syncSearchWithCategoryAndSubcategory();
+  }
 
- async loadResults(): Promise<void> {
+  this.applyFilters();
+});
+  }
+private loadCurrentUser(): void {
+  const userData = localStorage.getItem('user');
+
+  if (!userData) {
+    this.currentUserId.set('');
+    return;
+  }
+
+  try {
+    const user = JSON.parse(userData);
+
+    this.currentUserId.set(
+      String(user?._id || user?.id || '')
+    );
+  } catch (error) {
+    console.error(
+      'Invalid user data in localStorage:',
+      error
+    );
+
+    this.currentUserId.set('');
+  }
+}
+
+async loadResults(): Promise<void> {
   this.isLoading.set(true);
   this.cdr.detectChanges();
 
   try {
-    const { data, error } = await supabase
-      .from('post')
-      .select(`
-        postid,
-        title,
-        description,
-        price,
-        location,
-        areaid,
-        cityid,
-        image_url,
-        image_urls,
-        category,
-        categoryid,
-        subcategoryid,
-        adtype,
-        isactive,
-        status,
-        createdon
-      `)
-      .eq('isactive', true)
-      .eq('status', 'Active')
-      .eq('adtype', 'product')
-      .order('createdon', { ascending: false })
-      .limit(20);
+    const params = new HttpParams()
+      .set('listingType', 'product')
+      .set('page', '1')
+      .set('limit', '20');
 
-    if (error) {
-      throw error;
-    }
+    const response: any = await this.http
+      .get<any>(
+        this.postsApiUrl,
+        {
+          params,
+          headers: this.getAuthHeaders()
+        }
+      )
+      .toPromise();
 
-    const mapped: ProductCardItem[] = (data || []).map((item: any) => ({
-      ...item,
-      mainImage: this.getMainImage(item),
-      displayTitle: item.title || 'Untitled',
-      displayPrice: Number(item.price || 0),
-      displayCategory: item.category || 'Category',
-      displayLocation: item.location || this.buildLocation(item),
-      displayType: (item.adtype || 'product').toLowerCase()
-    }));
+    const rawPosts =
+      response?.data?.posts ||
+      response?.posts ||
+      response?.data ||
+      [];
+
+    const posts = Array.isArray(rawPosts)
+      ? rawPosts
+      : [];
+
+    const mapped: ProductCardItem[] =
+      posts.map((item: any) =>
+        this.mapMongoPost(item)
+      );
 
     this.results = mapped;
     this.filteredResults = [...mapped];
 
+    this.posts.set(mapped);
+    this.displayedPosts.set(mapped);
+
+    this.page = 1;
+    this.hasMore.set(mapped.length >= this.pageSize);
   } catch (error) {
-    console.error('Error loading product cards:', error);
+    console.error(
+      'Error loading Mongo product cards:',
+      error
+    );
 
     this.results = [];
     this.filteredResults = [];
 
-  }finally {
+    this.posts.set([]);
+    this.displayedPosts.set([]);
 
- this.isLoading.set(false);
-
- this.cdr.detectChanges();
-
+    this.hasMore.set(false);
+  } finally {
+    this.isLoading.set(false);
+    this.cdr.detectChanges();
+  }
 }
-}
+private mapMongoPost(item: any): ProductCardItem {
+  const category =
+    typeof item?.categoryId === 'object'
+      ? item.categoryId
+      : null;
 
+  const subcategory =
+    typeof item?.subcategoryId === 'object'
+      ? item.subcategoryId
+      : null;
+
+  const seller =
+    typeof item?.sellerId === 'object'
+      ? item.sellerId
+      : null;
+
+  const categoryId =
+    category?._id ||
+    item?.categoryId ||
+    '';
+
+  const subcategoryId =
+    subcategory?._id ||
+    item?.subcategoryId ||
+    '';
+
+  const categoryName =
+    category?.categoryName ||
+    item?.categoryName ||
+    item?.category ||
+    'Category';
+
+  const subcategoryName =
+    subcategory?.subcategoryName ||
+    item?.subcategoryName ||
+    item?.subcategory ||
+    '';
+
+  const city = item?.location?.city || '';
+  const state = item?.location?.state || '';
+  const address = item?.location?.address || '';
+
+  const displayLocation =
+    [city, state].filter(Boolean).join(', ') ||
+    address ||
+    'Location not available';
+
+  return {
+    ...item,
+
+    _id: String(item?._id || ''),
+    postid: String(item?._id || ''),
+
+    userid: String(
+      seller?._id ||
+      item?.sellerId ||
+      ''
+    ),
+
+    categoryid: String(categoryId),
+    subcategoryid: String(subcategoryId),
+
+    categoryname: categoryName,
+    subcategoryname: subcategoryName,
+
+    mainImage: this.getMainImage(item),
+
+    displayTitle:
+      item?.title || 'Untitled',
+
+    displayPrice:
+      Number(item?.price || 0),
+
+    displayCategory:
+      subcategoryName || categoryName,
+
+    displayLocation,
+
+    displayType:
+      String(
+        item?.listingType || 'product'
+      ).toLowerCase(),
+
+    district:
+      city || state || address || null,
+
+    latitude:
+      this.toNumberOrNull(
+        item?.location?.latitude
+      ),
+
+    longitude:
+      this.toNumberOrNull(
+        item?.location?.longitude
+      )
+  };
+}
+private toNumberOrNull(value: any): number | null {
+  const numberValue = Number(value);
+
+  return Number.isFinite(numberValue)
+    ? numberValue
+    : null;
+}
 buildLocation(item: any): string {
   if (item?.location) {
     return item.location;
@@ -275,9 +450,13 @@ getDistrict(item: any): string {
   );
 }
 openDetails(item: ProductCardItem): void {
-  const id = item?.postid;
+  const id = item?._id || item?.postid;
 
   if (!id) {
+    console.error(
+      'Mongo post id missing:',
+      item
+    );
     return;
   }
 
@@ -286,7 +465,6 @@ openDetails(item: ProductCardItem): void {
     id
   ]);
 }
-
   private loadSelectedLocationAndRadius(): void {
     if (typeof window === 'undefined') return;
 
@@ -319,28 +497,61 @@ openDetails(item: ProductCardItem): void {
       }
     }
   }
+async loadCategories(): Promise<void> {
+  try {
+    const response: any = await this.http
+      .get<any>(this.categoriesApiUrl)
+      .toPromise();
 
-  async loadCategories(): Promise<void> {
-    try {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('categoryid, categoryname, category_type, isactive, sortorder')
-        .eq('isactive', true)
-        .order('sortorder', { ascending: true });
+    const rawCategories =
+      response?.data?.categories ||
+      response?.categories ||
+      response?.data ||
+      [];
 
-      if (error) {
-        console.error('Error loading categories:', error);
-        this.categoriesData = [];
-        return;
-      }
+    const categories = Array.isArray(rawCategories)
+      ? rawCategories
+      : [];
 
-      this.categoriesData = (data || []) as CategoryItem[];
-      
-    } catch (error) {
-      
-      this.categoriesData = [];
-    }
+    this.categoriesData = categories.map(
+      (item: any) => ({
+        ...item,
+
+        _id: String(item?._id || ''),
+
+        categoryid: String(item?._id || ''),
+
+        categoryname:
+          item?.categoryName ||
+          item?.categoryname ||
+          '',
+
+        category_type:
+          item?.categoryType ||
+          item?.category_type ||
+          null,
+
+        isactive:
+          item?.isActive ??
+          item?.isactive ??
+          true,
+
+        sortorder: Number(
+          item?.sortOrder ??
+          item?.sortorder ??
+          0
+        )
+      })
+    );
+  } catch (error) {
+    console.error(
+      'Error loading Mongo categories:',
+      error
+    );
+
+    this.categoriesData = [];
   }
+}
 onFiltersApplied(filters: FilterState): void {
   console.log('Applied filters:', filters);
 
@@ -365,45 +576,88 @@ selectSubcategory(subcategory: any): void {
   // reload/filter your products here
 
 }
-  async loadAllSubcategories(): Promise<void> {
-    try {
-      const { data, error } = await supabase
-        .from('subcategories')
-        .select(
-          'subcategoryid, categoryid, subcategoryname, iconurl, isactive, sortorder'
-        )
-        .eq('isactive', true)
-        .order('sortorder', { ascending: true });
+async loadAllSubcategories(): Promise<void> {
+  try {
+    const response: any = await this.http
+      .get<any>(this.subcategoriesApiUrl)
+      .toPromise();
 
-      if (error) {
-        console.error('Error loading all subcategories:', error);
-        this.allSubcategories = [];
-        return;
-      }
+    const rawSubcategories =
+      response?.data?.subcategories ||
+      response?.subcategories ||
+      response?.data ||
+      [];
 
-      this.allSubcategories = (data || []) as SubcategoryItem[];
-    } catch (error) {
-      console.error('Error loading all subcategories:', error);
-      this.allSubcategories = [];
-    }
+    const subcategories =
+      Array.isArray(rawSubcategories)
+        ? rawSubcategories
+        : [];
+
+    this.allSubcategories =
+      subcategories.map((item: any) => {
+        const categoryId =
+          typeof item?.categoryId === 'object'
+            ? item.categoryId?._id
+            : item?.categoryId;
+
+        return {
+          ...item,
+
+          _id: String(item?._id || ''),
+
+          subcategoryid:
+            String(item?._id || ''),
+
+          categoryid:
+            String(categoryId || ''),
+
+          subcategoryname:
+            item?.subcategoryName ||
+            item?.subcategoryname ||
+            '',
+
+          iconurl:
+            this.getMediaUrl(
+              item?.icon ||
+              item?.iconurl ||
+              ''
+            ),
+
+          isactive:
+            item?.isActive ??
+            item?.isactive ??
+            true,
+
+          sortorder: Number(
+            item?.sortOrder ??
+            item?.sortorder ??
+            0
+          )
+        };
+      });
+  } catch (error) {
+    console.error(
+      'Error loading Mongo subcategories:',
+      error
+    );
+
+    this.allSubcategories = [];
   }
-
-async loadSubcategories(categoryId: number | null): Promise<void> {
-
+}
+async loadSubcategories(
+  categoryId: string | number | null
+): Promise<void> {
   if (!categoryId) {
     this.subcategories.set([]);
     return;
   }
 
-
   const filtered = this.allSubcategories.filter(
-    (sub:any)=>
-      Number(sub.categoryid) === Number(categoryId)
+    (sub: any) =>
+      String(sub.categoryid) === String(categoryId)
   );
 
-
   this.subcategories.set(filtered);
-
 }
 
   async onSearchTextChange(): Promise<void> {
@@ -827,47 +1081,91 @@ this.selectedSubcategoryId =
 
     this.applyFilters();
   }
-
-  async loadMorePosts(): Promise<void> {
-    if (this.isLoading() || !this.hasMore()) return;
-
-    this.isLoading.set(true);
-
-    try {
-      let newPosts = await this.supabaseService.getProductPosts(
-        this.page,
-        this.pageSize
-      );
-
-      newPosts = (newPosts || []).map((post: any) => ({
-        ...post,
-        categoryid: post?.categoryid ?? post?.category_id ?? null,
-        subcategoryid: post?.subcategoryid ?? post?.subcategory_id ?? null,
-        categoryname: post?.categoryname ?? post?.category ?? '',
-        subcategoryname: post?.subcategoryname ?? post?.subcategory ?? '',
-      }));
-
-      newPosts = this.processPostsWithDistance(newPosts);
-
-      
-
-      if (!newPosts.length || newPosts.length < this.pageSize) {
-        this.hasMore.set(false);
-      }
-
-      const allPosts = [...this.posts(), ...newPosts];
-      this.posts.set(allPosts);
-
-      this.applyFilters();
-      this.page++;
-    } catch (error) {
-      console.error('Error loading products:', error);
-      this.hasMore.set(false);
-    } finally {
-      this.isLoading.set(false);
-    }
+async loadMorePosts(): Promise<void> {
+  if (this.isLoading() || !this.hasMore()) {
+    return;
   }
 
+  this.isLoading.set(true);
+
+  try {
+    const nextPage = this.page + 1;
+
+    const params = new HttpParams()
+      .set('listingType', 'product')
+      .set('page', String(nextPage))
+      .set('limit', String(this.pageSize));
+
+    const response: any = await this.http
+      .get<any>(
+        this.postsApiUrl,
+        {
+          params,
+          headers: this.getAuthHeaders()
+        }
+      )
+      .toPromise();
+
+    const rawPosts =
+      response?.data?.posts ||
+      response?.posts ||
+      response?.data ||
+      [];
+
+    let newPosts: ProductCardItem[] =
+      Array.isArray(rawPosts)
+        ? rawPosts.map((post: any) =>
+            this.mapMongoPost(post)
+          )
+        : [];
+
+    newPosts =
+      this.processPostsWithDistance(
+        newPosts
+      );
+
+    if (newPosts.length < this.pageSize) {
+      this.hasMore.set(false);
+    }
+
+    const existingIds = new Set(
+      this.posts().map((post: any) =>
+        String(post?._id || '')
+      )
+    );
+
+    const uniqueNewPosts =
+      newPosts.filter(
+        (post: any) =>
+          !existingIds.has(
+            String(post?._id || '')
+          )
+      );
+
+    const allPosts = [
+      ...this.posts(),
+      ...uniqueNewPosts
+    ];
+
+    this.posts.set(allPosts);
+
+    this.results = allPosts;
+    this.filteredResults = [...allPosts];
+
+    this.page = nextPage;
+
+    this.applyFilters();
+  } catch (error) {
+    console.error(
+      'Error loading more Mongo products:',
+      error
+    );
+
+    this.hasMore.set(false);
+  } finally {
+    this.isLoading.set(false);
+  }
+}
   getShortLocation(post: any): string {
     const location =
       post?.location || post?.address || post?.area || post?.city || '';
@@ -891,16 +1189,37 @@ this.selectedSubcategoryId =
       await this.loadMorePosts();
     }
   }
-  
-
-  getMainImage(post: any): string {
-    const fallback = 'assets/no-image.png';
-
-    if (!post?.image_url) return fallback;
-
-    const separator = post.image_url.includes('?') ? '&' : '?';
-    return `${post.image_url}${separator}width=320&height=220&resize=cover&quality=70`;
+  private getMediaUrl(url: string): string {
+  if (!url) {
+    return 'assets/no-image.png';
   }
+
+  if (
+    url.startsWith('http://') ||
+    url.startsWith('https://')
+  ) {
+    return url;
+  }
+
+  const backendUrl =
+    environment.apiUrl.replace('/api', '');
+
+  return `${backendUrl}${
+    url.startsWith('/') ? url : `/${url}`
+  }`;
+}
+
+getMainImage(post: any): string {
+  const image =
+    Array.isArray(post?.images) &&
+    post.images.length > 0
+      ? post.images[0]
+      : post?.image_url ||
+        post?.imageUrl ||
+        '';
+
+  return this.getMediaUrl(image);
+}
 
   trackByPostId(index: number, post: any): number {
     return post.postid;
