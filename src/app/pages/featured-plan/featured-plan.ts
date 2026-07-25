@@ -1,74 +1,147 @@
-import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { ApiService } from '../../services/api.service';
 
 @Component({
   selector: 'app-featured-plan',
   standalone: true,
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './featured-plan.html',
   styleUrl: './featured-plan.css',
 })
-export class FeaturedPlan {
-  postId: number = 0;
-  adType: 'service' | 'product' = 'service';
-  isSaving = false;
-  postDetails: any = null;
+export class FeaturedPlan implements OnInit {
 
-  constructor(private router: Router) {
+  postId: string = '';
+  adType: 'service' | 'product' | 'job' = 'service';
+
+  isSaving = false;
+  isLoading = false;
+
+  postDetails: any = null;
+  boostPlans: any[] = [];
+
+  constructor(
+    private router: Router,
+    private api: ApiService
+  ) {
     const nav = this.router.getCurrentNavigation();
     const navState = nav?.extras?.state || {};
+
     const historyState =
-      typeof window !== 'undefined' ? window.history.state || {} : {};
+      typeof window !== 'undefined'
+        ? window.history.state || {}
+        : {};
 
-    this.postId = Number(navState['postId'] || historyState['postId'] || 0);
+    this.postId = String(
+      navState['postId'] ||
+      historyState['postId'] ||
+      ''
+    );
 
-    this.adType =
-      (navState['adType'] || historyState['adType']) === 'product'
-        ? 'product'
-        : 'service';
+const incomingType = String(
+  navState['adType'] ||
+  historyState['adType'] ||
+  ''
+)
+  .toLowerCase()
+  .trim();
+
+this.adType =
+  incomingType === 'product'
+    ? 'product'
+    : incomingType === 'job'
+    ? 'job'
+    : 'service';
 
     this.postDetails =
       navState['postDetails'] ||
       historyState['postDetails'] ||
       this.getStoredPendingPost();
 
-    if ((!this.postId || this.postId <= 0) && this.postDetails?.postid) {
-      this.postId = Number(this.postDetails.postid) || 0;
+    if (!this.postId && this.postDetails) {
+      this.postId = String(
+        this.postDetails?._id ||
+        this.postDetails?.postid ||
+        this.postDetails?.id ||
+        ''
+      );
     }
 
-    if ((!this.adType || this.adType === 'service') && this.postDetails) {
+    if (this.postDetails) {
       const type = String(
-        this.postDetails?.adtype || this.postDetails?.conditiontype || 'service'
+        this.postDetails?.listingType ||
+        this.postDetails?.adtype ||
+        this.postDetails?.conditiontype ||
+        this.adType
       )
         .toLowerCase()
         .trim();
 
-      this.adType = type === 'product' ? 'product' : 'service';
-    }
+      this.adType =
+  type === 'product'
+    ? 'product'
+    : type === 'job'
+    ? 'job'
+    : 'service';
 
-    if (this.postDetails && this.postId > 0) {
       this.postDetails = {
         ...this.postDetails,
-        postid: Number(this.postDetails?.postid || this.postId),
-        adtype:
-          this.postDetails?.adtype ||
-          this.postDetails?.conditiontype ||
+
+        _id:
+          this.postDetails?._id ||
+          this.postId,
+
+        postid:
+          this.postDetails?.postid ||
+          this.postId,
+
+        listingType:
+          this.postDetails?.listingType ||
           this.adType,
-        conditiontype:
-          this.postDetails?.conditiontype ||
-          this.postDetails?.adtype ||
-          this.adType,
+
+adtype: this.adType,
+conditiontype: this.adType
       };
     }
+  }
 
-  
+  ngOnInit(): void {
+    this.loadBoostPlans();
+  }
+
+  loadBoostPlans(): void {
+    this.isLoading = true;
+
+    this.api.get('/boost-plans').subscribe({
+      next: (response: any) => {
+        this.boostPlans = (response?.data || [])
+          .filter((plan: any) => plan.isActive === true)
+          .sort(
+            (a: any, b: any) =>
+              Number(a.price || 0) - Number(b.price || 0)
+          );
+
+        this.isLoading = false;
+      },
+
+      error: (error: any) => {
+        console.error('Boost plans load error:', error);
+
+        this.boostPlans = [];
+        this.isLoading = false;
+      }
+    });
   }
 
   private getStoredPendingPost(): any {
-    if (typeof window === 'undefined') return null;
+    if (typeof window === 'undefined') {
+      return null;
+    }
 
     try {
       const raw = localStorage.getItem('pending_post_payload');
+
       return raw ? JSON.parse(raw) : null;
     } catch (error) {
       console.error('Error reading pending_post_payload:', error);
@@ -77,7 +150,9 @@ export class FeaturedPlan {
   }
 
   private storePendingPost(): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') {
+      return;
+    }
 
     if (!this.postDetails || !this.postId) {
       return;
@@ -85,33 +160,65 @@ export class FeaturedPlan {
 
     const payload = {
       ...this.postDetails,
-      postid: Number(this.postDetails?.postid || this.postId),
-      adtype:
-        this.postDetails?.adtype ||
-        this.postDetails?.conditiontype ||
+
+      _id:
+        this.postDetails?._id ||
+        this.postId,
+
+      postid:
+        this.postDetails?.postid ||
+        this.postId,
+
+      listingType:
+        this.postDetails?.listingType ||
         this.adType,
-      conditiontype:
-        this.postDetails?.conditiontype ||
-        this.postDetails?.adtype ||
-        this.adType,
+
+adtype: this.adType,
+conditiontype: this.adType
     };
 
-    localStorage.setItem('pending_post_payload', JSON.stringify(payload));
-    localStorage.setItem('pending_post_flow', 'featured');
-    localStorage.setItem('pending_post_type', this.adType);
+    localStorage.setItem(
+      'pending_post_payload',
+      JSON.stringify(payload)
+    );
 
-    if (payload?.userid != null) {
-      localStorage.setItem('pending_post_userid', String(payload.userid));
+    localStorage.setItem(
+      'pending_post_flow',
+      'featured'
+    );
+
+    localStorage.setItem(
+      'pending_post_type',
+      this.adType
+    );
+
+    const userId =
+      payload?.sellerId?._id ||
+      payload?.sellerId ||
+      payload?.userId ||
+      payload?.userid ||
+      '';
+
+    if (userId) {
+      localStorage.setItem(
+        'pending_post_userid',
+        String(userId)
+      );
     }
-
-    
   }
 
-  choosePlan(planType: 'basic' | 'standard' | 'premium') {
-    if (this.isSaving) return;
+  choosePlan(plan: any): void {
+    if (this.isSaving) {
+      return;
+    }
 
-    if (!this.postId || this.postId <= 0) {
+    if (!this.postId) {
       alert('Post details not found. Please go back and try again.');
+      return;
+    }
+
+    if (!plan?._id) {
+      alert('Invalid boost plan selected.');
       return;
     }
 
@@ -120,75 +227,63 @@ export class FeaturedPlan {
 
       this.storePendingPost();
 
-      let selectedPlan: any = null;
+      const selectedPlan = {
+        _id: String(plan._id),
 
-      if (planType === 'basic') {
-        selectedPlan = {
-          boost_plan_id: 'boost_1_day',
-          boost_name: 'Quick Boost',
+        boostPlanId:
+          plan.boostPlanId,
 
-          plan_id: 'boost_1_day',
-          featured_plan_id: 'boost_1_day',
+        boostName:
+          plan.boostName,
 
-          plan_name: 'Quick Boost',
-          featured_plan_name: 'Quick Boost',
+        price:
+          Number(plan.price || 0),
 
-          amount: 1,
-          price: 1,
-          duration_days: 1,
-          isfeatured: true,
-          is_featured: true,
-          ad_type: this.adType,
-          postId: this.postId
-        };
-      } else if (planType === 'standard') {
-        selectedPlan = {
-          boost_plan_id: 'boost_5_day',
-          boost_name: 'Popular Boost',
+        durationDays:
+          Number(plan.durationDays || 1),
 
-          plan_id: 'boost_5_day',
-          featured_plan_id: 'boost_5_day',
+        isActive:
+          plan.isActive,
 
-          plan_name: 'Popular Boost',
-          featured_plan_name: 'Popular Boost',
+        plan_id:
+          String(plan._id),
 
-          amount: 500,
-          price: 500,
-          duration_days: 5,
-          isfeatured: true,
-          is_featured: true,
-          ad_type: this.adType,
-          postId: this.postId
-        };
-      } else {
-        selectedPlan = {
-          boost_plan_id: 'boost_9_day',
-          boost_name: 'Max Boost',
+        boost_plan_id:
+          String(plan._id),
 
-          plan_id: 'boost_9_day',
-          featured_plan_id: 'boost_9_day',
+        featured_plan_id:
+          String(plan._id),
 
-          plan_name: 'Max Boost',
-          featured_plan_name: 'Max Boost',
+        plan_name:
+          plan.boostName,
 
-          amount: 900,
-          price: 900,
-          duration_days: 9,
-          isfeatured: true,
-          is_featured: true,
-          ad_type: this.adType,
-          postId: this.postId
-        };
-      }
+        featured_plan_name:
+          plan.boostName,
 
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(
-          'selected_plan_payload',
-          JSON.stringify(selectedPlan)
-        );
+        amount:
+          Number(plan.price || 0),
 
-       
-      }
+        duration_days:
+          Number(plan.durationDays || 1),
+
+        isfeatured: true,
+        is_featured: true,
+
+        ad_type:
+          this.adType,
+
+        postId:
+          this.postId
+      };
+
+if (typeof window !== 'undefined') {
+  localStorage.setItem(
+    'selected_plan_payload',
+    JSON.stringify(selectedPlan)
+  );
+
+  localStorage.removeItem('verified_payment_payload');
+}
 
       this.router.navigate(['/payment'], {
         state: {
@@ -198,9 +293,11 @@ export class FeaturedPlan {
           selectedPlan
         }
       });
-    } catch (err) {
-      console.error('choosePlan error:', err);
+
+    } catch (error) {
+      console.error('choosePlan error:', error);
       alert('Something went wrong');
+
     } finally {
       this.isSaving = false;
     }

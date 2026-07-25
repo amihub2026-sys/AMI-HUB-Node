@@ -1,45 +1,66 @@
 <div class="subscription-container">
+
   <h1>Choose Your Featured Ad Plan</h1>
-  <p class="subtitle">Select a featured plan to boost your post visibility</p>
 
-  <div class="plan-cards">
-    <div class="plan-card">
-      <h2>Quick Boost</h2>
-      <p class="price">₹1 / 1 day</p>
-      <ul>
-        <li>Boost your ad quickly</li>
-        <li>Short visibility boost</li>
-        <li>Best for instant reach</li>
-      </ul>
-      <button class="btn" (click)="choosePlan('basic')">
-        Choose Quick Boost
-      </button>
-    </div>
+  <p class="subtitle">
+    Select a featured plan to boost your post visibility
+  </p>
 
-    <div class="plan-card featured">
-      <h2>Popular Boost</h2>
-      <p class="price">₹500 / 5 days</p>
-      <ul>
-        <li>Better visibility</li>
-        <li>Longer boost duration</li>
-        <li>Good for higher response</li>
-      </ul>
-      <button class="btn btn-primary" (click)="choosePlan('standard')">
-        Choose Popular Boost
-      </button>
-    </div>
+  <div
+    class="loading-text"
+    *ngIf="isLoading"
+  >
+    Loading boost plans...
+  </div>
 
-    <div class="plan-card">
-      <h2>Max Boost</h2>
-      <p class="price">₹900 / 9 days</p>
+  <div
+    class="loading-text"
+    *ngIf="!isLoading && boostPlans.length === 0"
+  >
+    No boost plans available.
+  </div>
+
+  <div
+    class="plan-cards"
+    *ngIf="!isLoading && boostPlans.length > 0"
+  >
+    <div
+      class="plan-card"
+      *ngFor="let plan of boostPlans; let i = index"
+      [class.featured]="i === 1"
+    >
+      <h2>
+        {{ plan.boostName }}
+      </h2>
+
+      <p class="price">
+        ₹{{ plan.price }}
+        /
+        {{ plan.durationDays }}
+        {{ plan.durationDays === 1 ? 'day' : 'days' }}
+      </p>
+
       <ul>
-        <li>Maximum visibility</li>
-        <li>Longest boost period</li>
-        <li>Best for top exposure</li>
+        <li>Boost your ad visibility</li>
+
+        <li>
+          Featured for
+          {{ plan.durationDays }}
+          {{ plan.durationDays === 1 ? 'day' : 'days' }}
+        </li>
+
+        <li>Get better reach and responses</li>
       </ul>
-      <button class="btn" (click)="choosePlan('premium')">
-        Choose Max Boost
+
+      <button
+        class="btn"
+        [class.btn-primary]="i === 1"
+        [disabled]="isSaving"
+        (click)="choosePlan(plan)"
+      >
+        {{ isSaving ? 'Please wait...' : 'Choose ' + plan.boostName }}
       </button>
     </div>
   </div>
+
 </div>
