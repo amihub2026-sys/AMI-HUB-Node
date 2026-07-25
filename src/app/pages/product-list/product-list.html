@@ -8,19 +8,19 @@
 
 <div class="category-switcher">
 
-
 <app-categories
-*ngIf="!showSubcategories"
-(categorySelected)="onCategorySelected($event)">
+  *ngIf="!showSubcategories"
+  categoryType="product"
+  (categorySelected)="onCategorySelected($event)">
 </app-categories>
 
-
 <app-subcategories
-*ngIf="showSubcategories"
-[selectedCategory]="selectedCategory"
-(back)="showSubcategories=false">
+  *ngIf="showSubcategories"
+  categoryType="product"
+  [selectedCategory]="selectedCategory"
+  (subcategorySelected)="onSubcategorySelected($event)"
+  (back)="onSubcategoryBack()">
 </app-subcategories>
-
 
 </div>
 </div>
@@ -77,7 +77,7 @@
 
 
     <!-- SUB CATEGORY BAR -->
-   <div
+   <!-- <div
       class="subcategory-bar"
       *ngIf="subcategories().length > 0">
 
@@ -121,7 +121,7 @@
 
     </div>
 
-
+ -->
 
 
 
@@ -137,7 +137,10 @@
 
       <div
         class="featured-card result-card"
-        *ngFor="let item of filteredResults"
+        *ngFor="
+  let item of displayedPosts();
+  trackBy: trackByPostId
+"
         (click)="openDetails(item)">
 
         <!-- IMAGE -->
