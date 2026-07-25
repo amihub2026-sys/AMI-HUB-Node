@@ -534,12 +534,7 @@ openDetails(item: ProductCardItem): void {
           lon: parsed?.lon != null ? Number(parsed.lon) : null,
         };
 
-        this.locationText =
-          parsed?.name ||
-          parsed?.address ||
-          parsed?.place_name ||
-          parsed?.city ||
-          '';
+ this.locationText = '';
       } catch (error) {
         console.error('Failed to parse selected location:', error);
         this.selectedLocation = null;
@@ -962,14 +957,9 @@ const selectedCategory =
       localStorage.setItem('selectedRadiusKm', String(this.selectedRadiusKm));
     }
 
-    let data = [...this.posts()];
-    if (this.currentUserId()) {
+let data = [...this.posts()];
 
-  data = data.filter((post) =>
-    String(post?.userid || '') !== String(this.currentUserId())
-  );
 
-}
 
     const search = this.searchText.trim().toLowerCase();
     const locationSearch = this.locationText.trim().toLowerCase();
@@ -1069,7 +1059,7 @@ const locationHaystack = [
           !isNaN(postLat) &&
           !isNaN(postLon);
 
-        if (!hasPostCoords) return false;
+        if (!hasPostCoords) return true;
 
         const distanceKm = this.calculateDistanceKm(
           Number(this.selectedLocation.lat),
@@ -1209,7 +1199,10 @@ if (this.sortBy === 'Newest') {
   );
 }
 
-    this.displayedPosts.set(data);
+  
+
+this.displayedPosts.set(data);
+this.cdr.detectChanges();
   }
 
   resetFilters(): void {
