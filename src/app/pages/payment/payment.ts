@@ -517,56 +517,7 @@ if (this.isValidFile(block.image)) {
 
     return result;
   }
-private async saveUserSubscription(paymentPayload:any){
 
-  const expiryDate = new Date();
-
-  expiryDate.setDate(
-    expiryDate.getDate() +
-    Number(
-  this.planData?.durationDays ||
-  this.planData?.duration_days ||
-  30
-)
-  );
-
-
-  const payload = {
-
-    planId:
-      this.getSelectedPlanId(),
-
-    remainingPosts:
-      Number(this.planData?.total_ads || 1),
-
-    remainingAds:
-      Number(this.planData?.total_ads || 1),
-
-    expiryDate:
-      expiryDate.toISOString()
-
-  };
-
-
-console.log(
- "SUBSCRIPTION PAYLOAD",
- payload
-);
-
-console.log(
- "PLAN DATA",
- this.planData
-);
-
-
-  await this.api
-  .post(
-    '/subscriptions/create',
-    payload
-  )
-  .toPromise();
-
-}
   private async saveBoostEntry(
   paymentPayload: {
     razorpay_payment_id?: string;
@@ -783,9 +734,7 @@ await this.api
 )
 .toPromise();
 
-      if (this.isSubscriptionPlanFlow()) {
-        await this.saveUserSubscription(paymentPayload);
-      }
+
     } catch (error: any) {
       console.error('Payment/save error:', error);
 
@@ -991,11 +940,12 @@ if (!accessToken) {
         invokeOptions.headers.Authorization = `Bearer ${accessToken}`;
       }
 
-      const data:any = await this.api.post(
-'/payment/create-order',
-{
- amount:this.amount
-}
+const data: any = await this.api.post(
+  '/payment/create-order',
+  {
+    postId: this.postData._id,
+    planId: this.getSelectedPlanId()
+  }
 ).toPromise();
 
 if (!data?.order?.id) {

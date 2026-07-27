@@ -1,13 +1,13 @@
 import { Component, Input, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { SupabaseService } from '../../../../../services/supabase.service';
+import { ApiService } from '../../../../../services/api.service';
 
 interface AdminUserBoostPlanItem {
   boost_purchase_id: string;
- userid: number | null;
+ userid: string | null;
   auth_user_id: string | null;
-post_id: number | null;
+post_id: string | null;
   ad_type: string | null;
   boost_plan_id: string;
   boost_name: string | null;
@@ -41,18 +41,16 @@ export class AdminUserBoostPlansComponent implements OnInit {
   allUserBoostPlans: AdminUserBoostPlanItem[] = [];
   loading = false;
 
-  constructor(
-    private supabaseService: SupabaseService,
-    private cdr: ChangeDetectorRef
-  ) {}
+constructor(
+  private api: ApiService,
+  private cdr: ChangeDetectorRef
+) {}
 
   ngOnInit(): void {
     this.fetchUserBoostPlans();
   }
 
-  get supabase() {
-    return this.supabaseService.supabase;
-  }
+
 
   get filteredUserBoostPlans(): AdminUserBoostPlanItem[] {
     const q = this.searchQuery.trim().toLowerCase();
@@ -79,50 +77,80 @@ export class AdminUserBoostPlansComponent implements OnInit {
     return this.filteredUserBoostPlans.slice(start, start + this.itemsPerPage);
   }
 
-  async fetchUserBoostPlans(): Promise<void> {
-    this.loading = true;
-    this.cdr.detectChanges();
+fetchUserBoostPlans(): void {
+  this.loading = true;
 
-    const { data, error } = await this.supabase
-      .from('user_boost_purchases')
-      .select('*')
-      .order('createdon', { ascending: false });
+  this.api.get<any>('/boost-plans/user-purchases').subscribe({
+    next: (res: any) => {
+      console.log('BOOST PURCHASE RESPONSE:', res);
 
-   if (error) {
-  console.error('Supabase fetch error:', error);
-  alert(JSON.stringify(error));
-  this.loading = false;
-  this.cdr.detectChanges();
-  return;
+      const data = res?.data || [];
+
+this.allUserBoostPlans = data.map((item: any) => ({
+  boost_purchase_id: String(item._id || ''),
+
+  userid: item.userId?._id
+    ? String(item.userId._id)
+    : null,
+
+  auth_user_id: item.userId?._id
+    ? String(item.userId._id)
+    : null,
+
+  post_id: item.postId?._id
+    ? String(item.postId._id)
+    : null,
+
+  ad_type: item.postId?.listingType || null,
+
+  boost_plan_id: item.boostPlanId?._id
+    ? String(item.boostPlanId._id)
+    : '',
+
+  boost_name: item.boostPlanId?.boostName || null,
+
+  amount: Number(item.amount || 0),
+
+  paymentstatus: item.paymentStatus || null,
+
+  razorpay_payment_id: item.razorpayPaymentId || null,
+
+  razorpay_order_id: item.razorpayOrderId || null,
+
+  startdate: item.startDate || null,
+
+  enddate: item.endDate || null,
+
+  isactive: Boolean(item.isActive),
+
+  createdon: item.createdAt || null,
+
+  startLabel: this.formatDate(item.startDate),
+
+  endLabel: this.formatDate(item.endDate),
+
+  createdLabel: this.formatDate(item.createdAt),
+
+  statusLabel: this.getStatusLabel(
+    Boolean(item.isActive),
+    item.endDate || null
+  )
+}));
+
+      this.loading = false;
+      this.currentPage = 1;
+      this.cdr.detectChanges();
+    },
+
+    error: (err) => {
+      console.error('BOOST PURCHASE LOAD ERROR:', err);
+
+      this.allUserBoostPlans = [];
+      this.loading = false;
+      this.cdr.detectChanges();
+    }
+  });
 }
-
-    this.allUserBoostPlans = (data || []).map((item: any) => ({
-      boost_purchase_id: item.boost_purchase_id,
-      userid: item.userid ?? null,
-      auth_user_id: item.auth_user_id ?? null,
-      post_id: item.post_id ?? null,
-      ad_type: item.ad_type ?? null,
-      boost_plan_id: item.boost_plan_id ?? '',
-      boost_name: item.boost_name ?? null,
-      amount: Number(item.amount ?? 0),
-      paymentstatus: item.paymentstatus ?? null,
-      razorpay_payment_id: item.razorpay_payment_id ?? null,
-      razorpay_order_id: item.razorpay_order_id ?? null,
-      startdate: item.startdate ?? null,
-      enddate: item.enddate ?? null,
-      isactive: !!item.isactive,
-      createdon: item.createdon ?? null,
-      startLabel: this.formatDate(item.startdate),
-      endLabel: this.formatDate(item.enddate),
-      createdLabel: this.formatDate(item.createdon),
-      statusLabel: this.getStatusLabel(item.isactive, item.enddate),
-    }));
-
-    this.loading = false;
-
-
-    this.cdr.detectChanges();
-  }
 
   goToPage(page: number): void {
     if (page < 1 || page > this.totalPages) return;
