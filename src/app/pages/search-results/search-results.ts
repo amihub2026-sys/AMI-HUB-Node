@@ -101,23 +101,10 @@ closeProfileOutside(): void {
 
 }
 
-private async isLoggedIn(): Promise<boolean>{
+private async isLoggedIn(): Promise<boolean> {
+  const token = localStorage.getItem('token');
 
-  try{
-
-    const user =
-    await this.supabaseService.getCurrentUser();
-
-
-    return !!user;
-
-
-  }catch(error){
-
-    return false;
-
-  }
-
+  return !!token;
 }
 
 private redirectToLogin(page:string):void{
@@ -241,24 +228,17 @@ goToNotifications():void{
 
 }
 
-goToChatFromDropdown():void{
+goToChatFromDropdown(): void {
+  this.showProfileMenu = false;
 
+  this.isLoggedIn().then((loggedIn) => {
+    if (!loggedIn) {
+      this.redirectToLogin('chats');
+      return;
+    }
 
- this.showProfileMenu=false;
-
-
- if(!this.isLoggedInUser){
-
-   this.router.navigate(['/login']);
-
-   return;
-
- }
-
-
- this.router.navigate(['/chat']);
-
-
+    this.router.navigate(['/chats']);
+  });
 }
 goToMyPosts(): void {
 
@@ -302,8 +282,10 @@ async logoutFromDropdown():Promise<void>{
 }
 
 
-  ngOnInit() {
-    this.route.queryParams.subscribe(async (params) => {
+ngOnInit() {
+  this.isLoggedInUser = !!localStorage.getItem('token');
+
+  this.route.queryParams.subscribe(async (params) => {
       this.searchText = (params['q'] || '').trim();
 
       const incomingType = String(params['type'] || this.selectedType)
