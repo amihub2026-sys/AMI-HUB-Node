@@ -365,12 +365,14 @@ goToChatFromDropdown(): void {
   this.showProfileMenu = false;
   this.closeMenu();
 
-  if (!this.isLoggedInUser) {
-    this.router.navigate(['/login']);
-    return;
-  }
+  this.isLoggedIn().then((loggedIn) => {
+    if (!loggedIn) {
+      this.redirectToLogin('chats');
+      return;
+    }
 
-  this.router.navigate(['/chat']);
+    this.router.navigate(['/chats']);
+  });
 }
   goToProfile(): void {
     this.isLoggedIn().then((loggedIn) => {
