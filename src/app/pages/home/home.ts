@@ -400,37 +400,56 @@ async loadNewProducts(): Promise<void> {
 
 }
 async applyFavoriteStatus(): Promise<void> {
+  const token = this.api.getToken();
 
-  const userId = this.currentUserId();
-
-  if (!userId) {
+  if (!token) {
     return;
   }
 
-  this.featuredBusinesses.update((items: any[]) =>
-    items.map((item: any) => ({
-      ...item,
-      isFavourite: false
-    }))
-  );
+  try {
+    const response: any = await this.api
+      .get('/favorites')
+      .toPromise();
 
-  this.trendingPosts.update((items: any[]) =>
-    items.map((item: any) => ({
-      ...item,
-      isFavourite: false
-    }))
-  );
+    const favorites = response?.data || [];
 
-  this.latestProducts.update((items: any[]) =>
-    items.map((item: any) => ({
-      ...item,
-      isFavourite: false
-    }))
-  );
+    const favoritePostIds = new Set(
+      favorites
+        .map((favorite: any) =>
+          String(
+            favorite?.postId?._id ||
+            favorite?.postId ||
+            ''
+          )
+        )
+        .filter((id: string) => id)
+    );
 
-  this.cdr.detectChanges();
+    const updateStatus = (items: any[]) =>
+      items.map((item: any) => {
+        const postId = String(
+          item?.postid ||
+          item?._id ||
+          item?.id ||
+          ''
+        );
+
+        return {
+          ...item,
+          isFavourite: favoritePostIds.has(postId)
+        };
+      });
+
+    this.featuredBusinesses.update(updateStatus);
+    this.trendingPosts.update(updateStatus);
+    this.latestProducts.update(updateStatus);
+
+    this.cdr.detectChanges();
+
+  } catch (error) {
+    console.error('Favorite status loading error:', error);
+  }
 }
-
   getCategoryImage(category: any): string {
     return (
       category?.iconurl ||
@@ -547,20 +566,49 @@ async applyFavoriteStatus(): Promise<void> {
     if (!post?.postid) return;
     this.router.navigate(['/details', post.postid]);
   }
-async toggleFavourite(item: any, event: Event): Promise<void> {
-
+toggleFavourite(item: any, event: Event): void {
   event.stopPropagation();
 
-  const userId = this.currentUserId();
+  const token = this.api.getToken();
 
-  if (!userId) {
+  if (!token) {
     this.router.navigate(['/login']);
     return;
   }
 
-  item.isFavourite = !item.isFavourite;
+  const postId = String(
+    item?.postid ||
+    item?._id ||
+    item?.id ||
+    ''
+  );
 
-  this.cdr.detectChanges();
+  if (!postId) {
+    console.error('Post id not available:', item);
+    return;
+  }
+
+  this.api.post<any>(
+    `/favorites/${postId}`,
+    {}
+  ).subscribe({
+    next: (res: any) => {
+      item.isFavourite =
+        res?.isFavorite ??
+        res?.data?.isFavorite ??
+        !item.isFavourite;
+
+      this.cdr.detectChanges();
+    },
+
+    error: (error: any) => {
+      console.error('Favorite toggle error:', error);
+
+      if (error?.status === 401) {
+        this.router.navigate(['/login']);
+      }
+    }
+  });
 }
   slideCategories(direction: 'left' | 'right'): void {
   if (!this.categorySlider) {
