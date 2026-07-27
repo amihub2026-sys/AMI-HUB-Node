@@ -1,76 +1,123 @@
-import { Component, Input, OnInit, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  Input,
+  OnInit,
+  ChangeDetectorRef
+} from '@angular/core';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { SupabaseService } from '../../../../../services/supabase.service';
+import { firstValueFrom } from 'rxjs';
 
-interface AdminUserSubscriptionItem {
-  usersubscriptionid: number;
-  userid: number | null;
-  subscriptionplanid: number | null;
-  startdate: string | null;
-  enddate: string | null;
-  amountpaid: number;
-  paymentstatus: string;
-  isactive: boolean;
-  createdon: string | null;
-  total_ads: number;
-  remaining_ads: number;
-  plan_uuid: string | null;
-  razorpay_payment_id: string | null;
-  razorpay_order_id: string | null;
-  razorpay_signature: string | null;
-  auth_user_id: string | null;
+import { ApiService } from '../../../../../services/api.service';
 
-  startLabel: string;
-  endLabel: string;
-  createdLabel: string;
-  statusLabel: 'Active' | 'Expired' | 'Inactive';
+interface AdminUserOption {
+  _id: string;
+  fullName: string;
+  username: string;
+  mobile: string;
+  email: string;
+  role: string;
+  isActive: boolean;
 }
 
-type UserSubscriptionStatusFilter = 'all' | 'active' | 'expired' | 'inactive';
+interface AdminPlanOption {
+  _id: string;
+  planId: string;
+  planName: string;
+  price: number;
+  validity: number;
+  postLimit: number;
+  adLimit: number;
+  remaining: number;
+  videoEnabled: boolean;
+  isActive: boolean;
+}
+
+interface AdminUserSubscriptionItem {
+  _id: string;
+
+  userId: AdminUserOption | null;
+  planId: AdminPlanOption | null;
+
+  startDate: string | null;
+  expiryDate: string | null;
+
+  remainingPosts: number;
+  remainingAds: number;
+
+  status: 'active' | 'inactive' | 'expired';
+
+  createdAt: string | null;
+  updatedAt: string | null;
+
+  userName: string;
+  userMobile: string;
+  userEmail: string;
+
+  planName: string;
+  planCode: string;
+  planPrice: number;
+
+  startLabel: string;
+  expiryLabel: string;
+  createdLabel: string;
+
+  statusLabel: 'Active' | 'Inactive' | 'Expired';
+}
+
+type UserSubscriptionStatusFilter =
+  | 'all'
+  | 'active'
+  | 'inactive'
+  | 'expired';
 
 @Component({
   selector: 'app-admin-user-subscriptions',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule
+  ],
   templateUrl: './admin-user-subscriptions.html',
-  styleUrls: ['./admin-user-subscriptions.css'],
+  styleUrls: ['./admin-user-subscriptions.css']
 })
 export class AdminUserSubscriptionsComponent implements OnInit {
+
   @Input() searchQuery = '';
+
   currentPage = 1;
-itemsPerPage = 5;
+  itemsPerPage = 5;
 
   userSubscriptionStatusFilter: UserSubscriptionStatusFilter = 'all';
 
   allUserSubscriptions: AdminUserSubscriptionItem[] = [];
+  allUsers: AdminUserOption[] = [];
+  allPlans: AdminPlanOption[] = [];
+
   loading = false;
+  dropdownLoading = false;
   saving = false;
-  deletingId: number | null = null;
+
+  deletingId: string | null = null;
+  statusUpdatingId: string | null = null;
 
   showForm = false;
   isEditMode = false;
-  editingId: number | null = null;
+  editingId: string | null = null;
 
   formModel = {
-    userid: null as number | null,
-    subscriptionplanid: null as number | null,
-    startdate: '',
-    enddate: '',
-    amountpaid: 0,
-    paymentstatus: 'paid',
-    isactive: true,
-    total_ads: 1,
-    remaining_ads: 1,
-    plan_uuid: '',
-    razorpay_payment_id: '',
-    razorpay_order_id: '',
-    razorpay_signature: '',
-    auth_user_id: '',
+    userId: '',
+    planId: '',
+    startDate: '',
+    expiryDate: '',
+    remainingPosts: 0,
+    remainingAds: 0,
+    status: 'active' as 'active' | 'inactive' | 'expired'
   };
 
   constructor(
-    private supabaseService: SupabaseService,
+    private api: ApiService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -78,48 +125,41 @@ itemsPerPage = 5;
     this.fetchUserSubscriptions();
   }
 
-  get supabase() {
-    return this.supabaseService.supabase;
-  }
   get totalPages(): number {
-  return Math.ceil(this.filteredUserSubscriptions.length / this.itemsPerPage) || 1;
-}
+    return (
+      Math.ceil(
+        this.filteredUserSubscriptions.length / this.itemsPerPage
+      ) || 1
+    );
+  }
 
-get paginatedUserSubscriptions(): AdminUserSubscriptionItem[] {
-  const start = (this.currentPage - 1) * this.itemsPerPage;
+  get paginatedUserSubscriptions(): AdminUserSubscriptionItem[] {
+    const start = (this.currentPage - 1) * this.itemsPerPage;
 
-  return this.filteredUserSubscriptions.slice(
-    start,
-    start + this.itemsPerPage
-  );
-}
+    return this.filteredUserSubscriptions.slice(
+      start,
+      start + this.itemsPerPage
+    );
+  }
 
-goToPage(page: number): void {
-  if (page < 1 || page > this.totalPages) return;
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages) {
+      return;
+    }
 
-  this.currentPage = page;
-}
-
-  private getStatusLabel(item: {
-    isactive: boolean;
-    enddate: string | null;
-  }): 'Active' | 'Expired' | 'Inactive' {
-    if (!item.isactive) return 'Inactive';
-    if (!item.enddate) return 'Inactive';
-
-    const end = new Date(item.enddate);
-    const now = new Date();
-
-    if (isNaN(end.getTime())) return 'Inactive';
-
-    return end >= now ? 'Active' : 'Expired';
+    this.currentPage = page;
   }
 
   private formatDate(value: string | null): string {
-    if (!value) return '-';
+    if (!value) {
+      return '-';
+    }
 
     const date = new Date(value);
-    if (isNaN(date.getTime())) return '-';
+
+    if (Number.isNaN(date.getTime())) {
+      return '-';
+    }
 
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -129,51 +169,126 @@ goToPage(page: number): void {
   }
 
   private toDateTimeLocal(value: string | null): string {
-    if (!value) return '';
+    if (!value) {
+      return '';
+    }
 
     const date = new Date(value);
-    if (isNaN(date.getTime())) return '';
 
-    const yyyy = date.getFullYear();
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
-    const dd = String(date.getDate()).padStart(2, '0');
-    const hh = String(date.getHours()).padStart(2, '0');
-    const mi = String(date.getMinutes()).padStart(2, '0');
+    if (Number.isNaN(date.getTime())) {
+      return '';
+    }
 
-    return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
   }
 
-  private mapUserSubscription(item: any): AdminUserSubscriptionItem {
-    const mapped: AdminUserSubscriptionItem = {
-      usersubscriptionid: Number(item.usersubscriptionid ?? 0),
-      userid: item.userid !== null && item.userid !== undefined ? Number(item.userid) : null,
-      subscriptionplanid:
-        item.subscriptionplanid !== null && item.subscriptionplanid !== undefined
-          ? Number(item.subscriptionplanid)
-          : null,
-      startdate: item.startdate ?? null,
-      enddate: item.enddate ?? null,
-      amountpaid: Number(item.amountpaid ?? 0),
-      paymentstatus: item.paymentstatus ?? '',
-      isactive: !!item.isactive,
-      createdon: item.createdon ?? null,
-      total_ads: Number(item.total_ads ?? 0),
-      remaining_ads: Number(item.remaining_ads ?? 0),
-      plan_uuid: item.plan_uuid ?? null,
-      razorpay_payment_id: item.razorpay_payment_id ?? null,
-      razorpay_order_id: item.razorpay_order_id ?? null,
-      razorpay_signature: item.razorpay_signature ?? null,
-      auth_user_id: item.auth_user_id ?? null,
-      startLabel: this.formatDate(item.startdate ?? null),
-      endLabel: this.formatDate(item.enddate ?? null),
-      createdLabel: this.formatDate(item.createdon ?? null),
-      statusLabel: this.getStatusLabel({
-        isactive: !!item.isactive,
-        enddate: item.enddate ?? null,
-      }),
-    };
+  private getStatusLabel(
+    status: string,
+    expiryDate: string | null
+  ): 'Active' | 'Inactive' | 'Expired' {
 
-    return mapped;
+    if (status === 'inactive') {
+      return 'Inactive';
+    }
+
+    if (status === 'expired') {
+      return 'Expired';
+    }
+
+    if (expiryDate) {
+      const expiry = new Date(expiryDate);
+
+      if (
+        !Number.isNaN(expiry.getTime()) &&
+        expiry.getTime() < Date.now()
+      ) {
+        return 'Expired';
+      }
+    }
+
+    return 'Active';
+  }
+
+  private mapUserSubscription(
+    item: any
+  ): AdminUserSubscriptionItem {
+
+    const populatedUser =
+      item.userId &&
+      typeof item.userId === 'object'
+        ? item.userId
+        : null;
+
+    const populatedPlan =
+      item.planId &&
+      typeof item.planId === 'object'
+        ? item.planId
+        : null;
+
+    const status =
+      item.status === 'inactive' ||
+      item.status === 'expired'
+        ? item.status
+        : 'active';
+
+    return {
+      _id: String(item._id || ''),
+
+      userId: populatedUser,
+      planId: populatedPlan,
+
+      startDate: item.startDate || null,
+      expiryDate: item.expiryDate || null,
+
+      remainingPosts: Number(item.remainingPosts || 0),
+      remainingAds: Number(item.remainingAds || 0),
+
+      status,
+
+      createdAt: item.createdAt || null,
+      updatedAt: item.updatedAt || null,
+
+      userName:
+        populatedUser?.fullName ||
+        populatedUser?.username ||
+        'Unknown User',
+
+      userMobile:
+        populatedUser?.mobile || '',
+
+      userEmail:
+        populatedUser?.email || '',
+
+      planName:
+        populatedPlan?.planName || 'Unknown Plan',
+
+      planCode:
+        populatedPlan?.planId || '',
+
+      planPrice:
+        Number(populatedPlan?.price || 0),
+
+      startLabel:
+        this.formatDate(item.startDate || null),
+
+      expiryLabel:
+        this.formatDate(item.expiryDate || null),
+
+      createdLabel:
+        this.formatDate(item.createdAt || null),
+
+      statusLabel:
+        this.getStatusLabel(
+          status,
+          item.expiryDate || null
+        )
+    };
   }
 
   async fetchUserSubscriptions(): Promise<void> {
@@ -181,65 +296,140 @@ goToPage(page: number): void {
     this.cdr.detectChanges();
 
     try {
-      const { data, error } = await this.supabase
-        .from('user_subscriptions')
-        .select('*')
-        .order('usersubscriptionid', { ascending: false });
+      const response: any = await firstValueFrom(
+        this.api.get('/subscriptions')
+      );
 
-      if (error) {
-        console.error('Fetch user subscriptions error:', error);
-        alert(error.message || 'Failed to load user subscriptions.');
-        this.cdr.detectChanges();
-        return;
-      }
+      const rows = Array.isArray(response?.data)
+        ? response.data
+        : [];
 
-      this.allUserSubscriptions = (data || []).map((item: any) =>
+      this.allUserSubscriptions = rows.map((item: any) =>
         this.mapUserSubscription(item)
       );
-      this.cdr.detectChanges();
-    } catch (err) {
-      console.error('Fetch user subscriptions exception:', err);
-      alert('Something went wrong while loading user subscriptions.');
-      this.cdr.detectChanges();
+
+      if (this.currentPage > this.totalPages) {
+        this.currentPage = this.totalPages;
+      }
+    } catch (error: any) {
+      console.error(
+        'LOAD USER SUBSCRIPTIONS ERROR:',
+        error
+      );
+
+      alert(
+        error?.error?.message ||
+        'Failed to load user subscriptions.'
+      );
     } finally {
       this.loading = false;
       this.cdr.detectChanges();
     }
   }
 
-  setUserSubscriptionStatusFilter(filter: UserSubscriptionStatusFilter): void {
+  async loadUsersAndPlans(): Promise<void> {
+    this.dropdownLoading = true;
+    this.cdr.detectChanges();
+
+    try {
+      const [usersResponse, plansResponse]: any[] =
+        await Promise.all([
+          firstValueFrom(
+            this.api.get('/admin/users')
+          ),
+
+          firstValueFrom(
+            this.api.get('/subscription-plans')
+          )
+        ]);
+
+      const usersData =
+        usersResponse?.data?.users ||
+        usersResponse?.users ||
+        usersResponse?.data ||
+        [];
+
+      const plansData =
+        plansResponse?.data || [];
+
+      this.allUsers = (
+        Array.isArray(usersData)
+          ? usersData
+          : []
+      ).map((user: any) => ({
+        _id: String(user._id || ''),
+        fullName: user.fullName || '',
+        username: user.username || '',
+        mobile: user.mobile || '',
+        email: user.email || '',
+        role: user.role || 'user',
+        isActive: user.isActive !== false
+      }));
+
+      this.allPlans = (
+        Array.isArray(plansData)
+          ? plansData
+          : []
+      ).map((plan: any) => ({
+        _id: String(plan._id || ''),
+        planId: plan.planId || '',
+        planName: plan.planName || 'Unnamed Plan',
+        price: Number(plan.price || 0),
+        validity: Number(plan.validity || 30),
+        postLimit: Number(plan.postLimit || 0),
+        adLimit: Number(plan.adLimit || 0),
+        remaining: Number(plan.remaining || 0),
+        videoEnabled: Boolean(plan.videoEnabled),
+        isActive: plan.isActive !== false
+      }));
+    } catch (error: any) {
+      console.error(
+        'LOAD USERS AND PLANS ERROR:',
+        error
+      );
+
+      alert(
+        error?.error?.message ||
+        'Failed to load users or subscription plans.'
+      );
+    } finally {
+      this.dropdownLoading = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  setUserSubscriptionStatusFilter(
+    filter: UserSubscriptionStatusFilter
+  ): void {
     this.userSubscriptionStatusFilter = filter;
+    this.currentPage = 1;
     this.cdr.detectChanges();
   }
 
   get filteredUserSubscriptions(): AdminUserSubscriptionItem[] {
-    const q = this.searchQuery.trim().toLowerCase();
+    const query =
+      this.searchQuery
+        .trim()
+        .toLowerCase();
 
     return this.allUserSubscriptions.filter((item) => {
+
       const matchesSearch =
-        !q ||
-        String(item.usersubscriptionid).toLowerCase().includes(q) ||
-        String(item.userid ?? '').toLowerCase().includes(q) ||
-        String(item.subscriptionplanid ?? '').toLowerCase().includes(q) ||
-        String(item.paymentstatus || '').toLowerCase().includes(q) ||
-        String(item.amountpaid).toLowerCase().includes(q) ||
-        String(item.total_ads).toLowerCase().includes(q) ||
-        String(item.remaining_ads).toLowerCase().includes(q) ||
-        String(item.auth_user_id || '').toLowerCase().includes(q) ||
-        String(item.plan_uuid || '').toLowerCase().includes(q) ||
-        String(item.razorpay_payment_id || '').toLowerCase().includes(q) ||
-        String(item.razorpay_order_id || '').toLowerCase().includes(q);
+        !query ||
+        item._id.toLowerCase().includes(query) ||
+        item.userName.toLowerCase().includes(query) ||
+        item.userMobile.toLowerCase().includes(query) ||
+        item.userEmail.toLowerCase().includes(query) ||
+        item.planName.toLowerCase().includes(query) ||
+        item.planCode.toLowerCase().includes(query) ||
+        item.statusLabel.toLowerCase().includes(query);
 
-      const matchesFilter =
+      const matchesStatus =
         this.userSubscriptionStatusFilter === 'all' ||
-        (this.userSubscriptionStatusFilter === 'active' &&
-          item.statusLabel === 'Active') ||
-        (this.userSubscriptionStatusFilter === 'expired' &&
-          item.statusLabel === 'Expired') ||
-        (this.userSubscriptionStatusFilter === 'inactive' &&
-          item.statusLabel === 'Inactive');
+        item.statusLabel.toLowerCase() ===
+          this.userSubscriptionStatusFilter;
 
-      return matchesSearch && matchesFilter;
+      return matchesSearch && matchesStatus;
     });
   }
 
@@ -249,246 +439,358 @@ goToPage(page: number): void {
 
   get activeUserSubscriptionsCount(): number {
     return this.allUserSubscriptions.filter(
-      (item) => item.statusLabel === 'Active'
+      item => item.statusLabel === 'Active'
     ).length;
   }
 
   get expiredUserSubscriptionsCount(): number {
     return this.allUserSubscriptions.filter(
-      (item) => item.statusLabel === 'Expired'
+      item => item.statusLabel === 'Expired'
     ).length;
   }
 
   get inactiveUserSubscriptionsCount(): number {
     return this.allUserSubscriptions.filter(
-      (item) => item.statusLabel === 'Inactive'
+      item => item.statusLabel === 'Inactive'
     ).length;
   }
 
-  openCreateForm(): void {
+  async openCreateForm(): Promise<void> {
     this.isEditMode = false;
     this.editingId = null;
-    this.showForm = true;
+
     this.resetForm();
+
+    this.showForm = true;
     this.cdr.detectChanges();
+
+    await this.loadUsersAndPlans();
   }
 
-  openEditForm(item: AdminUserSubscriptionItem): void {
+  async openEditForm(
+    item: AdminUserSubscriptionItem
+  ): Promise<void> {
+
     this.isEditMode = true;
-    this.editingId = item.usersubscriptionid;
-    this.showForm = true;
+    this.editingId = item._id;
 
     this.formModel = {
-      userid: item.userid,
-      subscriptionplanid: item.subscriptionplanid,
-      startdate: this.toDateTimeLocal(item.startdate),
-      enddate: this.toDateTimeLocal(item.enddate),
-      amountpaid: Number(item.amountpaid || 0),
-      paymentstatus: item.paymentstatus || 'paid',
-      isactive: !!item.isactive,
-      total_ads: Number(item.total_ads || 0),
-      remaining_ads: Number(item.remaining_ads || 0),
-      plan_uuid: item.plan_uuid || '',
-      razorpay_payment_id: item.razorpay_payment_id || '',
-      razorpay_order_id: item.razorpay_order_id || '',
-      razorpay_signature: item.razorpay_signature || '',
-      auth_user_id: item.auth_user_id || '',
+      userId:
+        item.userId?._id || '',
+
+      planId:
+        item.planId?._id || '',
+
+      startDate:
+        this.toDateTimeLocal(item.startDate),
+
+      expiryDate:
+        this.toDateTimeLocal(item.expiryDate),
+
+      remainingPosts:
+        Number(item.remainingPosts || 0),
+
+      remainingAds:
+        Number(item.remainingAds || 0),
+
+      status:
+        item.status
     };
 
+    this.showForm = true;
     this.cdr.detectChanges();
+
+    await this.loadUsersAndPlans();
   }
 
   closeForm(): void {
+    if (this.saving) {
+      return;
+    }
+
     this.showForm = false;
     this.isEditMode = false;
     this.editingId = null;
+
     this.resetForm();
     this.cdr.detectChanges();
   }
 
   resetForm(): void {
     this.formModel = {
-      userid: null,
-      subscriptionplanid: null,
-      startdate: '',
-      enddate: '',
-      amountpaid: 0,
-      paymentstatus: 'paid',
-      isactive: true,
-      total_ads: 1,
-      remaining_ads: 1,
-      plan_uuid: '',
-      razorpay_payment_id: '',
-      razorpay_order_id: '',
-      razorpay_signature: '',
-      auth_user_id: '',
+      userId: '',
+      planId: '',
+      startDate: '',
+      expiryDate: '',
+      remainingPosts: 0,
+      remainingAds: 0,
+      status: 'active'
     };
+  }
+
+  onPlanSelected(planMongoId: string): void {
+    const selectedPlan = this.allPlans.find(
+      plan => plan._id === planMongoId
+    );
+
+    if (!selectedPlan) {
+      return;
+    }
+
+    this.formModel.remainingPosts =
+      selectedPlan.postLimit;
+
+    this.formModel.remainingAds =
+      selectedPlan.adLimit;
+
+    if (!this.formModel.startDate) {
+      const now = new Date();
+
+      this.formModel.startDate =
+        this.toDateTimeLocal(now.toISOString());
+    }
+
+    const startDate =
+      new Date(this.formModel.startDate);
+
+    if (!Number.isNaN(startDate.getTime())) {
+      const expiryDate =
+        new Date(startDate);
+
+      expiryDate.setDate(
+        expiryDate.getDate() +
+        selectedPlan.validity
+      );
+
+      this.formModel.expiryDate =
+        this.toDateTimeLocal(
+          expiryDate.toISOString()
+        );
+    }
+
     this.cdr.detectChanges();
   }
 
   async saveUserSubscription(): Promise<void> {
-    if (!this.formModel.userid) {
-      alert('User ID is required.');
-      this.cdr.detectChanges();
+    if (!this.formModel.userId) {
+      alert('Please select a user.');
       return;
     }
 
-    if (!this.formModel.subscriptionplanid) {
-      alert('Subscription Plan ID is required.');
-      this.cdr.detectChanges();
+    if (!this.formModel.planId) {
+      alert('Please select a subscription plan.');
       return;
     }
 
-    if (!this.formModel.startdate) {
+    if (!this.formModel.startDate) {
       alert('Start date is required.');
-      this.cdr.detectChanges();
       return;
     }
 
-    if (!this.formModel.enddate) {
-      alert('End date is required.');
-      this.cdr.detectChanges();
+    if (!this.formModel.expiryDate) {
+      alert('Expiry date is required.');
       return;
     }
+
+    const startDate =
+      new Date(this.formModel.startDate);
+
+    const expiryDate =
+      new Date(this.formModel.expiryDate);
+
+    if (
+      Number.isNaN(startDate.getTime()) ||
+      Number.isNaN(expiryDate.getTime())
+    ) {
+      alert('Please enter valid dates.');
+      return;
+    }
+
+    if (expiryDate <= startDate) {
+      alert('Expiry date must be after start date.');
+      return;
+    }
+
+    const payload = {
+      userId: this.formModel.userId,
+      planId: this.formModel.planId,
+      startDate: startDate.toISOString(),
+      expiryDate: expiryDate.toISOString(),
+      remainingPosts: Number(
+        this.formModel.remainingPosts || 0
+      ),
+      remainingAds: Number(
+        this.formModel.remainingAds || 0
+      ),
+      status: this.formModel.status
+    };
 
     this.saving = true;
     this.cdr.detectChanges();
 
-    const payload = {
-      userid: this.formModel.userid,
-      subscriptionplanid: this.formModel.subscriptionplanid,
-      startdate: new Date(this.formModel.startdate).toISOString(),
-      enddate: new Date(this.formModel.enddate).toISOString(),
-      amountpaid: Number(this.formModel.amountpaid || 0),
-      paymentstatus: this.formModel.paymentstatus.trim(),
-      isactive: !!this.formModel.isactive,
-      total_ads: Number(this.formModel.total_ads || 0),
-      remaining_ads: Number(this.formModel.remaining_ads || 0),
-      plan_uuid: this.formModel.plan_uuid.trim() || null,
-      razorpay_payment_id: this.formModel.razorpay_payment_id.trim() || null,
-      razorpay_order_id: this.formModel.razorpay_order_id.trim() || null,
-      razorpay_signature: this.formModel.razorpay_signature.trim() || null,
-      auth_user_id: this.formModel.auth_user_id.trim() || null,
-    };
-
     try {
-      if (this.isEditMode && this.editingId) {
-        const { error } = await this.supabase
-          .from('user_subscriptions')
-          .update(payload)
-          .eq('usersubscriptionid', this.editingId);
+      if (
+        this.isEditMode &&
+        this.editingId
+      ) {
+        await firstValueFrom(
+          this.api.put(
+            `/subscriptions/${this.editingId}`,
+            payload
+          )
+        );
 
-        if (error) {
-          console.error('Update user subscription error:', error);
-          alert(error.message || 'Failed to update user subscription.');
-          this.cdr.detectChanges();
-          return;
-        }
-
-        alert('User subscription updated successfully.');
+        alert(
+          'User subscription updated successfully.'
+        );
       } else {
-        const insertPayload = {
-          ...payload,
-          createdon: new Date().toISOString(),
-        };
+        await firstValueFrom(
+          this.api.post(
+            '/subscriptions/admin-create',
+            payload
+          )
+        );
 
-        const { error } = await this.supabase
-          .from('user_subscriptions')
-          .insert([insertPayload]);
-
-        if (error) {
-          console.error('Create user subscription error:', error);
-          alert(error.message || 'Failed to create user subscription.');
-          this.cdr.detectChanges();
-          return;
-        }
-
-        alert('User subscription created successfully.');
+        alert(
+          'User subscription created successfully.'
+        );
       }
 
-      this.closeForm();
+      this.showForm = false;
+      this.isEditMode = false;
+      this.editingId = null;
+
+      this.resetForm();
+
       await this.fetchUserSubscriptions();
-    } catch (err) {
-      console.error('Save user subscription exception:', err);
-      alert('Something went wrong while saving user subscription.');
-      this.cdr.detectChanges();
+    } catch (error: any) {
+      console.error(
+        'SAVE USER SUBSCRIPTION ERROR:',
+        error
+      );
+
+      alert(
+        error?.error?.message ||
+        'Failed to save user subscription.'
+      );
     } finally {
       this.saving = false;
       this.cdr.detectChanges();
     }
   }
 
-  async toggleUserSubscriptionStatus(item: AdminUserSubscriptionItem): Promise<void> {
-    const nextValue = !item.isactive;
+  async toggleUserSubscriptionStatus(
+    item: AdminUserSubscriptionItem
+  ): Promise<void> {
+
+    if (this.statusUpdatingId) {
+      return;
+    }
+
+    const action =
+      item.status === 'active'
+        ? 'deactivate'
+        : 'activate';
+
+    const confirmed = confirm(
+      `Are you sure you want to ${action} this subscription?`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.statusUpdatingId = item._id;
+    this.cdr.detectChanges();
 
     try {
-      const { error } = await this.supabase
-        .from('user_subscriptions')
-        .update({
-          isactive: nextValue,
-        })
-        .eq('usersubscriptionid', item.usersubscriptionid);
+      await firstValueFrom(
+        this.api.patch(
+          `/subscriptions/${item._id}/status`,
+          {}
+        )
+      );
 
-      if (error) {
-        console.error('Toggle user subscription status error:', error);
-        alert(error.message || 'Failed to update status.');
-        this.cdr.detectChanges();
-        return;
-      }
+      await this.fetchUserSubscriptions();
+    } catch (error: any) {
+      console.error(
+        'UPDATE SUBSCRIPTION STATUS ERROR:',
+        error
+      );
 
-      item.isactive = nextValue;
-      item.statusLabel = this.getStatusLabel({
-        isactive: item.isactive,
-        enddate: item.enddate,
-      });
-      this.cdr.detectChanges();
-    } catch (err) {
-      console.error('Toggle user subscription status exception:', err);
-      alert('Something went wrong while updating status.');
+      alert(
+        error?.error?.message ||
+        'Failed to update subscription status.'
+      );
+    } finally {
+      this.statusUpdatingId = null;
       this.cdr.detectChanges();
     }
   }
 
-  async deleteUserSubscription(item: AdminUserSubscriptionItem): Promise<void> {
+  async deleteUserSubscription(
+    item: AdminUserSubscriptionItem
+  ): Promise<void> {
+
     const confirmed = confirm(
-      `Are you sure you want to delete subscription #${item.usersubscriptionid}?`
+      `Are you sure you want to delete the subscription for "${item.userName}"?`
     );
 
-    if (!confirmed) return;
+    if (!confirmed) {
+      return;
+    }
 
-    this.deletingId = item.usersubscriptionid;
+    this.deletingId = item._id;
     this.cdr.detectChanges();
 
     try {
-      const { error } = await this.supabase
-        .from('user_subscriptions')
-        .delete()
-        .eq('usersubscriptionid', item.usersubscriptionid);
-
-      if (error) {
-        console.error('Delete user subscription error:', error);
-        alert(error.message || 'Failed to delete user subscription.');
-        this.cdr.detectChanges();
-        return;
-      }
-
-      this.allUserSubscriptions = this.allUserSubscriptions.filter(
-        (row) => row.usersubscriptionid !== item.usersubscriptionid
+      await firstValueFrom(
+        this.api.delete(
+          `/subscriptions/${item._id}`
+        )
       );
 
-      alert('User subscription deleted successfully.');
-      this.cdr.detectChanges();
-    } catch (err) {
-      console.error('Delete user subscription exception:', err);
-      alert('Something went wrong while deleting user subscription.');
-      this.cdr.detectChanges();
+      this.allUserSubscriptions =
+        this.allUserSubscriptions.filter(
+          subscription =>
+            subscription._id !== item._id
+        );
+
+      if (this.currentPage > this.totalPages) {
+        this.currentPage = this.totalPages;
+      }
+
+      alert(
+        'User subscription deleted successfully.'
+      );
+    } catch (error: any) {
+      console.error(
+        'DELETE USER SUBSCRIPTION ERROR:',
+        error
+      );
+
+      alert(
+        error?.error?.message ||
+        'Failed to delete user subscription.'
+      );
     } finally {
       this.deletingId = null;
       this.cdr.detectChanges();
     }
   }
 
-  trackByUserSubscription(index: number, item: AdminUserSubscriptionItem): number {
-    return item.usersubscriptionid;
+  getShortId(id: string): string {
+    if (!id) {
+      return '-';
+    }
+
+    return id.slice(-6).toUpperCase();
+  }
+
+  trackByUserSubscription(
+    index: number,
+    item: AdminUserSubscriptionItem
+  ): string {
+    return item._id;
   }
 }

@@ -1,32 +1,45 @@
 <div class="user-subscriptions-page">
+
+  <!-- SUMMARY CARDS -->
   <div class="summary-grid">
     <div class="mini-stat-card">
       <div class="mini-stat-label">Total Subscriptions</div>
-      <div class="mini-stat-value">{{ totalUserSubscriptionsCount }}</div>
+      <div class="mini-stat-value">
+        {{ totalUserSubscriptionsCount }}
+      </div>
     </div>
 
     <div class="mini-stat-card">
       <div class="mini-stat-label">Active</div>
-      <div class="mini-stat-value">{{ activeUserSubscriptionsCount }}</div>
+      <div class="mini-stat-value">
+        {{ activeUserSubscriptionsCount }}
+      </div>
     </div>
 
     <div class="mini-stat-card">
       <div class="mini-stat-label">Expired</div>
-      <div class="mini-stat-value">{{ expiredUserSubscriptionsCount }}</div>
+      <div class="mini-stat-value">
+        {{ expiredUserSubscriptionsCount }}
+      </div>
     </div>
 
     <div class="mini-stat-card">
       <div class="mini-stat-label">Inactive</div>
-      <div class="mini-stat-value">{{ inactiveUserSubscriptionsCount }}</div>
+      <div class="mini-stat-value">
+        {{ inactiveUserSubscriptionsCount }}
+      </div>
     </div>
   </div>
 
+  <!-- MAIN SECTION -->
   <div class="section-card">
+
     <div class="section-head">
       <div class="section-head-left">
         <h2>User Subscriptions</h2>
+
         <p class="section-desc">
-          Manage user subscription records, validity, ads, and payment details.
+          Manage user plans, validity, remaining posts and remaining ads.
         </p>
       </div>
 
@@ -35,14 +48,20 @@
           Showing {{ filteredUserSubscriptions.length }} subscription(s)
         </div>
 
-        <button type="button" class="primary-btn" (click)="openCreateForm()">
+        <button
+          type="button"
+          class="primary-btn"
+          (click)="openCreateForm()"
+        >
           + Add User Subscription
         </button>
       </div>
     </div>
 
+    <!-- FILTERS -->
     <div class="toolbar">
       <div class="filter-chips">
+
         <button
           type="button"
           class="filter-chip"
@@ -78,42 +97,87 @@
         >
           Inactive
         </button>
+
       </div>
     </div>
 
+    <!-- LOADING -->
     <div class="loading-box" *ngIf="loading">
       Loading user subscriptions...
     </div>
 
+    <!-- TABLE -->
     <div class="table-wrap" *ngIf="!loading">
       <table class="user-subscriptions-table">
+
         <thead>
           <tr>
-            <th>ID</th>
-            <th>User ID</th>
-            <th>Plan ID</th>
-            <th>Start</th>
-            <th>End</th>
-            <th>Amount</th>
-            <th>Payment</th>
+            <th>Subscription ID</th>
+            <th>User</th>
+            <th>Mobile</th>
+            <th>Plan</th>
+            <th>Price</th>
+            <th>Start Date</th>
+            <th>Expiry Date</th>
+            <th>Posts Left</th>
+            <th>Ads Left</th>
             <th>Status</th>
-            <th>Total Ads</th>
-            <th>Remaining</th>
             <th>Created</th>
             <th class="actions-header">Actions</th>
           </tr>
         </thead>
 
         <tbody>
+
           <tr
-*ngFor="let item of paginatedUserSubscriptions; trackBy: trackByUserSubscription"          >
-            <td>#{{ item.usersubscriptionid }}</td>
-            <td>{{ item.userid ?? '-' }}</td>
-            <td>{{ item.subscriptionplanid ?? '-' }}</td>
-            <td>{{ item.startLabel }}</td>
-            <td>{{ item.endLabel }}</td>
-            <td>₹{{ item.amountpaid }}</td>
-            <td>{{ item.paymentstatus || '-' }}</td>
+            *ngFor="
+              let item of paginatedUserSubscriptions;
+              trackBy: trackByUserSubscription
+            "
+          >
+            <td title="{{ item._id }}">
+              #{{ getShortId(item._id) }}
+            </td>
+
+            <td>
+              <strong>{{ item.userName }}</strong>
+
+              <div class="table-sub-text" *ngIf="item.userEmail">
+                {{ item.userEmail }}
+              </div>
+            </td>
+
+            <td>
+              {{ item.userMobile || '-' }}
+            </td>
+
+            <td>
+              <strong>{{ item.planName }}</strong>
+
+              <div class="table-sub-text" *ngIf="item.planCode">
+                {{ item.planCode }}
+              </div>
+            </td>
+
+            <td>
+              ₹{{ item.planPrice }}
+            </td>
+
+            <td>
+              {{ item.startLabel }}
+            </td>
+
+            <td>
+              {{ item.expiryLabel }}
+            </td>
+
+            <td>
+              {{ item.remainingPosts }}
+            </td>
+
+            <td>
+              {{ item.remainingAds }}
+            </td>
 
             <td>
               <span
@@ -126,12 +190,13 @@
               </span>
             </td>
 
-            <td>{{ item.total_ads }}</td>
-            <td>{{ item.remaining_ads }}</td>
-            <td>{{ item.createdLabel }}</td>
+            <td>
+              {{ item.createdLabel }}
+            </td>
 
             <td class="actions-cell">
               <div class="row-actions">
+
                 <button
                   type="button"
                   class="table-action-btn"
@@ -143,161 +208,253 @@
                 <button
                   type="button"
                   class="table-action-btn warning"
+                  [disabled]="statusUpdatingId === item._id"
                   (click)="toggleUserSubscriptionStatus(item)"
                 >
-                  {{ item.isactive ? 'Deactivate' : 'Activate' }}
+                  {{
+                    statusUpdatingId === item._id
+                      ? 'Updating...'
+                      : item.status === 'active'
+                        ? 'Deactivate'
+                        : 'Activate'
+                  }}
                 </button>
 
                 <button
                   type="button"
                   class="table-action-btn danger"
-                  [disabled]="deletingId === item.usersubscriptionid"
+                  [disabled]="deletingId === item._id"
                   (click)="deleteUserSubscription(item)"
                 >
                   {{
-                    deletingId === item.usersubscriptionid ? 'Deleting...' : 'Delete'
+                    deletingId === item._id
+                      ? 'Deleting...'
+                      : 'Delete'
                   }}
                 </button>
+
               </div>
             </td>
           </tr>
 
-          <tr *ngIf="!filteredUserSubscriptions.length">
+          <tr *ngIf="filteredUserSubscriptions.length === 0">
             <td colspan="12" class="empty-cell">
-              No user subscriptions found for the current search/filter.
+              No user subscriptions found.
             </td>
           </tr>
+
         </tbody>
       </table>
     </div>
+
+    <!-- PAGINATION -->
     <div
-  class="pagination"
-  *ngIf="filteredUserSubscriptions.length > itemsPerPage"
->
-  <button
-    type="button"
-    (click)="goToPage(currentPage - 1)"
-    [disabled]="currentPage === 1"
-  >
-    Previous
-  </button>
+      class="pagination"
+      *ngIf="filteredUserSubscriptions.length > itemsPerPage"
+    >
+      <button
+        type="button"
+        (click)="goToPage(currentPage - 1)"
+        [disabled]="currentPage === 1"
+      >
+        Previous
+      </button>
 
-  <span>
-    Page {{ currentPage }} of {{ totalPages }}
-  </span>
+      <span>
+        Page {{ currentPage }} of {{ totalPages }}
+      </span>
 
-  <button
-    type="button"
-    (click)="goToPage(currentPage + 1)"
-    [disabled]="currentPage === totalPages"
-  >
-    Next
-  </button>
-</div>
+      <button
+        type="button"
+        (click)="goToPage(currentPage + 1)"
+        [disabled]="currentPage === totalPages"
+      >
+        Next
+      </button>
+    </div>
+
   </div>
 
+  <!-- CREATE / EDIT MODAL -->
+  <div
+    class="modal-backdrop"
+    *ngIf="showForm"
+    (click)="closeForm()"
+  >
+    <div
+      class="modal-card"
+      (click)="$event.stopPropagation()"
+    >
 
-  <div class="modal-backdrop" *ngIf="showForm">
-    <div class="modal-card">
       <div class="modal-head">
         <h3>
-          {{ isEditMode ? 'Edit User Subscription' : 'Add User Subscription' }}
+          {{
+            isEditMode
+              ? 'Edit User Subscription'
+              : 'Add User Subscription'
+          }}
         </h3>
-        <button type="button" class="modal-close" (click)="closeForm()">×</button>
+
+        <button
+          type="button"
+          class="modal-close"
+          (click)="closeForm()"
+        >
+          ×
+        </button>
       </div>
 
-      <div class="form-grid">
-        <div class="form-group">
-          <label>User ID</label>
-          <input type="number" [(ngModel)]="formModel.userid" />
+      <div
+        class="loading-box"
+        *ngIf="dropdownLoading"
+      >
+        Loading users and plans...
+      </div>
+
+      <div
+        class="form-grid"
+        *ngIf="!dropdownLoading"
+      >
+
+        <!-- USER DROPDOWN -->
+        <div class="form-group full-width">
+          <label>
+            Select User <span class="required-star">*</span>
+          </label>
+
+          <select
+            [(ngModel)]="formModel.userId"
+            [disabled]="isEditMode"
+          >
+            <option value="">
+              Select a user
+            </option>
+
+            <option
+              *ngFor="let user of allUsers"
+              [value]="user._id"
+            >
+              {{ user.fullName || user.username || 'Unnamed User' }}
+              - {{ user.mobile || user.email || 'No contact' }}
+            </option>
+          </select>
+
+          <small *ngIf="isEditMode" class="form-help-text">
+            User cannot be changed while editing a subscription.
+          </small>
         </div>
 
-        <div class="form-group">
-          <label>Subscription Plan ID</label>
-          <input type="number" [(ngModel)]="formModel.subscriptionplanid" />
+        <!-- PLAN DROPDOWN -->
+        <div class="form-group full-width">
+          <label>
+            Select Plan <span class="required-star">*</span>
+          </label>
+
+          <select
+            [(ngModel)]="formModel.planId"
+            (ngModelChange)="onPlanSelected($event)"
+          >
+            <option value="">
+              Select a subscription plan
+            </option>
+
+            <option
+              *ngFor="let plan of allPlans"
+              [value]="plan._id"
+            >
+              {{ plan.planName }}
+              - ₹{{ plan.price }}
+              - {{ plan.validity }} days
+            </option>
+          </select>
         </div>
 
+        <!-- START DATE -->
         <div class="form-group">
-          <label>Start Date</label>
-          <input type="datetime-local" [(ngModel)]="formModel.startdate" />
+          <label>
+            Start Date <span class="required-star">*</span>
+          </label>
+
+          <input
+            type="datetime-local"
+            [(ngModel)]="formModel.startDate"
+          />
         </div>
 
+        <!-- EXPIRY DATE -->
         <div class="form-group">
-          <label>End Date</label>
-          <input type="datetime-local" [(ngModel)]="formModel.enddate" />
+          <label>
+            Expiry Date <span class="required-star">*</span>
+          </label>
+
+          <input
+            type="datetime-local"
+            [(ngModel)]="formModel.expiryDate"
+          />
         </div>
 
+        <!-- REMAINING POSTS -->
         <div class="form-group">
-          <label>Amount Paid</label>
-          <input type="number" [(ngModel)]="formModel.amountpaid" />
+          <label>Remaining Posts</label>
+
+          <input
+            type="number"
+            min="0"
+            [(ngModel)]="formModel.remainingPosts"
+          />
         </div>
 
-        <div class="form-group">
-          <label>Payment Status</label>
-          <input type="text" [(ngModel)]="formModel.paymentstatus" />
-        </div>
-
-        <div class="form-group">
-          <label>Total Ads</label>
-          <input type="number" [(ngModel)]="formModel.total_ads" />
-        </div>
-
+        <!-- REMAINING ADS -->
         <div class="form-group">
           <label>Remaining Ads</label>
-          <input type="number" [(ngModel)]="formModel.remaining_ads" />
+
+          <input
+            type="number"
+            min="0"
+            [(ngModel)]="formModel.remainingAds"
+          />
         </div>
 
-        <div class="form-group">
-          <label>Plan UUID</label>
-          <input type="text" [(ngModel)]="formModel.plan_uuid" />
-        </div>
-
-        <div class="form-group">
-          <label>Auth User ID</label>
-          <input type="text" [(ngModel)]="formModel.auth_user_id" />
-        </div>
-
+        <!-- STATUS -->
         <div class="form-group full-width">
-          <label>Razorpay Payment ID</label>
-          <input type="text" [(ngModel)]="formModel.razorpay_payment_id" />
+          <label>Status</label>
+
+          <select [(ngModel)]="formModel.status">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="expired">Expired</option>
+          </select>
         </div>
 
-        <div class="form-group full-width">
-          <label>Razorpay Order ID</label>
-          <input type="text" [(ngModel)]="formModel.razorpay_order_id" />
-        </div>
-
-        <div class="form-group full-width">
-          <label>Razorpay Signature</label>
-          <input type="text" [(ngModel)]="formModel.razorpay_signature" />
-        </div>
-
-        <div class="form-group checkbox-group">
-          <label>
-            <input type="checkbox" [(ngModel)]="formModel.isactive" />
-            Is Active
-          </label>
-        </div>
       </div>
 
       <div class="modal-actions">
-        <button type="button" class="secondary-btn" (click)="closeForm()">
+        <button
+          type="button"
+          class="secondary-btn"
+          [disabled]="saving"
+          (click)="closeForm()"
+        >
           Cancel
         </button>
 
         <button
           type="button"
           class="primary-btn"
-          [disabled]="saving"
+          [disabled]="saving || dropdownLoading"
           (click)="saveUserSubscription()"
         >
           {{
             saving
               ? 'Saving...'
-              : (isEditMode ? 'Update Subscription' : 'Create Subscription')
+              : isEditMode
+                ? 'Update Subscription'
+                : 'Create Subscription'
           }}
         </button>
       </div>
+
     </div>
   </div>
+
 </div>
