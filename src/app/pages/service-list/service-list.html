@@ -80,10 +80,11 @@ categoryType="service"
     class="left-panel"
     [class.active]="isFilterOpen">
 
-    <app-filters
-      (filtersApplied)="onFiltersApplied($event)"
-      (filtersReset)="onFiltersReset()">
-    </app-filters>
+<app-filters
+  categoryType="service"
+  (filtersApplied)="onFiltersApplied($event)"
+  (filtersReset)="onFiltersReset()">
+</app-filters>
 
   </aside>
 
