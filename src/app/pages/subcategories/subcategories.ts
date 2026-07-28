@@ -26,6 +26,8 @@ import { environment } from '../../../environments/environment';
   styleUrl: './subcategories.css'
 })
 export class Subcategories implements OnChanges {
+  @Input()
+categoryType: 'product' | 'service' | 'all' = 'all';
 
   @Input()
   selectedCategory: any = null;
@@ -74,9 +76,9 @@ export class Subcategories implements OnChanges {
     this.isLoading = true;
     this.subcategories = [];
 
-    this.api.get<any>(
-      `/subcategories/category/${categoryId}`
-    )
+ this.api.get<any>(
+  `/subcategories/category/${categoryId}?type=${this.categoryType}`
+)
     .subscribe({
 
       next: (res) => {
