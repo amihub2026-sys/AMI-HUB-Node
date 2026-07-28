@@ -42,10 +42,11 @@
     class="left-panel"
     [class.active]="isFilterOpen">
 
-    <app-filters
-      (filtersApplied)="onFiltersApplied($event)"
-      (filtersReset)="onFiltersReset()">
-    </app-filters>
+<app-filters
+  categoryType="product"
+  (filtersApplied)="onFiltersApplied($event)"
+  (filtersReset)="onFiltersReset()">
+</app-filters>
 
   </aside>
 

@@ -196,14 +196,19 @@
       class="filter-section-content"
       [class.open]="isSectionOpen('sort')"
     >
-      <select
-        class="filter-input"
-        [(ngModel)]="filters.sortBy"
-      >
-        <option value="newest">Newest First</option>
-        <option value="price-low">Price: Low to High</option>
-        <option value="price-high">Price: High to Low</option>
-      </select>
+<select
+  class="filter-input"
+  [(ngModel)]="filters.sortBy"
+>
+  <option value="Newest">Newest First</option>
+  <option value="Oldest">Oldest First</option>
+  <option value="Price Low to High">
+    Price: Low to High
+  </option>
+  <option value="Price High to Low">
+    Price: High to Low
+  </option>
+</select>
     </div>
   </section>
 
