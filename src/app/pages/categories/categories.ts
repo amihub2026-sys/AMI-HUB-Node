@@ -9,7 +9,11 @@ import {
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ApiService } from '../../services/api.service';
-import { Output, EventEmitter } from '@angular/core';
+import {
+  Input,
+  Output,
+  EventEmitter
+} from '@angular/core';
 
 
 @Component({
@@ -22,6 +26,8 @@ templateUrl: './categories.html',
 styleUrls: ['./categories.css']
 })
 export class Category implements OnInit {
+  @Input()
+categoryType: 'product' | 'service' | 'all' = 'all';
   @Output()
 categorySelected = new EventEmitter<any>();
   @ViewChild('categorySlider')
@@ -77,11 +83,25 @@ item.isActive === true
 }));
 
 
-      this.browseCategories.set(
-        allCategories
-      );
+let visibleCategories = allCategories;
 
+if (this.categoryType === 'product') {
+  visibleCategories = allCategories.filter(
+    (item: any) =>
+      item.availableIn?.includes('product')
+  );
+}
 
+if (this.categoryType === 'service') {
+  visibleCategories = allCategories.filter(
+    (item: any) =>
+      item.availableIn?.includes('service')
+  );
+}
+
+this.browseCategories.set(
+  visibleCategories
+);
 this.productCategories.set(
   allCategories.filter(
     (item:any)=>

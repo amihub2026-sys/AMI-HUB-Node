@@ -2,6 +2,7 @@
   width: 100%;
   min-height: calc(100vh - 140px);
   padding: 24px 16px;
+  padding-top: 150px;
   background:
     radial-gradient(circle at top left, rgba(79, 70, 229, 0.05), transparent 22%),
     radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.05), transparent 22%),

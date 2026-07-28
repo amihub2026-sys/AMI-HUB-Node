@@ -557,8 +557,8 @@ async loadCategories(): Promise<void> {
       ? rawCategories
       : [];
 
-    this.categoriesData = categories.map(
-      (item: any) => ({
+    this.categoriesData = categories
+      .map((item: any) => ({
         ...item,
 
         _id: String(item?._id || ''),
@@ -585,11 +585,32 @@ async loadCategories(): Promise<void> {
           item?.sortorder ??
           0
         )
+      }))
+      .filter((category: CategoryItem) => {
+        const type = String(
+          category.category_type || ''
+        )
+          .trim()
+          .toLowerCase();
+
+        return (
+          category.isactive !== false &&
+          type === 'product'
+        );
       })
+      .sort(
+        (a: CategoryItem, b: CategoryItem) =>
+          Number(a.sortorder || 0) -
+          Number(b.sortorder || 0)
+      );
+
+    console.log(
+      'Common product categories:',
+      this.categoriesData
     );
   } catch (error) {
     console.error(
-      'Error loading Mongo categories:',
+      'Error loading Mongo product categories:',
       error
     );
 
