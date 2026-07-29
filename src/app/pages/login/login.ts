@@ -469,10 +469,15 @@ async verifyMobileOtp(){
       res
     );
 
-
+console.log(
+  "SELLER STATUS FROM OTP:",
+  res.user?.isSeller
+);
     this.storeUserSession(res);
 
-
+window.dispatchEvent(
+  new Event('userLoggedIn')
+);
     this.showAlert(
       "Login Successful",
       "success"

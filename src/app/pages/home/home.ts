@@ -542,16 +542,40 @@ async applyFavoriteStatus(): Promise<void> {
   }
 
   // Extract from address/location
-  const location =
-    business.location ||
-    business.address ||
+const location =
+  business.location ||
+  business.address ||
+  '';
+
+if (!location) {
+  return '';
+}
+
+
+let locationText = '';
+
+if (typeof location === 'string') {
+
+  locationText = location;
+
+}
+else if (typeof location === 'object') {
+
+  locationText =
+    location.city ||
+    location.address ||
+    location.state ||
     '';
 
-  if (!location) {
-    return '';
-  }
+}
 
-  const parts = location.split(',');
+
+if (!locationText) {
+  return '';
+}
+
+
+const parts = locationText.split(',');
 
   // Example:
   // "12, Anna Nagar, Madurai, Tamil Nadu"

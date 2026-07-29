@@ -50,18 +50,11 @@ seller:any = {
   name:'',
   email:'',
   phone:'',
-  username:'',
-  password:'',
-
-  accountType:'',
-  category:'',
 
   profileImage:null,
   kycImage:null,
   qrCodeImage:null,
 
-  rating:4,
-  verified:false,
   termsAccepted:false
 
 };
@@ -70,18 +63,7 @@ seller:any = {
 stars=[1,2,3,4,5];
 
 
-accountTypes=[
-  'Individual',
-  'Business'
-];
 
-
-categories=[
-  'Electronics',
-  'Fashion',
-  'Home & Living',
-  'Automotive'
-];
 
 
 redirectTo='';
@@ -187,18 +169,6 @@ loadSellerProfile(){
 
   phone:profile.mobile || '',
 
-  username:profile.username || '',
-
-  password:profile.password || '',
-
-
-  accountType:
-  profile.accountType || '',
-
-
-  category:
-  profile.category || '',
-
 
   profileImage:
   profile.profileImage || null,
@@ -212,12 +182,6 @@ loadSellerProfile(){
   profile.qrCodeImage || null,
 
 
-  rating:
-  profile.rating || 4,
-
-
-  verified:
-  profile.verified || false,
 
 
   termsAccepted:
@@ -436,22 +400,6 @@ mobile:
 this.seller.phone,
 
 
-username:
-this.seller.username,
-
-
-password:
-this.seller.password,
-
-
-accountType:
-this.seller.accountType,
-
-
-category:
-this.seller.category,
-
-
 profileImage:
 this.seller.profileImage,
 
@@ -503,7 +451,20 @@ console.log(
 res
 );
 
+const user =
+JSON.parse(localStorage.getItem('user') || '{}');
 
+
+user.isSeller = true;
+
+
+user.isOnboardingCompleted = true;
+
+
+localStorage.setItem(
+  'user',
+  JSON.stringify(user)
+);
 this.isLoading=false;
 
 this.isEditMode=true;
