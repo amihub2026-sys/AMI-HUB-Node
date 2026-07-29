@@ -92,7 +92,17 @@ isRouteLoading = false;
 
   async ngOnInit(): Promise<void> {
     this.currentUrl = this.router.url;
+window.addEventListener(
+  'userLoggedIn',
+  async () => {
 
+    this.isLoggedInUser =
+      await this.isLoggedIn();
+
+    this.cdr.detectChanges();
+
+  }
+);
 this.router.events.subscribe((event: any) => {
 
   if (event.constructor.name === 'NavigationStart') {
@@ -616,32 +626,51 @@ closeProfileOutside(): void {
     });
   }
 
-  async postService(): Promise<void> {
-    const user = await this.supabaseService.getCurrentUser();
-    const localLoggedIn = this.hasLocalUserLogin();
+async postService(): Promise<void> {
 
-    if (!user && !localLoggedIn) {
-     this.snackbar.show('Please login first', 'error');
-      this.router.navigate(['/login']);
-      return;
-    }
+  const loggedIn = await this.isLoggedIn();
 
-    if (!user && localLoggedIn) {
-      this.router.navigate(['/service']);
-      return;
-    }
 
-    const result = await this.supabaseService.checkSellerProfileCompleted();
+  if (!loggedIn) {
 
-    if (!result.completed) {
-      this.router.navigate(['/seller-profile'], {
-        state: { next: 'post-service' }
-      });
-      return;
-    }
+    this.snackbar.show(
+      'Please login first',
+      'error'
+    );
 
-    this.router.navigate(['/service']);
+    this.router.navigate(['/login'], {
+      state:{
+        redirectTo:'post-service'
+      }
+    });
+
+    return;
   }
+
+
+  // get user details from localStorage
+  const user =
+    JSON.parse(
+      localStorage.getItem('user') || '{}'
+    );
+
+
+  if(!user.isSeller){
+
+    this.router.navigate(['/seller-profile'],{
+      state:{
+        next:'post-service'
+      }
+    });
+
+    return;
+
+  }
+
+
+  this.router.navigate(['/service']);
+
+}
 
   toggleLocationPicker(): void {
     this.showLocationPicker = !this.showLocationPicker;

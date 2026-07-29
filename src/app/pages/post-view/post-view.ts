@@ -525,17 +525,6 @@ buildMongoDetailItems(
     });
   }
 
-  const phone =
-    data?.contact?.mobile ||
-    seller?.mobile;
-
-  if (phone) {
-    items.push({
-      label: 'Phone',
-      value: phone
-    });
-  }
-
   const address = this.buildDisplayAddress(data);
 
   if (address !== 'Location not available') {
@@ -666,38 +655,114 @@ prevMedia() {
     }
   }
 
-  callSeller() {
-    const post = this.postData();
-    if (!post?.sellerPhone) {
-      alert('Phone number not available');
-      return;
-    }
+callSeller() {
 
-    window.location.href = 'tel:' + post.sellerPhone;
+  const token = localStorage.getItem('token');
+
+  if(!token){
+
+    this.showAlert(
+      'Please login to contact seller',
+      'info'
+    );
+
+    this.router.navigate(['/login'],{
+      state:{
+        redirectTo:'post-view',
+        postId:this.postId
+      }
+    });
+
+    return;
   }
-whatsappSeller(): void {
+
+
   const post = this.postData();
+
+
+  if (!post?.sellerPhone) {
+
+    this.showAlert(
+      'Phone number not available',
+      'error'
+    );
+
+    return;
+
+  }
+
+
+  window.location.href =
+  'tel:' + post.sellerPhone;
+
+}
+whatsappSeller(): void {
+
+
+  const token = localStorage.getItem('token');
+
+
+  if(!token){
+
+    this.showAlert(
+      'Please login to contact seller',
+      'info'
+    );
+
+
+    this.router.navigate(['/login'],{
+
+      state:{
+        redirectTo:'post-view',
+        postId:this.postId
+      }
+
+    });
+
+
+    return;
+
+  }
+
+
+
+  const post = this.postData();
+
+
 
   let phone = String(
     post?.whatsappNumber || ''
-  ).replace(/\D/g, '');
+  ).replace(/\D/g,'');
 
-  if (!phone) {
+
+
+  if(!phone){
+
     this.showAlert(
       'WhatsApp number not available',
       'error'
     );
+
     return;
+
   }
 
-  if (phone.length === 10) {
+
+
+  if(phone.length === 10){
+
     phone = `91${phone}`;
+
   }
+
+
 
   window.open(
     `https://wa.me/${phone}`,
     '_blank'
   );
+
+
 }
   sharePost() {
     const post = this.postData();

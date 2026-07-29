@@ -70,41 +70,6 @@
     inputmode="numeric"
     [disabled]="isLoading">
 
-  <input
-    type="text"
-    placeholder="Username"
-    [(ngModel)]="seller.username"
-    [disabled]="isLoading">
-
-  <div class="password-wrap">
-    <input
-      [type]="showPassword ? 'text' : 'password'"
-      placeholder="Password"
-      [(ngModel)]="seller.password"
-      [disabled]="isLoading">
-
-    <button
-      type="button"
-      class="password-toggle"
-      (click)="togglePassword()"
-      [disabled]="isLoading">
-      {{ showPassword ? 'Hide' : 'Show' }}
-    </button>
-  </div>
-
-  <select [(ngModel)]="seller.accountType" [disabled]="isLoading">
-    <option value="">Select Account Type</option>
-    <option *ngFor="let type of accountTypes" [value]="type">
-      {{ type }}
-    </option>
-  </select>
-
-  <select [(ngModel)]="seller.category" [disabled]="isLoading">
-    <option value="">Select Category</option>
-    <option *ngFor="let cat of categories" [value]="cat">
-      {{ cat }}
-    </option>
-  </select>
 
   <h3>KYC Document</h3>
   <input
