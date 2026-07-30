@@ -1,0 +1,41 @@
+<div class="admin-login-container">
+
+  <div class="admin-login-card">
+
+    <h1>AMI HUB</h1>
+
+    <p>Admin Panel Login</p>
+
+
+    <div class="error" *ngIf="errorMessage">
+      {{errorMessage}}
+    </div>
+
+
+    <input
+      type="text"
+      placeholder="Username"
+      [(ngModel)]="username"
+    />
+
+
+    <input
+      type="password"
+      placeholder="Password"
+      [(ngModel)]="password"
+    />
+
+
+    <button
+      (click)="login()"
+      [disabled]="isLoading"
+    >
+
+      {{ isLoading ? 'Logging in...' : 'Admin Login' }}
+
+    </button>
+
+
+  </div>
+
+</div>

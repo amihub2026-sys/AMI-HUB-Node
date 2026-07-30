@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 export type AdminMenuKey =
   | 'dashboard'
   | 'users'
+  | 'sellers'
   | 'posts'
   | 'advertise'
   | 'categories'
@@ -47,6 +48,7 @@ export class AdminSidebar {
   readonly menuItems: AdminMenuItem[] = [
     { key: 'dashboard', label: 'Dashboard', icon: '📊' },
     { key: 'users', label: 'Users', icon: '👤' },
+     { key: 'sellers', label: 'Sellers', icon: '🏪' },
     { key: 'posts', label: 'Posts', icon: '📝' },
     { key: 'advertise', label: 'Advertise', icon: '📢' },
     { key: 'categories', label: 'Categories', icon: '📁' },

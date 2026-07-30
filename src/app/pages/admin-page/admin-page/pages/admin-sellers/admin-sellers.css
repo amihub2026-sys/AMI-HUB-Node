@@ -1,0 +1,60 @@
+.seller-table{
+width:100%;
+border-collapse:collapse;
+margin-top:20px;
+}
+
+
+.seller-table th{
+text-align:left;
+padding:15px;
+background:#f3f4f6;
+font-weight:600;
+}
+
+
+.seller-table td{
+padding:15px;
+border-bottom:1px solid #ddd;
+}
+
+
+.status{
+background:#16a34a;
+color:white;
+padding:5px 12px;
+border-radius:20px;
+font-size:13px;
+}
+.seller-details{
+
+    margin-top:20px;
+    padding:20px;
+
+    background:#ffffff;
+
+    border-radius:10px;
+
+    box-shadow:0 5px 20px rgba(0,0,0,0.08);
+
+    width:400px;
+
+}
+
+
+.seller-details h2{
+
+    margin-bottom:15px;
+
+    color:#0737a8;
+
+}
+
+
+.seller-details p{
+
+    margin:8px 0;
+
+    font-size:15px;
+
+}
