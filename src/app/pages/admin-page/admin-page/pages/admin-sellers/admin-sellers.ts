@@ -1,4 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  Output,
+  EventEmitter
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../../../../services/api.service';
 
@@ -19,7 +24,7 @@ sellers:any[]=[];
 selectedSeller:any = null;
 
 isLoading=false;
-
+@Output() viewPostEvent = new EventEmitter<string>();
 
 constructor(
  private apiService:ApiService
@@ -158,6 +163,11 @@ removeSeller(id:string){
 
   });
 
+
+}
+viewPost(postId:string){
+
+  this.viewPostEvent.emit(postId);
 
 }
 }

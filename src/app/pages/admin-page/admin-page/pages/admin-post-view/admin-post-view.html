@@ -1,0 +1,64 @@
+<div class="post-view">
+
+<h2>Post Details</h2>
+
+
+<div *ngIf="isLoading">
+Loading...
+</div>
+
+
+<div *ngIf="post">
+
+
+<h3>
+{{post.title}}
+</h3>
+
+
+<p>
+<b>Type:</b>
+{{post.listingType}}
+</p>
+
+
+<p>
+<b>Description:</b>
+{{post.description}}
+</p>
+
+
+<p>
+<b>Price:</b>
+₹ {{post.price}}
+</p>
+
+
+<p>
+<b>Status:</b>
+{{post.status}}
+</p>
+
+
+<p>
+<b>Created:</b>
+{{post.createdAt | date}}
+</p>
+
+
+<h3>Images</h3>
+
+
+<div *ngFor="let img of post.images">
+
+<img 
+[src]="img"
+width="150">
+
+</div>
+
+
+</div>
+
+
+</div>

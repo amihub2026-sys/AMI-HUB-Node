@@ -38,7 +38,12 @@
     
 <app-admin-sellers
   *ngIf="activeMenu === 'sellers'"
+  (viewPostEvent)="openAdminPostView($event)"
 ></app-admin-sellers>
+
+<app-admin-post-view
+  *ngIf="activeMenu === 'post-view'"
+  [postId]="viewingPostId"></app-admin-post-view>
 
     <app-admin-posts
       *ngIf="activeMenu === 'posts'"

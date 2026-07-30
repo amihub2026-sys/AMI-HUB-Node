@@ -127,8 +127,53 @@ width="100">
 
 <p>
 Total Posts:
-{{selectedSeller.posts.length}}
+{{selectedSeller.posts?.length || 0}}
 </p>
+
+
+<div 
+*ngFor="let post of selectedSeller.posts"
+class="post-card">
+
+
+<h4>
+{{post.title}}
+</h4>
+
+
+<p>
+<b>Type:</b>
+{{post.listingType}}
+</p>
+
+
+<p>
+<b>Status:</b>
+{{post.status}}
+</p>
+
+
+<p>
+<b>Price:</b>
+₹ {{post.price}}
+</p>
+
+
+<p>
+<b>Created:</b>
+{{post.createdAt | date:'dd-MM-yyyy'}}
+</p>
+
+
+<button
+(click)="viewPost(post._id)">
+View Post
+</button>
+
+
+<hr>
+
+</div>
 
 
 <h3>History</h3>
