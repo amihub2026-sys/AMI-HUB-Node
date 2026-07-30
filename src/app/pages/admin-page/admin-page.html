@@ -35,6 +35,10 @@
       *ngIf="activeMenu === 'users'"
       [searchQuery]="searchQuery"
     ></app-admin-users>
+    
+<app-admin-sellers
+  *ngIf="activeMenu === 'sellers'"
+></app-admin-sellers>
 
     <app-admin-posts
       *ngIf="activeMenu === 'posts'"

@@ -1,0 +1,142 @@
+<table class="seller-table">
+
+<thead>
+<tr>
+<th>Name</th>
+<th>Mobile</th>
+<th>Status</th>
+<th>Seller Since</th>
+<th>Actions</th>
+</tr>
+</thead>
+
+
+<tbody>
+
+<tr *ngFor="let seller of sellers">
+
+<td>{{seller.fullName}}</td>
+
+<td>{{seller.mobile}}</td>
+
+<td>
+<span class="status">
+{{seller.sellerStatus}}
+</span>
+</td>
+
+<td>
+{{seller.sellerSince | date:'dd-MM-yyyy'}}
+</td>
+
+
+<td>
+
+<button
+(click)="viewSellerDetails(seller._id)">
+View
+</button>
+
+<button
+(click)="removeSeller(seller._id)">
+Remove
+</button>
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+<div 
+class="seller-details"
+*ngIf="selectedSeller">
+
+
+<h2>Seller Details</h2>
+
+
+<p>
+<b>Name:</b>
+{{selectedSeller.seller.fullName}}
+</p>
+
+
+<p>
+<b>Mobile:</b>
+{{selectedSeller.seller.mobile}}
+</p>
+
+
+<p>
+<b>Email:</b>
+{{selectedSeller.seller.email}}
+</p>
+
+
+<p>
+<b>Status:</b>
+{{selectedSeller.seller.sellerStatus}}
+</p>
+
+
+<p>
+<b>Seller Since:</b>
+{{selectedSeller.seller.sellerSince | date:'dd-MM-yyyy'}}
+</p>
+
+
+<hr>
+<hr>
+
+<h3>Profile Information</h3>
+
+
+<p>
+<b>Name:</b>
+{{selectedSeller.profile?.fullName}}
+</p>
+
+
+<p>
+<b>Mobile:</b>
+{{selectedSeller.profile?.mobile}}
+</p>
+
+
+<p>
+<b>Email:</b>
+{{selectedSeller.profile?.email}}
+</p>
+
+
+<div *ngIf="selectedSeller.profile?.profileImage">
+
+<p>
+<b>Profile Image:</b>
+</p>
+
+<img 
+[src]="selectedSeller.profile.profileImage"
+width="100">
+
+</div>
+
+<h3>Posts</h3>
+
+<p>
+Total Posts:
+{{selectedSeller.posts.length}}
+</p>
+
+
+<h3>History</h3>
+
+<p>
+Total History:
+{{selectedSeller.history.length}}
+</p>
+
+
+</div>

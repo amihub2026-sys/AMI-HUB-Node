@@ -35,8 +35,8 @@ import { Payment } from './pages/payment/payment';
 import { DeleteAccount } from './pages/delete-account/delete-account';
 import { AdminPage } from './pages/admin-page/admin-page';
 import { AdminUserBoostPlansComponent } from './pages/admin-page/admin-page/pages/admin-user-boost-plans/admin-user-boost-plans';
-
-
+import { adminGuard } from './guards/admin-guard';
+import { AdminLoginComponent } from './pages/admin-page/admin-page/pages/admin-login/admin-login';
 
 export const routes: Routes = [
 
@@ -51,6 +51,10 @@ export const routes: Routes = [
 
   { path: 'account-setup', component: AccountSetup },
   { path: 'login', component: Login },
+  {
+  path: 'admin-login',
+  component: AdminLoginComponent
+},
   { path: 'register', component: Register },
 
   { path: 'my-posts', component: MyPosts },
@@ -116,7 +120,8 @@ export const routes: Routes = [
 
 {
   path:'admin',
-  component: AdminPage
+  component: AdminPage,
+  canActivate:[adminGuard]
 },
 
 {

@@ -20,12 +20,14 @@ import { AdminBoostPlansComponent } from './admin-page/pages/admin-boost-plans/a
 import { AdminPaymentsComponent } from './admin-page/pages/admin-payments/admin-payments';
 import { AdminCustomFields } from './admin-page/pages/admin-custom-fields/admin-custom-fields';
 import { AdminCustomFieldAssignment } from './admin-page/pages/admin-custom-field-assignment/admin-custom-field-assignment';
+import { AdminSellersComponent } from './admin-page/pages/admin-sellers/admin-sellers';
 type AdminMenuKey =
   SidebarAdminMenuKey |
   'advertise' |
   'edit-post' |
   'custom-fields' |
-  'custom-field-assignment';
+  'custom-field-assignment' |
+  'sellers';
 @Component({
   selector: 'app-admin-page',
   standalone: true,
@@ -49,7 +51,8 @@ type AdminMenuKey =
   AdminUserBoostPlansComponent,
   AdminPaymentsComponent,
   AdminCustomFields,
-  AdminCustomFieldAssignment
+  AdminCustomFieldAssignment,
+  AdminSellersComponent
 ],
   templateUrl: './admin-page.html',
   styleUrls: ['./admin-page.css'],
@@ -87,6 +90,8 @@ openAdminEditPost(postId: string): void {
         return 'Dashboard';
       case 'users':
         return 'Users';
+        case 'sellers':
+  return 'Sellers';
       case 'posts':
         return 'Posts';
       case 'categories':
