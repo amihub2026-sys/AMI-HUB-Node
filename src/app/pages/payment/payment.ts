@@ -660,7 +660,9 @@ await this.api
       const selectedPlanName = this.getSelectedPlanName();
       const selectedIsFeatured = this.getSelectedPlanIsFeatured();
 
-      const mainPhoto = await this.uploadMainPhoto(uploadedFiles);
+      const mainPhoto =
+  pendingPost.image_url ||
+  await this.uploadMainPhoto(uploadedFiles);
   const otherImages = this.parseJsonArray<string>(
   pendingPost.image_urls
 );

@@ -91,15 +91,17 @@ ngOnInit(){
    return;
  }
 
- const nav =
+const nav =
  this.router.getCurrentNavigation();
 
- if(nav?.extras?.state){
+const state =
+history.state;
 
-  this.redirectTo =
-  nav.extras.state['next'] || '';
 
- }
+this.redirectTo =
+  nav?.extras?.state?.['next'] ||
+  state?.['next'] ||
+  '';
 
 
  this.loadSellerProfile();
