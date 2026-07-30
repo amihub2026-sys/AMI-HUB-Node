@@ -24,8 +24,8 @@ export type AdminMenuKey =
   | 'locations'
   | 'banners'
   | 'notifications'
-  | 'settings';
-
+  | 'settings'
+   | 'post-view';
 interface AdminMenuItem {
   key: AdminMenuKey;
   label: string;

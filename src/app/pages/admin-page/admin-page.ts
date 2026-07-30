@@ -21,13 +21,15 @@ import { AdminPaymentsComponent } from './admin-page/pages/admin-payments/admin-
 import { AdminCustomFields } from './admin-page/pages/admin-custom-fields/admin-custom-fields';
 import { AdminCustomFieldAssignment } from './admin-page/pages/admin-custom-field-assignment/admin-custom-field-assignment';
 import { AdminSellersComponent } from './admin-page/pages/admin-sellers/admin-sellers';
+import { AdminPostViewComponent } from './admin-page/pages/admin-post-view/admin-post-view';
 type AdminMenuKey =
   SidebarAdminMenuKey |
   'advertise' |
   'edit-post' |
   'custom-fields' |
   'custom-field-assignment' |
-  'sellers';
+  'sellers' |
+  'post-view';
 @Component({
   selector: 'app-admin-page',
   standalone: true,
@@ -52,7 +54,8 @@ type AdminMenuKey =
   AdminPaymentsComponent,
   AdminCustomFields,
   AdminCustomFieldAssignment,
-  AdminSellersComponent
+  AdminSellersComponent,
+  AdminPostViewComponent
 ],
   templateUrl: './admin-page.html',
   styleUrls: ['./admin-page.css'],
@@ -64,7 +67,7 @@ export class AdminPage {
   activeMenu: AdminMenuKey = 'dashboard';
   editingPostId: string | null = null;
 
-
+viewingPostId: string | null = null;
 
 
   setActiveMenu(menu: AdminMenuKey): void {
@@ -75,6 +78,13 @@ export class AdminPage {
 openAdminEditPost(postId: string): void {
   this.editingPostId = postId;
   this.activeMenu = 'edit-post';
+}
+openAdminPostView(postId: string): void {
+
+  this.viewingPostId = postId;
+
+  this.activeMenu = 'post-view';
+
 }
  toggleSidebar(): void {
     this.sidebarOpen = !this.sidebarOpen;
@@ -182,4 +192,5 @@ default:
         return 'Search here...';
     }
   }
+
 }
