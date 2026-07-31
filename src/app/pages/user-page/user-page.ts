@@ -1,8 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { supabase } from '../../../supabaseClient';
-
+import { ApiService } from '../../services/api.service';
 
 @Component({
 
@@ -43,14 +42,11 @@ jobs = signal<any[]>([]);
 loading = signal(true);
 
 
-
 constructor(
  private route:ActivatedRoute,
- private router:Router
+ private router:Router,
+ private api:ApiService
 ){}
-
-
-
 ngOnInit(){
 
 this.userId =
@@ -62,81 +58,60 @@ this.loadUserPage();
 
 }
 
-
-
-
-
 async loadUserPage(){
 
-
 try{
-
 
 this.loading.set(true);
 
 
-// GET POSTS OF USER
+this.api
+.get<any>(
+ `/posts/seller/${this.userId}`
+)
+.subscribe({
 
-const {data:posts,error}=
-
-await supabase
-
-.from('post')
-
-.select('*')
-
-.eq('userid',this.userId);
+next:(res:any)=>{
 
 
-
-if(error){
-
-console.log(error);
-
-return;
-
-}
+const posts = res.data || [];
 
 
-
-if(posts && posts.length){
-
+if(posts.length){
 
 
 const firstPost = posts[0];
 
 
-// USER DETAILS FROM POST
-
+// USER DETAILS
 
 this.user.set({
 
 name:
-firstPost.contactname || 'User',
+firstPost.sellerId?.fullName ||
+'User',
 
 
 phone:
-firstPost.contactphone || '',
+firstPost.sellerId?.mobile ||
+'',
 
 
 email:
-firstPost.contactemail || '',
+firstPost.sellerId?.email ||
+'',
 
 
 address:
-firstPost.full_address ||
-firstPost.address ||
-firstPost.location ||
+firstPost.customFields?.full_address ||
 'Location not available',
 
 
 image:
-firstPost.sellerImage ||
+firstPost.sellerId?.image ||
 'assets/icons/user.png'
 
-
 });
-
 
 
 
@@ -146,12 +121,7 @@ this.products.set(
 
 posts.filter((p:any)=>
 
-String(
-p.conditiontype ||
-p.adtype
-)
-.toLowerCase()
-==='product'
+p.listingType === 'product'
 
 )
 
@@ -165,12 +135,7 @@ this.services.set(
 
 posts.filter((p:any)=>
 
-String(
-p.conditiontype ||
-p.adtype
-)
-.toLowerCase()
-==='service'
+p.listingType === 'service'
 
 )
 
@@ -184,21 +149,35 @@ this.jobs.set(
 
 posts.filter((p:any)=>
 
-String(
-p.conditiontype ||
-p.adtype
-)
-.toLowerCase()
-==='job'
+p.listingType === 'job'
 
 )
 
 );
 
 
+}
+
+
+this.loading.set(false);
+
+
+},
+
+
+error:(err)=>{
+
+console.log(
+"SELLER POSTS ERROR",
+err
+);
+
+this.loading.set(false);
 
 }
 
+
+});
 
 
 }
@@ -207,19 +186,12 @@ catch(err){
 
 console.log(err);
 
-}
-
-finally{
-
 this.loading.set(false);
 
 }
 
 
 }
-
-
-
 callUser(){
 
 window.location.href=

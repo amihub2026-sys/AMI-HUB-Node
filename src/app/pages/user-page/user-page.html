@@ -119,15 +119,14 @@ Products
 <div
 class="post-card"
 *ngFor="let item of products()"
-(click)="openPost(item.postid)"
+(click)="openPost(item._id)"
 >
 
 
 <img
 
 [src]="
-item.image_url ||
-item.image_urls?.[0] ||
+item.images?.[0]||
 'assets/no-image.png'
 "
 
@@ -151,7 +150,7 @@ item.image_urls?.[0] ||
 
 
 <p>
-{{item.location}}
+{{item.customFields?.full_address || 'Location not available'}}
 </p>
 
 
@@ -201,15 +200,14 @@ Services
 <div
 class="post-card"
 *ngFor="let item of services()"
-(click)="openPost(item.postid)"
+(click)="openPost(item._id)"
 >
 
 
 <img
 
 [src]="
-item.image_url ||
-item.image_urls?.[0] ||
+item.images?.[0] ||
 'assets/no-image.png'
 "
 
@@ -225,7 +223,7 @@ item.image_urls?.[0] ||
 
 
 <p>
-{{item.location}}
+{{item.customFields?.full_address || 'Location not available'}}
 </p>
 
 
@@ -279,7 +277,7 @@ class="post-card job-card"
 
 *ngFor="let item of jobs()"
 
-(click)="openPost(item.postid)"
+(click)="openPost(item._id)"
 
 >
 
