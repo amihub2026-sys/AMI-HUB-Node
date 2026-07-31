@@ -291,10 +291,13 @@ async loadPost(): Promise<void> {
       ? data.videos.map((url: string) => this.getMediaUrl(url))
       : [];
 
-    const seller =
-      typeof data.sellerId === 'object'
-        ? data.sellerId
-        : null;
+const seller =
+  data.sellerId && typeof data.sellerId === 'object'
+    ? data.sellerId
+    : null;
+
+console.log("SELLER OBJECT:", seller);
+console.log("CONTACT DATA:", data.contact);
 
     const category =
       typeof data.categoryId === 'object'
@@ -316,10 +319,9 @@ catalogItems:
       images: imageList,
       videos: videoList,
 
-      sellerName:
-        seller?.fullName ||
-        data.contact?.name ||
-        'Seller',
+sellerName:
+  seller?.fullName ||
+  'Seller',
 
 sellerImage: seller?.profileImage
   ? this.getMediaUrl(seller.profileImage)

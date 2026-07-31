@@ -462,7 +462,9 @@ user.isSeller = true;
 
 user.isOnboardingCompleted = true;
 
-
+user.fullName = this.seller.name;
+user.mobile = this.seller.phone;
+user.email = this.seller.email;
 localStorage.setItem(
   'user',
   JSON.stringify(user)
