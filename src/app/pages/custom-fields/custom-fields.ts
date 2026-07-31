@@ -598,30 +598,33 @@ else{
 
 }
   }
-  private buildCustomFieldValues(): any[] {
+private buildCustomFieldValues(): any[] {
 
-    return this.fields.map(
-      (field: DynamicCustomField) => ({
+  return this.fields.map(
+    (field: DynamicCustomField) => ({
 
-        customFieldId:
-          field._id,
+      customFieldId:
+        field._id,
 
-        fieldName:
-          field.fieldName,
+      fieldName:
+        field.fieldName,
 
-        label:
-          field.label,
+      label:
+        field.label,
 
-        fieldType:
-          field.fieldType,
+      icon:
+        field.icon || '',
 
-        value:
-          this.formData[field.fieldName]
+      fieldType:
+        field.fieldType,
 
-      })
-    );
-  }
+      value:
+        this.formData[field.fieldName]
 
+    })
+  );
+
+}
 
   private scrollToFirstError(): void {
 

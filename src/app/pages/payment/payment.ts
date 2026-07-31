@@ -467,13 +467,15 @@ const url = response?.publicUrl;
     return urls;
   }
 
-  private async buildCatalog(
-    uploadedFiles: { bucket: string; url: string }[]
-  ): Promise<Array<{ title: string; price: number; imageUrl: string }>> {
+private async buildCatalog(
+  uploadedFiles: { bucket: string; url: string }[]
+): Promise<Array<{ title: string; price: number; image: string }>> {
     const blocks = this.postDraftService.getServiceBlocks();
-    const result: Array<{ title: string; price: number; imageUrl: string }> = [];
+
+    const result: Array<{ title: string; price: number; image: string }> = [];
 
     for (const block of blocks) {
+
       if (!block.title || block.price == null) {
         continue;
       }
@@ -507,12 +509,16 @@ if (this.isValidFile(block.image)) {
 
 
   imageUrl = url;
+  console.log(
+  "CATALOG IMAGE UPLOADED URL:",
+  imageUrl
+);
 }
-      result.push({
-        title: block.title,
-        price: Number(block.price),
-        imageUrl
-      });
+result.push({
+  title:block.title,
+  price:Number(block.price),
+  image:imageUrl
+});
     }
 
     return result;
@@ -656,6 +662,13 @@ await this.api
 
     try {
       const pendingPost = this.postData || {};
+      const savedCustomFields =
+  JSON.parse(
+    localStorage.getItem('pending_custom_fields') || '[]'
+  );
+
+
+const customFieldsObject = savedCustomFields;
       const selectedPlanId = this.getSelectedPlanId();
       const selectedPlanName = this.getSelectedPlanName();
       const selectedIsFeatured = this.getSelectedPlanIsFeatured();
@@ -663,17 +676,36 @@ await this.api
       const mainPhoto =
   pendingPost.image_url ||
   await this.uploadMainPhoto(uploadedFiles);
-  const otherImages = this.parseJsonArray<string>(
+let otherImages = this.parseJsonArray<string>(
   pendingPost.image_urls
 );
 
-const videos = this.parseJsonArray<string>(
+
+if(!otherImages.length){
+
+  otherImages =
+  await this.uploadOtherImages(uploadedFiles);
+
+}
+
+
+
+let videos = this.parseJsonArray<string>(
   pendingPost.video_urls
 );
 
-const catalog = this.parseJsonArray<any>(
-  pendingPost.catalog
-);
+
+if(!videos.length){
+
+  videos =
+  await this.uploadVideos(uploadedFiles);
+
+}
+
+
+
+let catalog =
+await this.buildCatalog(uploadedFiles);
       // const oldImageUrls = this.parseJsonArray<string>(pendingPost.image_urls);
       // const oldVideoUrls = this.parseJsonArray<string>(pendingPost.video_urls);
       // const oldCatalog = this.parseJsonArray<any>(pendingPost.catalog);
@@ -710,13 +742,14 @@ videos:
 videos,
 
 
+catalog:
+catalog,
+
+
 location:
 pendingPost.location || {},
 
-
-customFields:
-pendingPost.customFields || {},
-
+customFields: customFieldsObject,
 
 isFeatured:
 selectedIsFeatured,

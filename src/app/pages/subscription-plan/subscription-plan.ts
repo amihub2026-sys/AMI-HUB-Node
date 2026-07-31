@@ -39,6 +39,7 @@ interface SubscriptionPlanItem {
   styleUrls: ['./subscription-plan.css'],
 })
 export class SubscriptionPlan implements OnInit {
+  customFieldValues:any[] = [];
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
 
@@ -63,14 +64,41 @@ export class SubscriptionPlan implements OnInit {
   ) {}
 
 ngOnInit(): void {
+
     const flow = this.route.snapshot.queryParamMap.get('flow');
-    this.flowType = flow === 'featured' ? 'featured' : 'normal';
+
+    this.flowType =
+      flow === 'featured'
+      ? 'featured'
+      : 'normal';
+
 
     if (!this.isBrowser) return;
 
-    this.loadPlans();
-  }
 
+
+    // GET CUSTOM FIELDS FROM PREVIOUS PAGE
+
+    const state = history.state;
+
+
+    if(state?.customFieldValues){
+
+      this.customFieldValues =
+        state.customFieldValues;
+
+
+      localStorage.setItem(
+        'pending_custom_fields',
+        JSON.stringify(this.customFieldValues)
+      );
+
+    }
+
+
+    this.loadPlans();
+
+}
   goHome(): void {
     this.showSuccess = false;
     this.cd.detectChanges();

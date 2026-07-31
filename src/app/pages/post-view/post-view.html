@@ -114,7 +114,68 @@
   </button>
 
 </section>
+<!-- SERVICE CATALOG -->
 
+<section 
+class="content-card"
+*ngIf="hasCatalog()"
+>
+
+<div class="section-heading">
+  <h2>
+    Service Catalogue
+  </h2>
+</div>
+
+<section 
+class="content-card catalog-section"
+*ngIf="hasCatalog()"
+>
+
+<div class="section-heading">
+<h2>
+Service Catalogue
+</h2>
+</div>
+
+
+<div class="catalog-list">
+
+
+<div
+class="catalog-item"
+*ngFor="let item of postData()?.catalogItems"
+>
+
+
+<div class="catalog-details">
+
+<h3>
+{{item.title}}
+</h3>
+
+
+<p class="catalog-price">
+₹ {{item.price}}
+</p>
+
+
+</div>
+
+
+<img
+[src]="item.imageUrl"
+class="catalog-item-image"
+/>
+
+
+</div>
+
+
+</div>
+
+</section>
+</section>
     <!-- REPORT MUST ALSO BE HERE -->
     <section
       class="report-area"
@@ -452,21 +513,95 @@
       </div>
 
       <!-- INFORMATION -->
-      <div class="information-card">
+<!-- BASIC INFORMATION -->
 
-        <div
-          class="information-row"
-          *ngFor="let item of postData()?.detailItems"
-        >
-          <div class="information-label">
-            <i class="fas fa-check-circle"></i>
-            <strong>{{ item.label }}</strong>
-          </div>
+<div 
+class="information-card"
+*ngIf="postData()?.basicDetails?.length"
+>
 
-          <span>{{ item.value }}</span>
-        </div>
+<h3 class="info-title">
+Basic Information
+</h3>
 
-      </div>
+
+<div
+class="information-row"
+*ngFor="let item of postData()?.basicDetails"
+>
+
+<div class="information-label">
+
+<i class="fas fa-check-circle"></i>
+
+<strong>
+{{item.label}}
+</strong>
+
+</div>
+
+
+<span>
+{{item.value}}
+</span>
+
+
+</div>
+
+
+</div>
+
+
+
+
+<!-- CUSTOM DETAILS -->
+
+<div 
+class="information-card"
+*ngIf="postData()?.customDetails?.length"
+>
+
+<h3 class="info-title">
+Details
+</h3>
+
+
+<div
+class="information-row"
+*ngFor="let item of postData()?.customDetails"
+>
+
+
+<div class="information-label">
+
+<img
+*ngIf="item.icon"
+[src]="item.icon"
+class="custom-field-icon"
+>
+
+
+<i
+*ngIf="!item.icon"
+class="fas fa-check-circle">
+</i>
+
+<strong>
+{{item.label}}
+</strong>
+
+</div>
+
+
+<span>
+{{item.value}}
+</span>
+
+
+</div>
+
+
+</div>
 
       <!-- LOCATION -->
       <div

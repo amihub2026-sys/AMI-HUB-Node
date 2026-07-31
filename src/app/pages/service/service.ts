@@ -1138,7 +1138,7 @@ video_urls: videoUrls,
           place_name: this.mainAd.place_name
         }
       };
-
+console.log("CATALOG DATA:", this.serviceBlocks);
       this.postDraftService.setDraft({
         rawPost: rawPayload,
         mainPhoto: this.mainAd.mainPhoto,
