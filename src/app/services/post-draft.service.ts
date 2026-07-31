@@ -79,6 +79,10 @@ export class PostDraftService {
     postId?: number | null;
     userId?: string | null;
   }): void {
+    console.log(
+  "POST DRAFT SERVICE BLOCKS:",
+  data.serviceBlocks
+);
     this.rawPost = this.cloneRawPost(data.rawPost);
     this.mainPhoto = data.mainPhoto ?? null;
     this.otherImages = [...(data.otherImages ?? [])];
@@ -127,6 +131,12 @@ export class PostDraftService {
   }
 
   getServiceBlocks(): ServiceBlockDraft[] {
+
+    console.log(
+  "SERVICE BLOCKS FROM DRAFT:",
+  this.serviceBlocks
+);
+    
     return this.serviceBlocks.map(block => ({
       title: block.title,
       price: block.price,

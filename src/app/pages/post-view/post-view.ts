@@ -308,7 +308,8 @@ async loadPost(): Promise<void> {
 
     const mappedPost = {
       ...data,
-
+catalogItems:
+  this.getNormalizedCatalog(data.catalog),
       postid: data._id,
       userid: seller?._id || data.sellerId,
 
@@ -357,20 +358,30 @@ sellerImage: seller?.profileImage
         subcategory: subcategory?.subcategoryName
       }),
 
-      detailItems: this.buildMongoDetailItems(
-        data,
-        category,
-        subcategory,
-        seller
-      ),
+basicDetails:
+  this.buildBasicDetails(
+    data,
+    category,
+    subcategory,
+    seller
+  ),
 
-      latitude:
-        this.toNumberOrNull(data.location?.latitude),
+customDetails:
+  this.buildCustomDetails(
+    data
+  ),
 
-      longitude:
-        this.toNumberOrNull(data.location?.longitude)
+latitude:
+  this.toNumberOrNull(data.customFields?.latitude),
+
+longitude:
+  this.toNumberOrNull(data.customFields?.longitude)
     };
 
+console.log(
+  "CATALOG ITEMS:",
+  mappedPost.catalogItems
+);
     this.postData.set(mappedPost);
 
     if (mappedPost.images.length > 0) {
@@ -436,32 +447,30 @@ private async countPostView(): Promise<void> {
     console.error('View count error:', error);
   }
 }
-buildLocation(data: any): string {
-  const city = data?.location?.city || '';
-  const state = data?.location?.state || '';
-  const address = data?.location?.address || '';
+buildLocation(data:any): string {
 
-  if (city && state) {
-    return `${city}, ${state}`;
-  }
+  const custom = data?.customFields || {};
 
-  return city || state || address || 'Location not available';
+  return (
+    custom.district ||
+    custom.state ||
+    custom.country ||
+    'Location not available'
+  );
+
 }
 
 buildDisplayAddress(data: any): string {
-  const location = data?.location || {};
 
-  const parts = [
-    location.address,
-    location.city,
-    location.state,
-    location.country,
-    location.pincode
-  ].filter(Boolean);
+  const custom = data?.customFields || {};
 
-  return parts.length
-    ? parts.join(', ')
-    : 'Location not available';
+  return (
+    custom.full_address ||
+    custom.area ||
+    custom.place_name ||
+    'Location not available'
+  );
+
 }
   buildCategoryText(data: any): string {
     const category = String(data?.category || '').trim();
@@ -473,68 +482,291 @@ buildDisplayAddress(data: any): string {
 
     return '';
   }
+buildBasicDetails(
+  data:any,
+  category:any,
+  subcategory:any,
+  seller:any
+){
 
+const items:any[]=[];
+
+
+const categoryText=[
+ category?.categoryName,
+ subcategory?.subcategoryName
+]
+.filter(Boolean)
+.join(' • ');
+
+
+if(categoryText){
+
+items.push({
+label:'Category',
+value:categoryText
+});
+
+}
+
+
+if(data?.listingType){
+
+items.push({
+label:'Type',
+value:String(data.listingType)
+.replace('_',' ')
+.replace(/^./,x=>x.toUpperCase())
+});
+
+}
+
+return items;
+
+}
+buildCustomDetails(data:any){
+
+  const items:any[] = [];
+
+  const excludedFields = [
+    'country',
+    'state',
+    'district',
+    'area',
+    'full_address',
+    'latitude',
+    'longitude',
+    'place_name'
+  ];
+
+
+  if(Array.isArray(data?.customFields)){
+
+    data.customFields.forEach((field:any)=>{
+
+      if(
+        field?.value !== null &&
+        field?.value !== undefined &&
+        field?.value !== ''
+      ){
+
+        items.push({
+
+          label:
+            field.label ||
+            field.fieldName,
+
+          value:
+            String(field.value),
+
+          icon:
+            field.icon || ''
+
+        });
+
+      }
+
+    });
+
+    return items;
+
+  }
+
+
+  Object.keys(data?.customFields || {})
+  .forEach(key=>{
+
+    if(excludedFields.includes(key)){
+      return;
+    }
+
+
+    const value=data.customFields[key];
+
+
+    if(
+      value !== null &&
+      value !== undefined &&
+      value !== ''
+    ){
+
+      items.push({
+
+        label:key,
+
+        value:String(value),
+
+        icon:''
+
+      });
+
+    }
+
+  });
+
+
+  return items;
+
+}
 buildMongoDetailItems(
   data: any,
   category: any,
   subcategory: any,
   seller: any
 ): Array<{ label: string; value: string }> {
+
   const items: Array<{ label: string; value: string }> = [];
+
+
+  // CATEGORY + SUBCATEGORY
 
   const categoryText = [
     category?.categoryName,
     subcategory?.subcategoryName
   ]
-    .filter(Boolean)
-    .join(' • ');
+  .filter(Boolean)
+  .join(' • ');
+
 
   if (categoryText) {
+
     items.push({
       label: 'Category',
       value: categoryText
     });
+
   }
+
+
+
+  // LISTING TYPE
 
   if (data?.listingType) {
+
     items.push({
+
       label: 'Type',
+
       value:
-        String(data.listingType).charAt(0).toUpperCase() +
-        String(data.listingType).slice(1)
+        String(data.listingType)
+        .charAt(0)
+        .toUpperCase()
+        +
+        String(data.listingType)
+        .slice(1)
+
     });
+
   }
 
+
+
+  // STATUS
+
   if (data?.status) {
+
     items.push({
+
       label: 'Status',
+
       value:
-        String(data.status).charAt(0).toUpperCase() +
-        String(data.status).slice(1)
+        String(data.status)
+        .replace('_',' ')
+        .charAt(0)
+        .toUpperCase()
+        +
+        String(data.status)
+        .replace('_',' ')
+        .slice(1)
+
     });
+
   }
+
+
+
+  // SELLER
 
   const sellerName =
     seller?.fullName ||
-    data?.contact?.name;
+    data?.contact?.name ||
+    '';
+
 
   if (sellerName) {
+
     items.push({
-      label: 'Seller',
-      value: sellerName
+
+      label:'Seller',
+
+      value:sellerName
+
     });
+
   }
+
+
+
+  // ADDRESS
 
   const address = this.buildDisplayAddress(data);
 
-  if (address !== 'Location not available') {
+
+  if(address !== 'Location not available'){
+
     items.push({
-      label: 'Address',
-      value: address
+
+      label:'Address',
+
+      value:address
+
     });
+
   }
 
+
+
+  // DYNAMIC CUSTOM FIELDS ONLY
+
+  if(data?.customFields){
+
+
+    Object.keys(data.customFields)
+    .forEach(key=>{
+
+
+      const value =
+        data.customFields[key];
+
+
+      if(
+        value !== null &&
+        value !== undefined &&
+        value !== ''
+      ){
+
+
+        items.push({
+
+          label:key,
+
+          value:String(value)
+
+        });
+
+
+      }
+
+
+    });
+
+
+  }
+
+
+
   return items;
+
 }
 
   getNormalizedCatalog(catalog: any): Array<{ title: string; price: number | null; imageUrl: string }> {
@@ -547,7 +779,12 @@ buildMongoDetailItems(
           item?.price !== undefined && item?.price !== null && item?.price !== ''
             ? Number(item.price)
             : null,
-        imageUrl: String(item?.imageUrl || item?.image_url || '').trim()
+        imageUrl: String(
+  item?.image ||
+  item?.imageUrl ||
+  item?.image_url ||
+  ''
+).trim()
       }))
       .filter((item: any) => item.title || item.price !== null || item.imageUrl);
   }
