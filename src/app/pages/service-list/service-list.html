@@ -10,13 +10,10 @@
 <!-- CATEGORY -->
 
 <app-categories
-
-*ngIf="!showSubcategories"
-
-categoryType="service"
-
-(categorySelected)="onCategorySelected($event)">
-
+  *ngIf="!showSubcategories"
+  categoryType="service"
+  navigationMode="parent"
+  (categorySelected)="onCategorySelected($event)">
 </app-categories>
 
 
