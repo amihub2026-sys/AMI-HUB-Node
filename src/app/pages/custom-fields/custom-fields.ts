@@ -483,13 +483,11 @@ return {
   }
 
 
-  isLoggedIn(): boolean {
-
-    return Boolean(
-      localStorage.getItem('userToken')
-    );
-  }
-
+isLoggedIn(): boolean {
+  return Boolean(
+    localStorage.getItem('token')
+  );
+}
 
   submitCustomFields(
     form: NgForm
@@ -552,21 +550,9 @@ return {
 
     this.isSubmitting = true;
 
-if(this.flowType === 'edit'){
-
-  this.router.navigate(
-    ['/edit-post', this.postId],
-    {
-      state:{
-        flow:'edit',
-        postId:this.postId,
-        customFieldValues:customFieldValues
-      }
-    }
-  );
-
-  this.isSubmitting = false;
-
+if (this.flowType === 'edit') {
+  this.updateEditedPost(customFieldValues);
+  return;
 }
 else{
 
@@ -598,6 +584,80 @@ else{
 
 }
   }
+
+private updateEditedPost(customFieldValues: any[]): void {
+  const savedEditPayload =
+    localStorage.getItem('edit_post_payload');
+
+  if (!savedEditPayload) {
+    this.isSubmitting = false;
+    this.submitError =
+      'Edited post data not found. Please go back and try again.';
+    return;
+  }
+
+  let editData: any;
+
+  try {
+    editData = JSON.parse(savedEditPayload);
+  } catch (error) {
+    console.error('Invalid edit payload:', error);
+
+    this.isSubmitting = false;
+    this.submitError =
+      'Unable to read edited post data.';
+    return;
+  }
+
+  const postId =
+    this.postId ||
+    editData?.postId;
+
+  if (!postId) {
+    this.isSubmitting = false;
+    this.submitError =
+      'Post ID not found.';
+    return;
+  }
+
+  const finalPayload = {
+    ...(editData?.payload || {}),
+    custom_fields: customFieldValues
+  };
+
+  this.api
+    .put(`/posts/${postId}`, finalPayload)
+    .subscribe({
+      next: (response: any) => {
+        console.log(
+          'Post updated successfully:',
+          response
+        );
+
+        localStorage.removeItem(
+          'edit_post_payload'
+        );
+
+        this.isSubmitting = false;
+
+        this.router.navigate(['/my-posts']);
+      },
+
+      error: (error: any) => {
+        console.error(
+          'Post update error:',
+          error
+        );
+
+        this.isSubmitting = false;
+
+        this.submitError =
+          error?.error?.message ||
+          'Unable to update the post. Please try again.';
+      }
+    });
+}
+
 private buildCustomFieldValues(): any[] {
 
   return this.fields.map(
