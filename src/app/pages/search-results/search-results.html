@@ -17,6 +17,16 @@
 <!-- active pages -->
 <div class="nav-links">
 
+  <button
+  type="button"
+  class="nav-link-btn"
+  [class.active]="selectedType === 'all'"
+  (click)="goToAll()"
+>
+  <i class="fas fa-border-all"></i>
+  <span>All</span>
+</button>
+
 <button
   class="nav-link-btn"
   [class.active]="selectedType === 'product'"
@@ -249,292 +259,192 @@
 
 </div>
 
-<!-- <div class="results-header">
+<!-- FULL SEARCH CONTENT: visible only on /search and /all-listings -->
+<section class="results-page" *ngIf="isSearchPage">
 
-  <h2 class="results-title">
-    Results for "{{ searchText || 'All' }}"
-  </h2>
+  <div class="results-header">
+    <h2 class="results-title">
+      Results for "{{ searchText || 'All' }}"
+    </h2>
 
- <button
-  type="button"
-  class="mobile-filter-btn"
-  (click)="toggleMobileFilters()"
->
-  <i class="fas fa-sliders-h"></i>
-
-  <span>
-    {{ showMobileFilters ? 'Close' : 'Filters' }}
-  </span>
-</button>
-
-</div> -->
- 
-  <!-- <div class="results-layout">
-   <div
-    class="mobile-filter-overlay"
-    *ngIf="showMobileFilters"
-    (click)="closeMobileFilters()"
-  ></div> -->
-
-  <!-- <div
-    class="filters-panel"
-    [class.mobile-filter-open]="showMobileFilters"
-  >
-
-
-<h3>🔍 Filters</h3> -->
-
-
-<!-- SEARCH -->
-<!-- <details open>
-  <summary>
-    Search
-  </summary>
-
-  <div class="filter-content">
-
-    <input
-      type="text"
-      [(ngModel)]="searchText"
-      placeholder="Search products..."
-      (keyup.enter)="searchNow()"
-    />
-
+    <button
+      type="button"
+      class="mobile-filter-btn"
+      (click)="toggleMobileFilters()"
+    >
+      <i class="fas fa-sliders-h"></i>
+      <span>{{ showMobileFilters ? 'Close' : 'Filters' }}</span>
+    </button>
   </div>
 
-</details>
- -->
+  <div class="results-layout">
 
-<!-- CATEGORY -->
-<!-- <details>
+    <div
+      class="mobile-filter-overlay"
+      *ngIf="showMobileFilters"
+      (click)="closeMobileFilters()"
+    ></div>
 
-<summary>
-  Category
-</summary>
+    <aside
+      class="filters-panel"
+      [class.mobile-filter-open]="showMobileFilters"
+    >
+      <h3>🔍 Filters</h3>
 
+      <details open>
+        <summary>Search</summary>
+        <div class="filter-content">
+          <input
+            type="text"
+            [(ngModel)]="searchText"
+            placeholder="Search products or services..."
+            (keyup.enter)="searchNow()"
+          />
+        </div>
+      </details>
 
-<div class="filter-content">
+      <details>
+        <summary>Category</summary>
+        <div class="filter-content">
+          <div class="custom-category-select">
+            <div
+              class="selected-category"
+              (click)="showCategoryDropdown = !showCategoryDropdown"
+            >
+              <img
+                *ngIf="selectedCategoryId && getSelectedCategory()?.iconurl"
+                [src]="getSelectedCategory()?.iconurl"
+                [alt]="getSelectedCategory()?.categoryname || 'Selected category'"
+              />
 
-<div class="custom-category-select">
+              <span>
+                {{ getSelectedCategory()?.categoryname || 'All Categories' }}
+              </span>
 
+              <span class="arrow">▼</span>
+            </div>
 
-  <div class="selected-category"
-     (click)="showCategoryDropdown = !showCategoryDropdown">
+            <div
+              class="category-dropdown"
+              *ngIf="showCategoryDropdown"
+            >
+              <button
+                type="button"
+                class="category-item"
+                (click)="selectCategory(null)"
+              >
+                <span>All Categories</span>
+              </button>
 
-      <img
-        *ngIf="selectedCategoryId"
-        [src]="getSelectedCategory()?.iconurl"
-      >
+              <button
+                type="button"
+                class="category-item"
+                *ngFor="let category of categories"
+                (click)="selectCategory(category.categoryid)"
+              >
+                <img
+                  *ngIf="category.iconurl"
+                  [src]="category.iconurl"
+                  [alt]="category.categoryname"
+                />
+                <span>{{ category.categoryname }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </details>
 
-      <span>
-        {{ getSelectedCategory()?.categoryname || 'All Categories' }}
-      </span>
+      <details>
+        <summary>Location</summary>
+        <div class="filter-content">
+          <div class="location-input">
+            <i class="fas fa-location-dot"></i>
+            <input
+              type="text"
+              [(ngModel)]="locationText"
+              placeholder="Search location..."
+              (input)="applyFilters()"
+            />
+          </div>
+        </div>
+      </details>
 
-      <span class="arrow">
-        ▼
-      </span>
+      <details>
+        <summary>Radius</summary>
+        <div class="filter-content">
+          <div>{{ selectedRadiusKm }} km</div>
+          <input
+            type="range"
+            min="1"
+            max="50"
+            [(ngModel)]="selectedRadiusKm"
+            (input)="applyFilters()"
+          />
+          <div class="range-labels">
+            <span>1 km</span>
+            <span>50 km</span>
+          </div>
+        </div>
+      </details>
 
-    </div>
+      <details>
+        <summary>Price Range</summary>
+        <div class="filter-content">
+          <div class="budget-row">
+            <input
+              type="number"
+              [(ngModel)]="minPrice"
+              placeholder="Min price"
+            />
+            <input
+              type="number"
+              [(ngModel)]="maxPrice"
+              placeholder="Max price"
+            />
+          </div>
+        </div>
+      </details>
 
+      <details>
+        <summary>Sort By</summary>
+        <div class="filter-content">
+          <select
+            [(ngModel)]="sortBy"
+            (change)="applyFilters()"
+          >
+            <option value="Newest">Newest</option>
+            <option value="Oldest">Oldest</option>
+            <option value="Price Low">Price Low to High</option>
+            <option value="Price High">Price High to Low</option>
+          </select>
+        </div>
+      </details>
 
-
-    <div class="category-dropdown"
-         *ngIf="showCategoryDropdown">
-
-
-      <div class="category-item"
-           (click)="selectCategory(null)">
-
-
-        <span>
-          All Categories
-        </span>
-
-
-      </div>
-
-
-
-      <div class="category-item"
-           *ngFor="let category of categories"
-           (click)="selectCategory(category.categoryid)">
-
-
-        <img
-          [src]="category.iconurl"
-          [alt]="category.categoryname"
+      <div class="filter-actions">
+        <button
+          type="button"
+          class="apply-btn"
+          (click)="applyMobileFilters()"
         >
+          Apply Filters
+        </button>
 
-
-        <span>
-          {{category.categoryname}}
-        </span>
-
-
+        <button
+          type="button"
+          class="reset-btn"
+          (click)="resetMobileFilters()"
+        >
+          Reset Filters
+        </button>
       </div>
+    </aside>
 
+    <main class="results-content">
 
-    </div>
-
-
-  </div>
-
-
-</div>
-
-</details> -->
-<!-- LOCATION -->
-<!-- <details>
-
-<summary>
- Location
-</summary>
-
-
-<div class="filter-content">
-
-<div class="location-input">
-
-<i class="fas fa-location-dot"></i>  <input
-    [(ngModel)]="locationText"
-    placeholder=" Search location..."
-    (input)="applyFilters()"
-  />
-
-</div>
-</div>
-
-</details> -->
-<!-- RADIUS -->
-<!-- <details>
-
-<summary>
- Radius
-</summary>
-
-
-<div class="filter-content">
-   {{selectedRadiusKm}} km
-
-<input
-type="range"
-min="1"
-max="50"
-[(ngModel)]="selectedRadiusKm"
-(input)="applyFilters()"
-/>
-
-
-<div class="range-labels">
-
-  <span>1 km</span>
-
-  <span>50 km</span>
-
-</div>
-
-
-</div>
-
-</details> -->
-<!-- PRICE -->
-
-<!-- <details>
-
-<summary>
- Price Range
-</summary> -->
-
-
-<!-- <div class="filter-content">
-
-<div class="budget-row">
-
-<input
-type="number"
-[(ngModel)]="minPrice"
-placeholder="Min price"
-/>
-<input
-type="number"
-[(ngModel)]="maxPrice"
-placeholder="Max price"
-/>
-</div>
-</div>
-</details> -->
-<!-- SORT -->
-
-<!-- <details>
-
-  <summary>
-    Sort By
-  </summary>
-
-
-  <div class="filter-content">
-
-
-    <select
-      [(ngModel)]="sortBy"
-      (change)="applyFilters()">
-
-
-      <option value="Newest">
-        Newest
-      </option>
-
-
-      <option value="Oldest">
-        Oldest
-      </option>
-
-
-      <option value="Price Low">
-        Price Low to High
-      </option>
-
-
-      <option value="Price High">
-        Price High to Low
-      </option>
-
-
-    </select>
-
-
-  </div>
-
-</details> -->
-
-  <!-- BUTTONS -->
-
-<!-- <div class="filter-actions">
-
-  <button
-    type="button"
-    class="apply-btn"
-    (click)="applyMobileFilters()"
-  >
-    Apply Filters
-  </button>
-
-  <button
-    type="button"
-    class="reset-btn"
-    (click)="resetMobileFilters()"
-  >
-    Reset Filters
-  </button>
-
-</div>
-
-
-</div>
-
-
-<div class="results-content">
- <div class="subcategory-bar" *ngIf="subcategories.length > 0">
+      <div
+        class="subcategory-bar"
+        *ngIf="subcategories.length > 0"
+      >
         <button
           type="button"
           class="subcategory-chip"
@@ -571,100 +481,54 @@ placeholder="Max price"
         >
           No matching posts found.
         </div>
-   <div
-  class="featured-card result-card"
-  *ngFor="let item of filteredResults"
-  (click)="openDetails(item)"
-> -->
 
-  <!-- BADGE
-  <span class="card-badge">
-    {{ item.displayType === 'service' ? 'SERVICE' : 'PRODUCT' }}
-  </span> -->
-<!-- 
-  HEART
-  <span class="favorite">
-    ♡
-  </span> -->
+        <article
+          class="featured-card result-card"
+          *ngFor="let item of filteredResults"
+          (click)="openDetails(item)"
+        >
+          <div class="card-image">
+            <span class="card-badge">
+              {{ item.displayType }}
+            </span>
 
+            <img
+              [src]="item.mainImage"
+              [alt]="item.displayTitle"
+            />
+          </div>
 
-  <!-- IMAGE -->
-<!-- <div class="card-image">
+          <div class="card-body">
+            <p class="category">
+              ✦ {{ item.displayCategory }}
+            </p>
 
-  <span class="card-badge">
-    {{item.displayType}}
-  </span>
+            <h4>{{ item.displayTitle }}</h4>
 
-  <img
-    [src]="item.mainImage"
-    [alt]="item.displayTitle"
-  />
+            <p class="description">
+              {{ item.description || 'Quality service and best products available' }}
+            </p>
 
-</div>
+            <div class="info-row">
+              <span>⭐ 4.8</span>
+              <span>
+                <i class="fas fa-location-dot"></i>
+                {{ getDistrict(item) }}
+              </span>
+            </div>
 
-  <div class="card-body"> -->
+            <div class="bottom-row">
+              <div class="price-box">
+                <strong *ngIf="item.displayPrice > 0">
+                  ₹{{ item.displayPrice }}
+                </strong>
+              </div>
 
-
-    <!-- CATEGORY -->
-   <!-- <p class="category">
-  ✦ {{item.displayCategory}}
-</p> -->
-
-
-    <!-- TITLE -->
-    <!-- <h4>
-      {{item.displayTitle}}
-    </h4> -->
-
-
-    <!-- DESCRIPTION -->
-    <!-- <p class="description">
-      {{item.description || 'Quality service and best products available'}}
-    </p> -->
-
-
-    <!-- RATING LOCATION -->
-    <!-- <div class="info-row">
-
-      <span>
-        ⭐ 4.8
-      </span>
-
-<span>
-  <i class="fas fa-location-dot"></i>
-  {{getDistrict(item)}}
-</span>
-    </div> -->
-
-
-    <!-- PRICE + BUTTON -->
-    <!-- <div class="bottom-row">
-
-      <div class="price-box">
-
-        <strong *ngIf="item.displayPrice > 0">
-          ₹{{item.displayPrice}}
-        </strong> -->
-
-        <!-- <small>
-          /service
-        </small> -->
-
-      <!-- </div>
-
-
-      <a class="card-link">
-        View Details
-      </a> -->
-
-
-    <!-- </div>
-
-
+              <span class="card-link">View Details</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </main>
   </div>
-
-        </div>
-    
-
-  </div>
-</div> -->
+</section>

@@ -28,6 +28,8 @@ styleUrls: ['./categories.css']
 export class Category implements OnInit {
   @Input()
 categoryType: 'product' | 'service' | 'all' = 'all';
+@Input()
+navigationMode: 'home' | 'parent' = 'parent';
   @Output()
 categorySelected = new EventEmitter<any>();
   @ViewChild('categorySlider')
@@ -175,10 +177,39 @@ getCategoryImage(category:any):string {
     });
   }
   // OPEN CATEGORY
-openCategory(cat:any){
+openCategory(cat: any): void {
 
+  const categoryId = String(
+    cat?._id ||
+    cat?.categoryid ||
+    cat?.id ||
+    ''
+  );
+
+  if (!categoryId) {
+    console.error(
+      'Category ID missing:',
+      cat
+    );
+
+    return;
+  }
+
+  // Send selected category to Product List or Service List.
   this.categorySelected.emit(cat);
 
+  // Product List and Service List must stay on the same page.
+  if (this.navigationMode === 'parent') {
+    return;
+  }
+
+  // Home page category click goes to All Search Results.
+  this.router.navigate(['/search'], {
+    queryParams: {
+      categoryId: categoryId,
+      type: 'all'
+    }
+  });
 }
   // IMAGE ERROR FALLBACK
   onCategoryImageError(

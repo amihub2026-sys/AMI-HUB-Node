@@ -1,780 +1,587 @@
-import { Component, ChangeDetectorRef, HostListener,Input } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { Location } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { supabase } from '../../../supabaseClient';
-import { SupabaseService } from '../../services/supabase.service';
+import {
+  ChangeDetectorRef,
+  Component,
+  HostListener,
+  Input,
+  OnInit
+} from '@angular/core';
 
+import { CommonModule, Location } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+
+import { ApiService } from '../../services/api.service';
 
 interface CategoryItem {
-  categoryid: number;
+  categoryid: string;
   categoryname: string;
-  slug?: string | null;
-  iconurl?: string | null;
-  bannerurl?: string | null;
-  category_type?: string | null;
-  isactive?: boolean | null;
-  sortorder?: number | null;
+  iconurl?: string;
+  availableIn?: string[];
 }
 
 interface SubcategoryItem {
-  subcategoryid: number;
-  categoryid: number;
+  subcategoryid: string;
+  categoryid: string;
   subcategoryname: string;
-  iconurl?: string | null;
-  isactive?: boolean | null;
-  sortorder?: number | null;
+  iconurl?: string;
 }
 
 @Component({
   selector: 'app-search-results',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule
+  ],
   templateUrl: './search-results.html',
   styleUrls: ['./search-results.css']
 })
-export class SearchResults {
-  @Input() results:any[] = [];
+export class SearchResults implements OnInit {
+
+  @Input() results: any[] = [];
+@Input()
+type: 'all' | 'product' | 'service' | 'job' = 'all';
   searchText = '';
   locationText = '';
   selectedRadiusKm = 5;
-selectedType: 'all' | 'product' | 'service' | 'job' = 'all';
-showCategoryDropdown = false;
-sortBy = 'Newest';
 
-  selectedCategoryId: number | null = null;
-  selectedSubcategoryId: number | null = null;
+  selectedType: 'all' | 'product' | 'service' | 'job' = 'all';
+
+  selectedCategoryId: string | null = null;
+  selectedSubcategoryId: string | null = null;
 
   minPrice: number | null = null;
   maxPrice: number | null = null;
-   showMobileFilters = false;
+
+  sortBy = 'Newest';
+
+  showCategoryDropdown = false;
+  showMobileFilters = false;
+  showProfileMenu = false;
+
+  isLoggedInUser = false;
+  notificationCount = 0;
+  chatCount = 0;
 
   isLoading = false;
 
-  filteredResults: any[] = [];
-
   categories: CategoryItem[] = [];
   subcategories: SubcategoryItem[] = [];
-showProfileMenu = false;
-isLoggedInUser = false;
-notificationCount = 0;
-chatCount = 0;
-
+  filteredResults: any[] = [];
 
   constructor(
     private route: ActivatedRoute,
-    
-     public router: Router,
+    public router: Router,
     private cdr: ChangeDetectorRef,
-      private location: Location,
-       private supabaseService: SupabaseService
-   
+    private location: Location,
+    private api: ApiService
   ) {}
-  goBack(): void {
-  this.location.back();
-}
-goToLogin(): void {
 
-  this.showProfileMenu = false;
+  ngOnInit(): void {
+    this.isLoggedInUser =
+      !!localStorage.getItem('token');
+
+    this.route.queryParamMap.subscribe(async (params) => {
+      this.searchText =
+        String(params.get('q') || '').trim();
+
+      this.selectedCategoryId =
+        params.get('categoryId') ||
+        params.get('category') ||
+        null;
+
+      this.selectedSubcategoryId =
+        params.get('subcategoryId') ||
+        params.get('subcategory') ||
+        null;
+
+const incomingType =
+  String(
+    params.get('type') ||
+    this.type ||
+    'all'
+  )
+    .trim()
+    .toLowerCase();
+
+      this.selectedType =
+        incomingType === 'products'
+          ? 'product'
+          : incomingType === 'services' ||
+            incomingType === 'service-list'
+          ? 'service'
+          : incomingType === 'product' ||
+            incomingType === 'service' ||
+            incomingType === 'job'
+          ? incomingType
+          : 'all';
 
-  this.router.navigate(['/login']);
-
-}
-// account dropdown
-toggleProfileMenu(event: MouseEvent): void {
-
-  event.stopPropagation();
-
-  this.showProfileMenu =
-  !this.showProfileMenu;
-
-}
-
-
-
-@HostListener('document:click')
-
-closeProfileOutside(): void {
-
-  this.showProfileMenu = false;
-
-}
-
-private async isLoggedIn(): Promise<boolean> {
-  const token = localStorage.getItem('token');
-
-  return !!token;
-}
-
-private redirectToLogin(page:string):void{
-
- this.router.navigate(
-  ['/login'],
-  {
-    state:{
-      redirectTo:page
-    }
-  }
- );
-
-}
-
-goToProfileMenu():void{
-
-
- this.showProfileMenu=false;
-
-
- this.isLoggedIn()
- .then(logged=>{
-
-
-  if(!logged){
-
-    this.redirectToLogin('profile');
-
-    return;
-
-  }
-
-
-  this.router.navigate(['/seller-profile']);
-
-
- });
-
-
-}
-
-goToOrders():void{
-
-
- this.showProfileMenu=false;
-
-
- this.isLoggedIn()
- .then(logged=>{
-
-
- if(!logged){
-
-   this.redirectToLogin('orders');
-
-   return;
-
- }
-
-
- this.router.navigate(['/orders']);
-
-
- });
-
-
-}
-
-goToFavorites():void{
-
-
- this.showProfileMenu=false;
-
-
- this.isLoggedIn()
- .then(logged=>{
-
-
- if(!logged){
-
-   this.redirectToLogin('wishlist');
-
-   return;
-
- }
-
-
- this.router.navigate(['/favt']);
-
-
- });
-
-
-}
-
-goToNotifications():void{
-
-
- this.showProfileMenu=false;
-
-
- this.isLoggedIn()
- .then(logged=>{
-
-
- if(!logged){
-
-   this.redirectToLogin('notification');
-
-   return;
-
- }
-
-
- this.router.navigate(['/notification']);
-
-
- });
-
-
-}
-
-goToChatFromDropdown(): void {
-  this.showProfileMenu = false;
-
-  this.isLoggedIn().then((loggedIn) => {
-    if (!loggedIn) {
-      this.redirectToLogin('chats');
-      return;
-    }
-
-    this.router.navigate(['/chats']);
-  });
-}
-goToMyPosts(): void {
-
-  this.showProfileMenu = false;
-
-  this.isLoggedIn().then((loggedIn) => {
-
-    if (!loggedIn) {
-
-      this.router.navigate(['/login'], {
-        state: {
-          redirectTo: 'my-posts'
-        }
-      });
-
-      return;
-
-    }
-
-
-    this.router.navigate(['/my-posts']);
-
-  });
-
-}
-async logoutFromDropdown():Promise<void>{
-
-
- this.showProfileMenu=false;
-
-
- await this.supabaseService.signOut();
-
-
- localStorage.clear();
-
-
- this.router.navigate(['/login']);
-
-
-}
-
-
-ngOnInit() {
-  this.isLoggedInUser = !!localStorage.getItem('token');
-
-  this.route.queryParams.subscribe(async (params) => {
-      this.searchText = (params['q'] || '').trim();
-
-      const incomingType = String(params['type'] || this.selectedType)
-.toLowerCase()
-.trim();
-    this.selectedType =
- incomingType === 'products'
- ? 'product'
- : incomingType === 'services' || incomingType === 'service-list'
- ? 'service'
- : incomingType === 'product' ||
-   incomingType === 'service' ||
-   incomingType === 'job'
- ? (incomingType as 'product' | 'service' | 'job')
- : 'all';
-
-      this.resetPageState();
       await this.initialLoad();
     });
   }
-getSelectedCategory(){
 
-  return this.categories.find(
-    c => c.categoryid === this.selectedCategoryId
-  );
-
-}
-
-
-toggleMobileFilters(): void {
-  this.showMobileFilters = !this.showMobileFilters;
-
-  if (typeof document !== 'undefined') {
-    document.body.style.overflow =
-      this.showMobileFilters ? 'hidden' : '';
-  }
-}
-goHome(): void {
-  this.router.navigate(['/']);
-}
-closeMobileFilters(): void {
-  this.showMobileFilters = false;
-
-  if (typeof document !== 'undefined') {
-    document.body.style.overflow = '';
-  }
-}
-
-applyMobileFilters(): void {
-  this.applyFilters();
-  this.closeMobileFilters();
-}
-
-async resetMobileFilters(): Promise<void> {
-  await this.resetFilters();
-  this.closeMobileFilters();
-}
-async selectCategory(id:number|null){
-
-  this.selectedCategoryId = id;
-
-  this.showCategoryDropdown = false;
-
-  await this.onCategoryChange();
-
-}
-  resetPageState() {
-    this.selectedCategoryId = null;
-    this.selectedSubcategoryId = null;
-    this.subcategories = [];
+  async initialLoad(): Promise<void> {
+    this.isLoading = true;
     this.results = [];
     this.filteredResults = [];
-    this.isLoading = false;
-    this.cdr.detectChanges();
-  }
-
-  async initialLoad() {
-    this.isLoading = true;
+    this.subcategories = [];
     this.cdr.detectChanges();
 
     try {
-      await this.loadResults();
       await this.loadCategories();
-      await this.resolveCategoryFromSearch();
 
-      if (this.selectedCategoryId !== null) {
-        await this.loadResults();
+      if (this.selectedCategoryId) {
+        await this.loadSubcategories(
+          this.selectedCategoryId
+        );
       }
 
+      await this.loadResults();
       this.applyFilters();
+
     } catch (error) {
-      console.error('Initial search load error:', error);
+      console.error(
+        'Search results initial load error:',
+        error
+      );
+
       this.results = [];
       this.filteredResults = [];
+
     } finally {
       this.isLoading = false;
       this.cdr.detectChanges();
     }
   }
 
-  goToServiceList() {
-    this.selectedType = 'service';
-    this.searchNow();
+  async loadCategories(): Promise<void> {
+    try {
+      const response: any =
+        await firstValueFrom(
+          this.api.get('/categories')
+        );
+
+      const allCategories =
+        (response?.data || [])
+          .filter(
+            (item: any) =>
+              item?.isActive === true
+          )
+          .map((item: any) => ({
+            categoryid: String(
+              item?._id ||
+              item?.categoryid ||
+              ''
+            ),
+            categoryname:
+              item?.categoryName ||
+              item?.categoryname ||
+              '',
+            iconurl:
+              item?.icon ||
+              item?.image ||
+              item?.iconurl ||
+              '',
+            availableIn:
+              Array.isArray(item?.availableIn)
+                ? item.availableIn
+                : []
+          }));
+
+      this.categories =
+        this.selectedType === 'all'
+          ? allCategories
+          : allCategories.filter(
+              (category: CategoryItem) =>
+                category.availableIn?.includes(
+                  this.selectedType
+                )
+            );
+
+    } catch (error) {
+      console.error(
+        'Category loading error:',
+        error
+      );
+
+      this.categories = [];
+    }
   }
 
-  async searchNow() {
-    const cleanSearch = (this.searchText || '').trim();
+async loadSubcategories(
+  categoryId: string
+): Promise<void> {
 
-    const currentQ = (this.route.snapshot.queryParamMap.get('q') || '').trim();
-    const currentType = (this.route.snapshot.queryParamMap.get('type') || 'all').trim();
-    const nextType = this.selectedType;
+  try {
 
-    if (currentQ === cleanSearch && currentType === nextType) {
-      this.resetPageState();
-      await this.initialLoad();
-      return;
+    let endpoint = '';
+
+    if (this.selectedType === 'all') {
+
+      endpoint =
+        `/subcategories/category/${encodeURIComponent(categoryId)}`;
+
+    } else {
+
+      endpoint =
+        `/subcategories/category/${encodeURIComponent(categoryId)}?type=${this.selectedType}`;
+
     }
+
+    const response: any =
+      await firstValueFrom(
+        this.api.get(endpoint)
+      );
+
+    const rawSubcategories =
+      response?.data ||
+      response?.subcategories ||
+      [];
+
+    this.subcategories =
+      (Array.isArray(rawSubcategories)
+        ? rawSubcategories
+        : []
+      ).map((item: any) => ({
+
+        ...item,
+
+        subcategoryid: String(
+          item?._id ||
+          item?.subcategoryid ||
+          ''
+        ),
+
+        categoryid: String(
+          item?.categoryId?._id ||
+          item?.categoryId ||
+          item?.categoryid ||
+          ''
+        ),
+
+        subcategoryname:
+          item?.subcategoryName ||
+          item?.subcategoryname ||
+          '',
+
+        iconurl:
+          item?.icon ||
+          item?.image ||
+          item?.iconurl ||
+          ''
+
+      }));
+
+    console.log(
+      'ALL PAGE SUBCATEGORIES:',
+      this.subcategories
+    );
+
+  } catch (error) {
+
+    console.error(
+      'Subcategory loading error:',
+      error
+    );
+
+    this.subcategories = [];
+  }
+}
+  async loadResults(): Promise<void> {
+    try {
+      const params =
+        new URLSearchParams();
+
+      if (this.searchText) {
+        params.set(
+          'keyword',
+          this.searchText
+        );
+      }
+
+      if (this.selectedType !== 'all') {
+        params.set(
+          'listingType',
+          this.selectedType
+        );
+      }
+
+      if (this.selectedCategoryId) {
+        params.set(
+          'categoryId',
+          this.selectedCategoryId
+        );
+      }
+
+      if (this.selectedSubcategoryId) {
+        params.set(
+          'subcategoryId',
+          this.selectedSubcategoryId
+        );
+      }
+
+      const query =
+        params.toString();
+
+      const endpoint =
+        query
+          ? `/posts?${query}`
+          : '/posts';
+
+      const response: any =
+        await firstValueFrom(
+          this.api.get(endpoint)
+        );
+
+      const postList =
+        Array.isArray(response?.data)
+          ? response.data
+          : Array.isArray(response?.posts)
+          ? response.posts
+          : Array.isArray(response)
+          ? response
+          : [];
+
+      this.results =
+        postList.map(
+          (item: any) =>
+            this.mapPost(item)
+        );
+
+      this.filteredResults =
+        [...this.results];
+
+    } catch (error) {
+      console.error(
+        'Post loading error:',
+        error
+      );
+
+      this.results = [];
+      this.filteredResults = [];
+    }
+  }
+
+  private mapPost(item: any): any {
+    const category =
+      typeof item?.categoryId === 'object'
+        ? item.categoryId
+        : null;
+
+    const subcategory =
+      typeof item?.subcategoryId === 'object'
+        ? item.subcategoryId
+        : null;
+
+    return {
+      ...item,
+
+      postid: String(
+        item?._id ||
+        item?.postid ||
+        ''
+      ),
+
+      categoryid: String(
+        category?._id ||
+        item?.categoryId ||
+        item?.categoryid ||
+        ''
+      ),
+
+      subcategoryid: String(
+        subcategory?._id ||
+        item?.subcategoryId ||
+        item?.subcategoryid ||
+        ''
+      ),
+
+      displayTitle:
+        item?.title ||
+        'Untitled',
+
+      displayPrice:
+        Number(item?.price || 0),
+
+      displayCategory:
+        category?.categoryName ||
+        item?.category ||
+        'Category',
+
+      displayType:
+        String(
+          item?.listingType ||
+          item?.adtype ||
+          'product'
+        ).toLowerCase(),
+
+      mainImage:
+        this.getMainImage(item),
+
+      displayLocation:
+        this.buildLocation(item),
+
+      createdon:
+        item?.createdAt ||
+        item?.createdon ||
+        null
+    };
+  }
+
+  async selectCategory(
+    id: string | null
+  ): Promise<void> {
+    this.showCategoryDropdown = false;
 
     await this.router.navigate(['/search'], {
       queryParams: {
-        q: cleanSearch || '',
-        type: nextType
+        q: this.searchText || null,
+        type: this.selectedType,
+        categoryId: id,
+        subcategoryId: null
       }
     });
   }
 
-selectType(type:'product'|'service'){
+  async selectSubcategory(
+    subcategory: SubcategoryItem
+  ): Promise<void> {
+    await this.router.navigate(['/search'], {
+      queryParams: {
+        q: this.searchText || null,
+        type: this.selectedType,
+        categoryId:
+          this.selectedCategoryId,
+        subcategoryId:
+          subcategory.subcategoryid
+      }
+    });
+  }
 
-  this.selectedType = type;
+  async showAllSubcategoryPosts(): Promise<void> {
+    await this.router.navigate(['/search'], {
+      queryParams: {
+        q: this.searchText || null,
+        type: this.selectedType,
+        categoryId:
+          this.selectedCategoryId,
+        subcategoryId: null
+      }
+    });
+  }
 
-  if(type === 'product'){
-    this.router.navigate(
-      ['/products'],
-      {queryParams:{type:'product'}}
+  getSelectedCategory():
+    CategoryItem | undefined {
+    return this.categories.find(
+      (category) =>
+        String(category.categoryid) ===
+        String(this.selectedCategoryId)
     );
   }
 
-
-  if(type === 'service'){
-    this.router.navigate(
-      ['/service-list'],
-      {queryParams:{type:'service'}}
-    );
-  }
-
-}
-
-  async loadCategories() {
-    try {
-      let query = supabase
-        .from('categories')
-      .select('categoryid, categoryname, slug, iconurl, bannerurl, category_type, isactive, sortorder')
-        .eq('isactive', true)
-        .order('sortorder', { ascending: true });
-
-      if (this.selectedType === 'product') {
-        query = query.eq('category_type', 'product');
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-
-      this.categories = (data || []) as CategoryItem[];
-      this.cdr.detectChanges();
-    } catch (error) {
-      console.error('Error loading categories:', error);
-      this.categories = [];
-      this.cdr.detectChanges();
-    }
-  }
-
-  async loadSubcategories(categoryId: number | null) {
-    if (!categoryId) {
-      this.subcategories = [];
-      this.cdr.detectChanges();
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('subcategories')
-        .select('subcategoryid, categoryid, subcategoryname, iconurl, isactive, sortorder')
-        .eq('categoryid', categoryId)
-        .eq('isactive', true)
-        .order('sortorder', { ascending: true });
-
-      if (error) throw error;
-
-      this.subcategories = (data || []) as SubcategoryItem[];
-      this.cdr.detectChanges();
-    } catch (error) {
-      console.error('Error loading subcategories:', error);
-      this.subcategories = [];
-      this.cdr.detectChanges();
-    }
-  }
-
-  async resolveCategoryFromSearch() {
-    const cleanSearch = (this.searchText || '').trim().toLowerCase();
-
-    this.selectedCategoryId = null;
-    this.selectedSubcategoryId = null;
-    this.subcategories = [];
-
-    if (!cleanSearch || this.categories.length === 0) {
-      this.cdr.detectChanges();
-      return;
-    }
-
-    const matchedCategory = this.findCategoryFromSearch(cleanSearch);
-
-    if (matchedCategory) {
-      const detectedId = Number(matchedCategory.categoryid);
-      const exists = this.categories.find(
-        (c) => Number(c.categoryid) === detectedId
-      );
-
-      if (exists) {
-        this.selectedCategoryId = detectedId;
-        await this.loadSubcategories(this.selectedCategoryId);
-
-        setTimeout(() => {
-          this.selectedCategoryId = detectedId;
-          this.cdr.detectChanges();
-        });
-      }
-
-      this.cdr.detectChanges();
-      return;
-    }
-
-    const matchedPost = this.results.find((item: any) => {
-      const text = [
-        item?.title,
-        item?.description,
-        item?.category,
-        item?.displayTitle,
-        item?.displayLocation
-      ]
-        .filter(Boolean)
-        .join(' ')
+  applyFilters(): void {
+    const search =
+      this.searchText
+        .trim()
         .toLowerCase();
 
-      const normalizedSearch = this.normalizeWord(cleanSearch);
+    const location =
+      this.locationText
+        .trim()
+        .toLowerCase();
 
-      return (
-        text.includes(cleanSearch) ||
-        text.includes(normalizedSearch) ||
-        this.normalizeWord(text).includes(normalizedSearch)
-      );
-    });
+    let data =
+      [...this.results];
 
-    if (matchedPost?.categoryid) {
-      const detectedId = Number(matchedPost.categoryid);
-      const exists = this.categories.find(
-        (c) => Number(c.categoryid) === detectedId
-      );
-
-      if (exists) {
-        this.selectedCategoryId = detectedId;
-        await this.loadSubcategories(this.selectedCategoryId);
-
-        setTimeout(() => {
-          this.selectedCategoryId = detectedId;
-          this.cdr.detectChanges();
-        });
-      }
-    }
-
-    this.cdr.detectChanges();
-  }
-
-  async onCategoryChange() {
-    this.selectedSubcategoryId = null;
-    await this.loadSubcategories(this.selectedCategoryId);
-    this.applyFilters();
-  }
-
-  selectSubcategory(sub: SubcategoryItem) {
-    this.selectedSubcategoryId = sub.subcategoryid;
-    this.applyFilters();
-  }
-
-  showAllSubcategoryPosts() {
-    this.selectedSubcategoryId = null;
-    this.applyFilters();
-  }
-
-  async loadResults() {
-    try {
-      let query = supabase
-        .from('post')
-        .select(`
-          postid,
-          title,
-          description,
-          price,
-          location,
-          areaid,
-          cityid,
-          image_url,
-          image_urls,
-          category,
-          categoryid,
-          subcategoryid,
-          adtype,
-          isactive,
-          status,
-          createdon
-        `)
-        .eq('isactive', true)
-        .eq('status', 'Active')
-        .order('createdon', { ascending: false })
-        .limit(60);
-
-      if (this.selectedType === 'product') {
-        query = query.eq('adtype', 'product');
-      } else if (this.selectedType === 'service') {
-        query = query.eq('adtype', 'service');
-      }
-        else if (this.selectedType === 'job') {
-  query = query.eq('adtype', 'job');
-}   
-      if (this.selectedCategoryId !== null) {
-        query = query.eq('categoryid', this.selectedCategoryId);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      const mapped = (data || []).map((item: any) => ({
-        ...item,
-        mainImage: this.getMainImage(item),
-        displayTitle: item.title || 'Untitled',
-        displayPrice: Number(item.price || 0),
-        displayCategory: item.category || 'Category',
-        displayLocation: item.location || this.buildLocation(item),
-        displayType: (item.adtype || 'product').toLowerCase()
-      }));
-
-      this.results = mapped;
-      this.filteredResults = [...mapped];
-      this.isLoading = false;
-
-      this.cdr.detectChanges();
-    } catch (error) {
-      console.error('Error loading results:', error);
-      this.results = [];
-      this.filteredResults = [];
-      this.isLoading = false;
-      this.cdr.detectChanges();
-    }
-  }
-
-  findCategoryFromSearch(cleanSearch: string): CategoryItem | null {
-    const search = cleanSearch.trim().toLowerCase();
-
-    for (const category of this.categories) {
-      const name = String(category.categoryname || '').trim().toLowerCase();
-      if (!name) continue;
-
-      if (search === name) return category;
-      if (search.includes(name) || name.includes(search)) return category;
-      if (this.normalizeWord(search) === this.normalizeWord(name)) return category;
-
-      const searchWords = search.split(/\s+/).filter(Boolean);
-      const categoryWords = name.split(/\s+/).filter(Boolean);
-
-      for (const sWord of searchWords) {
-        if (sWord.length < 3) continue;
-
-        const matched = categoryWords.some((cWord) =>
-          cWord.includes(sWord) ||
-          sWord.includes(cWord) ||
-          this.normalizeWord(cWord) === this.normalizeWord(sWord)
-        );
-
-        if (matched) return category;
-      }
-    }
-
-    return null;
-  }
-  getDistrict(item:any){
-  return item.district 
-      || item.location?.split(',')[3]?.trim()
-      || 'Location';
-}
-
-  normalizeWord(value: string): string {
-    let v = value.trim().toLowerCase();
-
-    if (v.endsWith('ies')) return v.slice(0, -3) + 'y';
-    if (v.endsWith('es')) return v.slice(0, -2);
-    if (v.endsWith('s')) return v.slice(0, -1);
-
-    return v;
-  }
-
-  applyFilters() {
-    const cleanSearch = (this.searchText || '').trim().toLowerCase();
-    const locationSearch = (this.locationText || '').trim().toLowerCase();
-    let data = [...this.results];
-    this.filteredResults = data;
-    // SORT FILTER
-
-if (this.sortBy === 'Newest') {
-
-  data.sort((a,b) =>
-    new Date(b.createdon).getTime() -
-    new Date(a.createdon).getTime()
-  );
-
-}
-
-
-if (this.sortBy === 'Oldest') {
-
-  data.sort((a,b) =>
-    new Date(a.createdon).getTime() -
-    new Date(b.createdon).getTime()
-  );
-
-}
-
-
-if (this.sortBy === 'Price Low') {
-
-  data.sort((a,b) =>
-    Number(a.displayPrice) -
-    Number(b.displayPrice)
-  );
-
-}
-
-
-if (this.sortBy === 'Price High') {
-
-  data.sort((a,b) =>
-    Number(b.displayPrice) -
-    Number(a.displayPrice)
-  );
-
-}
-
-    if (cleanSearch) {
-      data = data.filter((item) =>
-        String(item.title || '').toLowerCase().includes(cleanSearch) ||
-        String(item.description || '').toLowerCase().includes(cleanSearch) ||
-        String(item.category || '').toLowerCase().includes(cleanSearch)
-      );
-    }
-
-    if (locationSearch) {
-      data = data.filter((item) => {
-        const locationHaystack = [
-          item?.location,
-          item?.displayLocation
+    if (search) {
+      data = data.filter((item: any) => {
+        const searchableText = [
+          item?.displayTitle,
+          item?.description,
+          item?.displayCategory,
+          item?.subcategoryId?.subcategoryName
         ]
           .filter(Boolean)
           .join(' ')
           .toLowerCase();
 
-        return locationHaystack.includes(locationSearch);
+        return searchableText.includes(search);
       });
     }
 
-    if (this.selectedCategoryId !== null) {
-      data = data.filter((item) =>
-        Number(item.categoryid) === Number(this.selectedCategoryId)
+    if (location) {
+      data = data.filter((item: any) => {
+        const locationText = [
+          item?.displayLocation,
+          item?.customFields?.full_address,
+          item?.customFields?.area,
+          item?.customFields?.district,
+          item?.location?.address,
+          item?.location?.city,
+          item?.location?.state
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+
+        return locationText.includes(location);
+      });
+    }
+
+    if (this.minPrice !== null) {
+      data = data.filter(
+        (item: any) =>
+          Number(item.displayPrice || 0) >=
+          Number(this.minPrice)
       );
     }
 
-    if (this.selectedSubcategoryId !== null) {
-      data = data.filter((item) =>
-        Number(item.subcategoryid) === Number(this.selectedSubcategoryId)
+    if (this.maxPrice !== null) {
+      data = data.filter(
+        (item: any) =>
+          Number(item.displayPrice || 0) <=
+          Number(this.maxPrice)
       );
     }
 
-    if (this.minPrice !== null && this.minPrice !== 0) {
-      data = data.filter((item) =>
-        Number(item.displayPrice || 0) >= Number(this.minPrice)
+    if (this.sortBy === 'Newest') {
+      data.sort(
+        (a: any, b: any) =>
+          new Date(
+            b.createdon || 0
+          ).getTime() -
+          new Date(
+            a.createdon || 0
+          ).getTime()
       );
     }
 
-    if (this.maxPrice !== null && this.maxPrice !== 0) {
-      data = data.filter((item) =>
-        Number(item.displayPrice || 0) <= Number(this.maxPrice)
+    if (this.sortBy === 'Oldest') {
+      data.sort(
+        (a: any, b: any) =>
+          new Date(
+            a.createdon || 0
+          ).getTime() -
+          new Date(
+            b.createdon || 0
+          ).getTime()
+      );
+    }
+
+    if (this.sortBy === 'Price Low') {
+      data.sort(
+        (a: any, b: any) =>
+          Number(a.displayPrice || 0) -
+          Number(b.displayPrice || 0)
+      );
+    }
+
+    if (this.sortBy === 'Price High') {
+      data.sort(
+        (a: any, b: any) =>
+          Number(b.displayPrice || 0) -
+          Number(a.displayPrice || 0)
       );
     }
 
@@ -782,62 +589,291 @@ if (this.sortBy === 'Price High') {
     this.cdr.detectChanges();
   }
 
-  async resetFilters() {
+  async searchNow(): Promise<void> {
+    await this.router.navigate(['/search'], {
+      queryParams: {
+        q:
+          this.searchText.trim() ||
+          null,
+        type:
+          this.selectedType,
+        categoryId:
+          this.selectedCategoryId,
+        subcategoryId:
+          this.selectedSubcategoryId
+      }
+    });
+  }
+
+  async resetFilters(): Promise<void> {
     this.searchText = '';
     this.locationText = '';
     this.selectedRadiusKm = 5;
-    this.selectedCategoryId = null;
-    this.selectedSubcategoryId = null;
-    this.subcategories = [];
     this.minPrice = null;
     this.maxPrice = null;
-    this.results = [];
-    this.filteredResults = [];
-    this.isLoading = false;
-    this.cdr.detectChanges();
+    this.sortBy = 'Newest';
 
-    await this.initialLoad();
+    await this.router.navigate(['/search'], {
+      queryParams: {
+        type:
+          this.selectedType
+      }
+    });
   }
 
-  buildLocation(item: any): string {
-    if (item?.location) return item.location;
-
-    const parts: string[] = [];
-    if (item?.areaid) parts.push(`Area ${item.areaid}`);
-    if (item?.cityid) parts.push(`City ${item.cityid}`);
-
-    return parts.length ? parts.join(', ') : 'Location not available';
+  goToAll(): void {
+    this.router.navigate(['/search'], {
+      queryParams: {
+        type: 'all'
+      }
+    });
   }
 
-  getMainImage(item: any): string {
-    if (item?.image_url) return item.image_url;
-    if (Array.isArray(item?.image_urls) && item.image_urls.length > 0) {
-      return item.image_urls[0];
-    }
-    return 'https://via.placeholder.com/400x260?text=No+Image';
+selectType(
+  type: 'product' | 'service'
+): void {
+
+  if (type === 'product') {
+
+    this.router.navigate(
+      ['/products'],
+      {
+        queryParams: {
+          type: 'product'
+        }
+      }
+    );
+
+    return;
   }
- 
-
-  openDetails(item: any) {
-    const id = item?.postid;
-    if (!id) return;
-    this.router.navigate(['/details', id]);
-  }
-
-goToJobs(){
-
-  this.selectedType = 'job';
-
 
   this.router.navigate(
-    ['/job'],
+    ['/service-list'],
     {
-      queryParams:{
-        type:'job'
+      queryParams: {
+        type: 'service'
       }
     }
   );
 
 }
 
+  goToJobs(): void {
+    this.router.navigate(['/job']);
+  }
+
+  goHome(): void {
+    this.router.navigate(['/']);
+  }
+
+  goBack(): void {
+    this.location.back();
+  }
+
+  toggleMobileFilters(): void {
+    this.showMobileFilters =
+      !this.showMobileFilters;
+
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow =
+        this.showMobileFilters
+          ? 'hidden'
+          : '';
+    }
+  }
+
+  closeMobileFilters(): void {
+    this.showMobileFilters = false;
+
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = '';
+    }
+  }
+
+  applyMobileFilters(): void {
+    this.applyFilters();
+    this.closeMobileFilters();
+  }
+
+  async resetMobileFilters(): Promise<void> {
+    await this.resetFilters();
+    this.closeMobileFilters();
+  }
+
+  toggleProfileMenu(
+    event: MouseEvent
+  ): void {
+    event.stopPropagation();
+
+    this.showProfileMenu =
+      !this.showProfileMenu;
+  }
+
+  @HostListener('document:click')
+  closeProfileOutside(): void {
+    this.showProfileMenu = false;
+  }
+
+  goToLogin(): void {
+    this.showProfileMenu = false;
+    this.router.navigate(['/login']);
+  }
+
+  goToProfileMenu(): void {
+    this.showProfileMenu = false;
+
+    if (!this.isLoggedInUser) {
+      this.redirectToLogin('profile');
+      return;
+    }
+
+    this.router.navigate([
+      '/seller-profile'
+    ]);
+  }
+
+  goToOrders(): void {
+    this.showProfileMenu = false;
+
+    if (!this.isLoggedInUser) {
+      this.redirectToLogin('orders');
+      return;
+    }
+
+    this.router.navigate(['/orders']);
+  }
+
+  goToFavorites(): void {
+    this.showProfileMenu = false;
+
+    if (!this.isLoggedInUser) {
+      this.redirectToLogin('wishlist');
+      return;
+    }
+
+    this.router.navigate(['/favt']);
+  }
+
+  goToNotifications(): void {
+    this.showProfileMenu = false;
+
+    if (!this.isLoggedInUser) {
+      this.redirectToLogin('notification');
+      return;
+    }
+
+    this.router.navigate([
+      '/notification'
+    ]);
+  }
+
+  goToChatFromDropdown(): void {
+    this.showProfileMenu = false;
+
+    if (!this.isLoggedInUser) {
+      this.redirectToLogin('chats');
+      return;
+    }
+
+    this.router.navigate(['/chats']);
+  }
+
+  goToMyPosts(): void {
+    this.showProfileMenu = false;
+
+    if (!this.isLoggedInUser) {
+      this.redirectToLogin('my-posts');
+      return;
+    }
+
+    this.router.navigate(['/my-posts']);
+  }
+
+  logoutFromDropdown(): void {
+    this.showProfileMenu = false;
+
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+
+    this.isLoggedInUser = false;
+
+    this.router.navigate(['/login']);
+  }
+
+  private redirectToLogin(
+    page: string
+  ): void {
+    this.router.navigate(['/login'], {
+      state: {
+        redirectTo: page
+      }
+    });
+  }
+
+  buildLocation(item: any): string {
+    return (
+      item?.customFields?.full_address ||
+      item?.customFields?.area ||
+      item?.customFields?.district ||
+      item?.location?.address ||
+      item?.location?.city ||
+      item?.location?.state ||
+      'Location not available'
+    );
+  }
+
+  getDistrict(item: any): string {
+    return (
+      item?.customFields?.district ||
+      item?.location?.city ||
+      item?.location?.state ||
+      item?.customFields?.area ||
+      'Location not available'
+    );
+  }
+
+  getMainImage(item: any): string {
+    if (
+      Array.isArray(item?.images) &&
+      item.images.length > 0
+    ) {
+      return item.images[0];
+    }
+
+    if (item?.image_url) {
+      return item.image_url;
+    }
+
+    if (
+      Array.isArray(item?.image_urls) &&
+      item.image_urls.length > 0
+    ) {
+      return item.image_urls[0];
+    }
+
+    return 'assets/no-image.png';
+  }
+openDetails(item: any): void {
+  const id =
+    item?.postid ||
+    item?._id;
+
+  if (!id) {
+    return;
+  }
+
+  this.router.navigate([
+    '/details',
+    id
+  ]);
 }
+
+get isSearchPage(): boolean {
+  return (
+    this.router.url.startsWith('/search') ||
+    this.router.url.startsWith('/all-listings')
+  );
+}
+
+}
+  

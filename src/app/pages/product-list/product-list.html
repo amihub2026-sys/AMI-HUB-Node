@@ -11,6 +11,7 @@
 <app-categories
   *ngIf="!showSubcategories"
   categoryType="product"
+  navigationMode="parent"
   (categorySelected)="onCategorySelected($event)">
 </app-categories>
 
