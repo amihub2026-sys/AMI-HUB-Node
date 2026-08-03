@@ -29,8 +29,6 @@ video_enabled:boolean;
 
 remaining_ads:number;
 
-is_active:boolean;
-
 }
 type SubscriptionStatusFilter = 'all' | 'active' | 'inactive';
 
@@ -67,7 +65,6 @@ itemsPerPage = 5;
     plan_id: '',
     ad_limit: 1,
     video_enabled: false,
-    is_active: true,
     remaining_ads: 1,
   };
 
@@ -120,8 +117,6 @@ validitydays:item.validity,
 postlimit:item.postLimit,
 
 isactive:item.isActive,
-
-is_active:item.isActive,
 
 plan_id:item.planId,
 
@@ -195,7 +190,7 @@ this.loading=false;
         String(plan.ad_limit).toLowerCase().includes(q) ||
         String(plan.remaining_ads).toLowerCase().includes(q);
 
-      const isPlanActive = plan.isactive && plan.is_active;
+      const isPlanActive = plan.isactive;
 
       const matchesFilter =
         this.subscriptionStatusFilter === 'all' ||
@@ -212,13 +207,13 @@ this.loading=false;
 
   get activeSubscriptionPlansCount(): number {
     return this.allSubscriptionPlans.filter(
-      (plan) => plan.isactive && plan.is_active
+      (plan) => plan.isactive
     ).length;
   }
 
   get inactiveSubscriptionPlansCount(): number {
     return this.allSubscriptionPlans.filter(
-      (plan) => !(plan.isactive && plan.is_active)
+      (plan) => !plan.isactive
     ).length;
   }
 
@@ -248,7 +243,6 @@ this.formModel = {
   plan_id: plan.plan_id || '',
   ad_limit: Number(plan.ad_limit || 0),
   video_enabled: !!plan.video_enabled,
-  is_active: !!plan.is_active,
   remaining_ads: Number(plan.remaining_ads || 0),
 };
     this.cdr.detectChanges();
@@ -273,7 +267,6 @@ this.formModel = {
       plan_id: '',
       ad_limit: 1,
       video_enabled: false,
-      is_active: true,
       remaining_ads: 1,
     };
     this.cdr.detectChanges();
@@ -305,7 +298,6 @@ this.formModel = {
       plan_id: this.formModel.plan_id.trim(),
       ad_limit: Number(this.formModel.ad_limit || 0),
       video_enabled: !!this.formModel.video_enabled,
-      is_active: !!this.formModel.is_active,
       remaining_ads: Number(this.formModel.remaining_ads || 0),
     };
 
@@ -328,13 +320,39 @@ this.api.put(
     isActive: this.formModel.isactive
   }
 )
-.subscribe(()=>{
+.subscribe({
 
-  alert("Subscription plan updated successfully");
+  next: () => {
 
-  this.closeForm();
+    this.saving = false;
 
-  this.fetchSubscriptionPlans();
+    alert(
+      'Subscription plan updated successfully'
+    );
+
+    this.closeForm();
+
+    this.fetchSubscriptionPlans();
+
+    this.cdr.detectChanges();
+  },
+
+  error: (err: any) => {
+
+    console.error(
+      'UPDATE SUBSCRIPTION ERROR:',
+      err
+    );
+
+    this.saving = false;
+
+    alert(
+      err?.error?.message ||
+      'Failed to update subscription plan'
+    );
+
+    this.cdr.detectChanges();
+  }
 
 });
 }
@@ -356,31 +374,59 @@ videoEnabled:this.formModel.video_enabled,
 isActive:this.formModel.isactive
 }
 )
-.subscribe(()=>{
+.subscribe({
 
+  next: () => {
 
-alert(
-"Subscription plan created successfully"
-);
+    this.saving = false;
 
+    alert(
+      'Subscription plan created successfully'
+    );
 
-this.closeForm();
+    this.closeForm();
 
-this.fetchSubscriptionPlans();
+    this.fetchSubscriptionPlans();
 
+    this.cdr.detectChanges();
+  },
+
+  error: (err: any) => {
+
+    console.error(
+      'CREATE SUBSCRIPTION ERROR:',
+      err
+    );
+
+    this.saving = false;
+
+    alert(
+      err?.error?.message ||
+      'Failed to create subscription plan'
+    );
+
+    this.cdr.detectChanges();
+  }
 
 });
 
 
 }
-    } catch (err) {
-      console.error('Save subscription plan exception:', err);
-      alert('Something went wrong while saving subscription plan.');
-      this.cdr.detectChanges();
-    } finally {
-      this.saving = false;
-      this.cdr.detectChanges();
-    }
+} catch (err) {
+
+  console.error(
+    'Save subscription plan exception:',
+    err
+  );
+
+  this.saving = false;
+
+  alert(
+    'Something went wrong while saving subscription plan.'
+  );
+
+  this.cdr.detectChanges();
+}
   }
 async toggleSubscriptionStatus(
 plan: AdminSubscriptionPlanItem
@@ -395,7 +441,7 @@ this.api.patch(
 
 plan.isactive = !plan.isactive;
 
-plan.is_active = plan.isactive;
+
 
 
 this.cdr.detectChanges();
