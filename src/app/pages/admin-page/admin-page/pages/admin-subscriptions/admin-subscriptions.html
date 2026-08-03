@@ -126,13 +126,13 @@
             </td>
 
             <td>
-              <span
-                class="status-badge"
-                [class.status-active]="plan.isactive && plan.is_active"
-                [class.status-inactive]="!(plan.isactive && plan.is_active)"
-              >
-                {{ plan.isactive && plan.is_active ? 'Active' : 'Inactive' }}
-              </span>
+<span
+  class="status-badge"
+  [class.status-active]="plan.isactive"
+  [class.status-inactive]="!plan.isactive"
+>
+  {{ plan.isactive ? 'Active' : 'Inactive' }}
+</span>
             </td>
 
             <td>{{ plan.createdLabel }}</td>
@@ -152,7 +152,7 @@
                   class="table-action-btn warning"
                   (click)="toggleSubscriptionStatus(plan)"
                 >
-                  {{ plan.isactive && plan.is_active ? 'Deactivate' : 'Activate' }}
+                  {{ plan.isactive ? 'Deactivate' : 'Activate' }}
                 </button>
 
                 <button
@@ -253,12 +253,7 @@
           </label>
         </div>
 
-        <div class="form-group checkbox-group">
-          <label>
-            <input type="checkbox" [(ngModel)]="formModel.is_active" />
-            is_active
-          </label>
-        </div>
+
       </div>
 
       <div class="modal-actions">
