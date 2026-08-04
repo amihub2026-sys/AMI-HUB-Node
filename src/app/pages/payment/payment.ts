@@ -37,6 +37,7 @@ private api = inject(ApiService);
   private readonly razorpayKey = 'rzp_live_S7g9JgHJea4xYt';
   private readonly verifiedPaymentStorageKey = 'verified_payment_payload';
   private readonly featureEditContextStorageKey = 'feature_edit_post_context';
+  private readonly subscriptionCreatedStorageKey ='current_payment_subscription_created';
 
   async ngOnInit(): Promise<void> {
     if (!this.isBrowser) return;
@@ -787,7 +788,65 @@ file.url
       throw error;
     }
   }
+private async createUserSubscription(): Promise<void> {
 
+  if (!this.isSubscriptionPlanFlow()) {
+    return;
+  }
+
+  const alreadyCreated =
+    localStorage.getItem(
+      this.subscriptionCreatedStorageKey
+    ) === 'true';
+
+  if (alreadyCreated) {
+    console.log(
+      'Subscription already created for this payment'
+    );
+    return;
+  }
+
+  const selectedPlanId =
+    this.planData?.subscriptionplanid ||
+    this.planData?._id ||
+    null;
+
+  if (!selectedPlanId) {
+    throw new Error(
+      'Subscription plan ID not found'
+    );
+  }
+
+  const response: any =
+    await this.api
+      .post(
+        '/subscriptions/create',
+        {
+          planId: selectedPlanId
+        }
+      )
+      .toPromise();
+
+  if (
+    !response ||
+    response.success !== true
+  ) {
+    throw new Error(
+      response?.message ||
+      'Failed to activate subscription'
+    );
+  }
+
+  localStorage.setItem(
+    this.subscriptionCreatedStorageKey,
+    'true'
+  );
+
+  console.log(
+    'USER SUBSCRIPTION CREATED:',
+    response
+  );
+}
   private async savePostAfterPayment(
     paymentPayload: {
       razorpay_payment_id?: string;
@@ -796,11 +855,23 @@ file.url
     } = {}
   ): Promise<void> {
     try {
-      if (this.isExistingPostFeaturedFlow()) {
-        await this.updateExistingPostAsFeatured(paymentPayload);
-      } else {
-        await this.insertNewPostAfterPayment(paymentPayload);
-      }
+if (this.isExistingPostFeaturedFlow()) {
+
+  await this.updateExistingPostAsFeatured(
+    paymentPayload
+  );
+
+} else {
+
+  // Create the user's purchased subscription first.
+  await this.createUserSubscription();
+
+  // Then create the post.
+  await this.insertNewPostAfterPayment(
+    paymentPayload
+  );
+
+}
 
       this.clearVerifiedPaymentState();
 
@@ -811,6 +882,7 @@ file.url
       localStorage.removeItem('pending_post_type');
       localStorage.removeItem('pending_post_userid');
       localStorage.removeItem(this.featureEditContextStorageKey);
+      localStorage.removeItem(this.subscriptionCreatedStorageKey);
 
       this.postDraftService.clearDraft();
   this.paymentSuccess.set(true);

@@ -554,37 +554,189 @@ if (this.flowType === 'edit') {
   this.updateEditedPost(customFieldValues);
   return;
 }
-else{
+else {
 
-  this.router.navigate(
-    ['/subscription-plan'],
-    {
-      state:{
-        categoryId:this.categoryId,
-        categoryName:this.categoryName,
-        subcategoryId:this.subcategoryId,
-        subcategoryName:this.subcategoryName,
-        customFieldValues:customFieldValues
-      }
-    }
-  )
-  .then(() => {
+  this.createPostUsingSubscription(
+    customFieldValues
+  );
 
-    this.isSubmitting = false;
+}
+  }
+private createPostUsingSubscription(
+  customFieldValues: any[]
+): void {
 
-  })
-  .catch(() => {
+  const savedPayload =
+    localStorage.getItem(
+      'pending_post_payload'
+    );
+
+  if (!savedPayload) {
 
     this.isSubmitting = false;
 
     this.submitError =
-      'Unable to continue. Please try again.';
+      'Post information was not found. Please go back and try again.';
 
-  });
-
-}
+    return;
   }
 
+  let pendingPost: any;
+
+  try {
+
+    pendingPost =
+      JSON.parse(savedPayload);
+
+  } catch (error) {
+
+    console.error(
+      'INVALID PENDING POST PAYLOAD:',
+      error
+    );
+
+    this.isSubmitting = false;
+
+    this.submitError =
+      'Unable to read the post information.';
+
+    return;
+  }
+
+  const finalPayload = {
+
+    ...pendingPost,
+
+    categoryId:
+      this.categoryId ||
+      pendingPost?.categoryId ||
+      null,
+
+    subcategoryId:
+      this.subcategoryId ||
+      pendingPost?.subcategoryId ||
+      null,
+
+    listingType:
+      this.listingType ||
+      pendingPost?.listingType ||
+      pendingPost?.adtype ||
+      'service',
+
+    customFields:
+      customFieldValues,
+
+    custom_fields:
+      customFieldValues
+
+  };
+
+  this.api
+    .post(
+      '/posts',
+      finalPayload
+    )
+    .subscribe({
+
+      next: (response: any) => {
+
+        this.isSubmitting = false;
+
+        localStorage.removeItem(
+          'pending_post_payload'
+        );
+
+        localStorage.removeItem(
+          'pending_service_catalog_payload'
+        );
+
+        localStorage.removeItem(
+          'pending_post_flow'
+        );
+
+        localStorage.removeItem(
+          'pending_post_type'
+        );
+
+        localStorage.removeItem(
+          'pending_post_userid'
+        );
+
+        alert(
+          response?.message ||
+          'Post created successfully and sent for admin approval.'
+        );
+
+        this.router.navigate([
+          '/my-posts'
+        ]);
+
+      },
+
+      error: (error: any) => {
+
+        console.error(
+          'CREATE POST ERROR:',
+          error
+        );
+
+        this.isSubmitting = false;
+
+        const response =
+          error?.error || {};
+
+        if (
+          error?.status === 402 ||
+          response?.requiresPayment === true
+        ) {
+
+          localStorage.setItem(
+            'pending_post_payload',
+            JSON.stringify(finalPayload)
+          );
+
+          this.router.navigate(
+            ['/subscription-plan'],
+            {
+              queryParams: {
+                flow: 'normal'
+              },
+              state: {
+
+                categoryId:
+                  this.categoryId,
+
+                categoryName:
+                  this.categoryName,
+
+                subcategoryId:
+                  this.subcategoryId,
+
+                subcategoryName:
+                  this.subcategoryName,
+
+                customFieldValues:
+                  customFieldValues,
+
+                returnAfterPayment:
+                  true
+
+              }
+            }
+          );
+
+          return;
+        }
+
+        this.submitError =
+          response?.message ||
+          'Unable to create the post. Please try again.';
+
+      }
+
+    });
+
+}
 private updateEditedPost(customFieldValues: any[]): void {
   const savedEditPayload =
     localStorage.getItem('edit_post_payload');
