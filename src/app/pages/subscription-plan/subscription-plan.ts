@@ -227,48 +227,64 @@ isActive:Boolean(item.isActive)
     });
 
     try {
-      const planId = plan.planId;
+      const planId =
+  plan.subscriptionplanid;
 
 const planPayload = {
 
-  subscriptionplanid: plan.subscriptionplanid,
+  // MongoDB document ID.
+  // Use this when creating the user subscription.
+  subscriptionplanid:
+    plan.subscriptionplanid,
 
-  plan_id: plan.planId,
+  // Human-readable plan code, such as BASIC or STARTER.
+  plan_id:
+    plan.planId,
 
-  plan_name: plan.planName,
+  plan_name:
+    plan.planName,
 
-  amount: plan.price,
+  amount:
+    Number(plan.price || 0),
 
-  price: plan.price,
+  price:
+    Number(plan.price || 0),
 
-  duration_days: plan.validity,
+  duration_days:
+    Number(plan.validity || 0),
 
-  validitydays: plan.validity,
+  validitydays:
+    Number(plan.validity || 0),
 
+  // Normal marketplace post allowance.
+  post_limit:
+    Number(plan.postLimit || 0),
+
+  remaining_posts:
+    Number(plan.postLimit || 0),
+
+  // Boosted/featured advertisement allowance.
+  ad_limit:
+    Number(plan.adLimit || 0),
 
   total_ads:
-    plan.adLimit || plan.postLimit || 1,
-
+    Number(plan.adLimit || 0),
 
   remaining_ads:
-    plan.remaining || 0,
-
+    Number(plan.adLimit || 0),
 
   isfeatured:
     this.flowType === 'featured',
 
-
   featured_plan_id:
     this.flowType === 'featured'
-      ? planId
+      ? plan.subscriptionplanid
       : null,
-
 
   featured_plan_name:
     this.flowType === 'featured'
       ? plan.planName
       : null,
-
 
   flow_type:
     this.flowType
