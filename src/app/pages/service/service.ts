@@ -333,19 +333,55 @@ data = postResult?.data;
 
     this.mainAd.contactphone = data.contactphone || '';
     this.mainAd.whatsappnumber = data.whatsappnumber || '';
+const savedLocation =
+  data.location &&
+  typeof data.location === 'object'
+    ? data.location
+    : null;
 
-    this.mainAd.full_address =
-      data.full_address || data.location || data.address || '';
-    this.mainAd.latitude = data.latitude ?? null;
-    this.mainAd.longitude = data.longitude ?? null;
-    this.mainAd.place_name = data.place_name || '';
-    this.mainAd.location_source = data.location_source || 'google';
+this.mainAd.full_address =
+  data.full_address ||
+  savedLocation?.address ||
+  data.address ||
+  '';
 
-    this.mainAd.country = data.country || 'India';
-    this.mainAd.state = data.state || '';
-    this.mainAd.district = data.district || '';
-    this.mainAd.area = data.area || '';
+this.mainAd.latitude =
+  data.latitude ??
+  savedLocation?.latitude ??
+  null;
 
+this.mainAd.longitude =
+  data.longitude ??
+  savedLocation?.longitude ??
+  null;
+
+this.mainAd.place_name =
+  data.place_name ||
+  savedLocation?.address ||
+  '';
+
+this.mainAd.location_source =
+  data.location_source || 'google';
+
+this.mainAd.country =
+  data.country ||
+  savedLocation?.country ||
+  'India';
+
+this.mainAd.state =
+  data.state ||
+  savedLocation?.state ||
+  '';
+
+this.mainAd.district =
+  data.district ||
+  savedLocation?.city ||
+  '';
+
+this.mainAd.area =
+  data.area ||
+  savedLocation?.city ||
+  '';
 this.existingImageUrls =
   Array.isArray(data.images)
   ? data.images
@@ -790,14 +826,14 @@ private async uploadMultipleToR2(
       return false;
     }
 
-    if (
-      !this.mainAd.full_address ||
-      this.mainAd.latitude == null ||
-      this.mainAd.longitude == null
-    ) {
-      this.showAlert('Please select location');
-      return false;
-    }
+    // if (
+    //   !this.mainAd.full_address ||
+    //   this.mainAd.latitude == null ||
+    //   this.mainAd.longitude == null
+    // ) {
+    //   this.showAlert('Please select location');
+    //   return false;
+    // }
 if (this.mainAd.contactphone && !/^\d{10}$/.test(this.mainAd.contactphone)) {
   this.showAlert('Phone number must be exactly 10 digits');
   return false;

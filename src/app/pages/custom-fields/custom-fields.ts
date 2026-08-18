@@ -209,25 +209,54 @@ this.listingType =
             response ||
             [];
 
+this.fields = Array.isArray(receivedFields)
+  ? receivedFields
+      .map((field: any) =>
+        this.normalizeField(field)
+      )
 
-          this.fields = Array.isArray(receivedFields)
-            ? receivedFields
-                .map((field: any) =>
-                  this.normalizeField(field)
-                )
-                .filter(
-                  (field: DynamicCustomField) =>
-                    field.isActive
-                )
-                .sort(
-                  (
-                    first: DynamicCustomField,
-                    second: DynamicCustomField
-                  ) =>
-                    (first.sortOrder || 0) -
-                    (second.sortOrder || 0)
-                )
-            : [];
+      // Only active fields
+      .filter(
+        (field: DynamicCustomField) =>
+          field.isActive
+      )
+
+      // Hide City / State / Country
+      .filter((field: DynamicCustomField) => {
+
+        const normalize = (value: string) =>
+          String(value || '')
+            .trim()
+            .toLowerCase()
+            .replace(/[\s_-]+/g, '');
+
+        const fieldName = normalize(field.fieldName);
+        const label = normalize(field.label);
+
+        const hiddenLocationFields = [
+          'city',
+          'cityname',
+          'state',
+          'statename',
+          'country',
+          'countryname'
+        ];
+
+        return (
+          !hiddenLocationFields.includes(fieldName) &&
+          !hiddenLocationFields.includes(label)
+        );
+      })
+
+      .sort(
+        (
+          first: DynamicCustomField,
+          second: DynamicCustomField
+        ) =>
+          (first.sortOrder || 0) -
+          (second.sortOrder || 0)
+      )
+  : [];
 
 
           this.initializeFormData();
