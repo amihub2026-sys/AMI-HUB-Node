@@ -54,10 +54,11 @@ constructor(
     this.router.navigateByUrl('/subscription-plan');
   }
   jobs:any[] = [];
-  currentSlide = 0;
-  totalSlides = 3;
-  autoSlideInterval: any;
-  slidesArray = Array(this.totalSlides);
+heroSliders: any[] = [];
+
+currentSlide = 0;
+
+autoSlideInterval: any;
 
   customersCount = 0;
   productsCount = 0;
@@ -108,11 +109,13 @@ async ngOnInit(): Promise<void> {
     String(user?._id || user?.id || '')
   );
 
-  this.loadLatestJobs();
+ this.loadLatestJobs();
 
-  this.startAutoSlide();
+await this.loadHeroSliders();
 
-  await this.loadBrowseCategories();
+this.startAutoSlide();
+
+await this.loadBrowseCategories();
   await this.loadFeaturedBusinesses();
   await this.loadTrendingPosts();
   await this.loadNewProducts();
@@ -128,7 +131,39 @@ async ngOnInit(): Promise<void> {
     }, 100);
   }
   
+async loadHeroSliders(): Promise<void> {
 
+  try {
+
+    const response: any =
+      await this.api
+        .getActiveHeroSliders()
+        .toPromise();
+
+    this.heroSliders =
+      response?.data || [];
+
+    this.currentSlide = 0;
+
+    console.log(
+      'Hero sliders:',
+      this.heroSliders
+    );
+
+    this.cdr.detectChanges();
+
+  } catch (error) {
+
+    console.error(
+      'Hero slider loading error:',
+      error
+    );
+
+    this.heroSliders = [];
+
+  }
+
+}
 async loadLatestJobs(): Promise<void> {
   try {
     const result: any = await this.api
@@ -706,25 +741,81 @@ onCategoryImageError(event: Event): void {
     });
   }
 
-  startAutoSlide() {
-    this.autoSlideInterval = setInterval(() => this.nextSlide(), 3000);
+ startAutoSlide(): void {
+
+  this.stopAutoSlide();
+
+  if (this.heroSliders.length <= 1) {
+    return;
   }
 
-  pauseSlider() {
-    clearInterval(this.autoSlideInterval);
+  this.autoSlideInterval = setInterval(
+    () => {
+      this.nextSlide();
+    },
+    3000
+  );
+
+}
+
+
+stopAutoSlide(): void {
+
+  if (this.autoSlideInterval) {
+
+    clearInterval(
+      this.autoSlideInterval
+    );
+
+    this.autoSlideInterval = null;
+
   }
 
-  resumeSlider() {
-    this.startAutoSlide();
+}
+
+
+pauseSlider(): void {
+
+  this.stopAutoSlide();
+
+}
+
+
+resumeSlider(): void {
+
+  this.startAutoSlide();
+
+}
+
+
+nextSlide(): void {
+
+  if (this.heroSliders.length === 0) {
+    return;
   }
 
-  nextSlide() {
-    this.currentSlide = (this.currentSlide + 1) % this.totalSlides;
+  this.currentSlide =
+    (this.currentSlide + 1) %
+    this.heroSliders.length;
+
+}
+
+
+prevSlide(): void {
+
+  if (this.heroSliders.length === 0) {
+    return;
   }
 
-  prevSlide() {
-    this.currentSlide = (this.currentSlide - 1 + this.totalSlides) % this.totalSlides;
-  }
+  this.currentSlide =
+    (
+      this.currentSlide -
+      1 +
+      this.heroSliders.length
+    ) %
+    this.heroSliders.length;
+
+}
 
   startCounter() {
     clearInterval(this.counterInterval);

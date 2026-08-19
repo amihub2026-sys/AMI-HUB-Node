@@ -295,4 +295,72 @@ deleteCustomFieldAssignment(
 
 }
 
+// ======================
+// HERO SLIDER
+// ======================
+
+uploadHeroSlider(
+  desktopImage: File,
+  mobileImage: File,
+  displayOrder: number,
+  active: boolean
+) {
+
+  const formData = new FormData();
+
+  formData.append(
+    'desktopImage',
+    desktopImage
+  );
+
+  formData.append(
+    'mobileImage',
+    mobileImage
+  );
+
+  formData.append(
+    'displayOrder',
+    displayOrder.toString()
+  );
+
+  formData.append(
+    'active',
+    active.toString()
+  );
+
+  return this.http.post<any>(
+    `${this.baseUrl}/hero-slider`,
+    formData,
+    this.getHeaders()
+  );
+
+}
+
+
+getAdminHeroSliders() {
+
+  return this.get<any>(
+    '/hero-slider/admin'
+  );
+
+}
+
+
+getActiveHeroSliders() {
+
+  return this.get<any>(
+    '/hero-slider'
+  );
+
+}
+
+
+deleteHeroSlider(id: string) {
+
+  return this.delete<any>(
+    `/hero-slider/${id}`
+  );
+
+}
+
 }
