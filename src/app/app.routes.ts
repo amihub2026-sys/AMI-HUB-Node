@@ -37,7 +37,7 @@ import { AdminPage } from './pages/admin-page/admin-page';
 import { AdminUserBoostPlansComponent } from './pages/admin-page/admin-page/pages/admin-user-boost-plans/admin-user-boost-plans';
 import { adminGuard } from './guards/admin-guard';
 import { AdminLoginComponent } from './pages/admin-page/admin-page/pages/admin-login/admin-login';
-import { HeroSliderManagement } from './pages/hero-slider-management/hero-slider-management';
+import { HeroSliderManagement } from './pages/admin-page/admin-page/pages/hero-slider-management/hero-slider-management';
 
 
 export const routes: Routes = [
