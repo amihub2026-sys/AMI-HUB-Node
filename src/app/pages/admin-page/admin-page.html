@@ -131,10 +131,9 @@
       <p>Locations module will be connected next.</p>
     </div>
 
-    <div class="content-card" *ngIf="activeMenu === 'banners'">
-      <h1>Banners</h1>
-      <p>Banners module will be connected next.</p>
-    </div>
+ <div class="content-card" *ngIf="activeMenu === 'banners'">
+  <app-hero-slider-management></app-hero-slider-management>
+</div>
 
     <div class="content-card" *ngIf="activeMenu === 'notifications'">
       <h1>Notifications</h1>

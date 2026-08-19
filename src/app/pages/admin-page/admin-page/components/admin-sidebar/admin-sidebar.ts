@@ -69,7 +69,7 @@ export class AdminSidebar {
   icon: '🔗'
 },
     // { key: 'locations', label: 'Locations', icon: '📍' },
-    // { key: 'banners', label: 'Banners', icon: '🖼️' },
+     { key: 'banners', label: 'Banners', icon: '🖼️' },
     // { key: 'notifications', label: 'Notifications', icon: '🔔' },
     { key: 'settings', label: 'Settings', icon: '⚙️' },
   ];

@@ -22,6 +22,7 @@ import { AdminCustomFields } from './admin-page/pages/admin-custom-fields/admin-
 import { AdminCustomFieldAssignment } from './admin-page/pages/admin-custom-field-assignment/admin-custom-field-assignment';
 import { AdminSellersComponent } from './admin-page/pages/admin-sellers/admin-sellers';
 import { AdminPostViewComponent } from './admin-page/pages/admin-post-view/admin-post-view';
+import { HeroSliderManagement } from '../hero-slider-management/hero-slider-management';
 type AdminMenuKey =
   SidebarAdminMenuKey |
   'advertise' |
@@ -37,7 +38,7 @@ type AdminMenuKey =
  imports: [
   CommonModule,
   FormsModule,
-
+ HeroSliderManagement,
   Service,   
   AdminSidebar,
   AdminTopbar,
