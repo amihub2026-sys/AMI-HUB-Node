@@ -13,43 +13,100 @@
   <div class="whole">
  
     <!-- TOP HERO BANNER -->
-  <!-- <section class="top-hero">
-    <div class="top-banner-ad">
-      <div class="slider">
-        <div
-          class="slides"
-          [style.transform]="'translateX(-' + (currentSlide * 100) + '%)'"
+<!-- =========================
+     DYNAMIC HERO SLIDER
+========================= -->
+
+<section
+  class="top-hero"
+  *ngIf="heroSliders.length > 0"
+>
+
+  <div class="top-banner-ad">
+
+    <div
+      class="slider"
+      (mouseenter)="pauseSlider()"
+      (mouseleave)="resumeSlider()"
+    >
+
+      <div
+        class="slides"
+        [style.transform]="
+          'translateX(-' +
+          (currentSlide * 100) +
+          '%)'
+        "
+      >
+
+        <picture
+          *ngFor="let slider of heroSliders"
         >
 
-        <picture>
-  <source media="(max-width: 768px)" srcset="assets/busines4.png">
-  <img src="assets/slee1.png" alt="Slide 1">
-</picture>
+          <!-- MOBILE IMAGE -->
+          <source
+            media="(max-width: 768px)"
+            [srcset]="slider.mobileImageUrl"
+          >
 
-<picture>
-  <source media="(max-width: 768px)" srcset="assets/busines2.png">
-  <img src="assets/slee2.png" alt="Slide 2">
-</picture>
+          <!-- DESKTOP IMAGE -->
+          <img
+            [src]="slider.desktopImageUrl"
+            alt="AMI HUB Banner"
+          >
 
-<picture>
-  <source media="(max-width: 768px)" srcset="assets/busines3.png">
-  <img src="assets/slee3.png" alt="Slide 3">
-</picture>
-        </div>
+        </picture>
 
-        <button class="prev" (click)="prevSlide()">❮</button>
-        <button class="next" (click)="nextSlide()">❯</button>
-
-        <div class="dots">
-          <span
-            *ngFor="let s of slidesArray; let i = index"
-            [class.active]="i === currentSlide"
-            (click)="currentSlide = i">
-          </span>
-        </div>
       </div>
+
+
+      <!-- PREVIOUS -->
+      <button
+        *ngIf="heroSliders.length > 1"
+        class="prev"
+        type="button"
+        (click)="prevSlide()"
+      >
+        ❮
+      </button>
+
+
+      <!-- NEXT -->
+      <button
+        *ngIf="heroSliders.length > 1"
+        class="next"
+        type="button"
+        (click)="nextSlide()"
+      >
+        ❯
+      </button>
+
+
+      <!-- DOTS -->
+      <div
+        class="dots"
+        *ngIf="heroSliders.length > 1"
+      >
+
+        <span
+          *ngFor="
+            let slider of heroSliders;
+            let i = index
+          "
+          [class.active]="
+            i === currentSlide
+          "
+          (click)="currentSlide = i"
+        >
+        </span>
+
+      </div>
+
     </div>
-  </section> -->
+
+  </div>
+
+</section>
 <section class="mini-promos">
   <div class="promo-grid">
 

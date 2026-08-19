@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ApiService } from '../../../../../services/api.service';
 
 @Component({
   selector: 'app-hero-slider-management',
@@ -25,67 +26,286 @@ export class HeroSliderManagement implements OnInit {
 
   heroSliders: any[] = [];
 
+  loading = false;
+  errorMessage = '';
+
+  constructor(
+    private apiService: ApiService
+  ) {}
+
   ngOnInit(): void {
+    this.loadHeroSliders();
   }
 
-  onDesktopImageSelected(event: Event): void {
 
-    const input = event.target as HTMLInputElement;
+  // =========================
+  // LOAD HERO SLIDERS
+  // =========================
 
-    if (input.files && input.files.length > 0) {
+  loadHeroSliders(): void {
 
-      this.desktopImage = input.files[0];
+    this.apiService
+      .getAdminHeroSliders()
+      .subscribe({
 
-      const reader = new FileReader();
+        next: (response) => {
+
+          this.heroSliders =
+            response?.data || [];
+
+        },
+
+        error: (error) => {
+
+          console.error(
+            'Load hero sliders error:',
+            error
+          );
+
+          this.errorMessage =
+            'Failed to load hero banners';
+
+        }
+
+      });
+
+  }
+
+
+  // =========================
+  // DESKTOP IMAGE
+  // =========================
+
+  onDesktopImageSelected(
+    event: Event
+  ): void {
+
+    const input =
+      event.target as HTMLInputElement;
+
+    if (
+      input.files &&
+      input.files.length > 0
+    ) {
+
+      this.desktopImage =
+        input.files[0];
+
+      const reader =
+        new FileReader();
 
       reader.onload = () => {
-        this.desktopPreview = reader.result as string;
+
+        this.desktopPreview =
+          reader.result as string;
+
       };
 
-      reader.readAsDataURL(this.desktopImage);
+      reader.readAsDataURL(
+        this.desktopImage
+      );
+
     }
+
   }
 
-  onMobileImageSelected(event: Event): void {
 
-    const input = event.target as HTMLInputElement;
+  // =========================
+  // MOBILE IMAGE
+  // =========================
 
-    if (input.files && input.files.length > 0) {
+  onMobileImageSelected(
+    event: Event
+  ): void {
 
-      this.mobileImage = input.files[0];
+    const input =
+      event.target as HTMLInputElement;
 
-      const reader = new FileReader();
+    if (
+      input.files &&
+      input.files.length > 0
+    ) {
+
+      this.mobileImage =
+        input.files[0];
+
+      const reader =
+        new FileReader();
 
       reader.onload = () => {
-        this.mobilePreview = reader.result as string;
+
+        this.mobilePreview =
+          reader.result as string;
+
       };
 
-      reader.readAsDataURL(this.mobileImage);
+      reader.readAsDataURL(
+        this.mobileImage
+      );
+
     }
+
   }
+
+
+  // =========================
+  // UPLOAD HERO SLIDER
+  // =========================
 
   uploadSlider(): void {
 
     if (!this.desktopImage) {
-      alert('Please select desktop banner');
+
+      alert(
+        'Please select desktop banner'
+      );
+
       return;
+
     }
 
     if (!this.mobileImage) {
-      alert('Please select mobile banner');
+
+      alert(
+        'Please select mobile banner'
+      );
+
+      return;
+
+    }
+
+
+    this.loading = true;
+
+    this.errorMessage = '';
+
+
+    this.apiService
+      .uploadHeroSlider(
+        this.desktopImage,
+        this.mobileImage,
+        this.displayOrder,
+        this.active
+      )
+      .subscribe({
+
+        next: (response) => {
+
+          console.log(
+            'Hero slider upload response:',
+            response
+          );
+
+
+          alert(
+            'Hero banner uploaded successfully'
+          );
+
+
+          this.resetForm();
+
+          this.loadHeroSliders();
+
+          this.loading = false;
+
+        },
+
+        error: (error) => {
+
+          console.error(
+            'Hero slider upload error:',
+            error
+          );
+
+
+          this.errorMessage =
+            error?.error?.message ||
+            'Failed to upload hero banner';
+
+
+          alert(
+            this.errorMessage
+          );
+
+
+          this.loading = false;
+
+        }
+
+      });
+
+  }
+
+
+  // =========================
+  // DELETE HERO SLIDER
+  // =========================
+
+  deleteSlider(id: string): void {
+
+    const confirmed =
+      confirm(
+        'Are you sure you want to delete this hero banner?'
+      );
+
+
+    if (!confirmed) {
       return;
     }
 
-    console.log('Desktop Image:', this.desktopImage);
-    console.log('Mobile Image:', this.mobileImage);
-    console.log('Order:', this.displayOrder);
-    console.log('Active:', this.active);
 
-    alert('Banner selected successfully');
+    this.apiService
+      .deleteHeroSlider(id)
+      .subscribe({
+
+        next: () => {
+
+          alert(
+            'Hero banner deleted successfully'
+          );
+
+          this.loadHeroSliders();
+
+        },
+
+        error: (error) => {
+
+          console.error(
+            'Delete hero slider error:',
+            error
+          );
+
+
+          alert(
+            error?.error?.message ||
+            'Failed to delete hero banner'
+          );
+
+        }
+
+      });
+
   }
 
-  deleteSlider(id: number): void {
-    console.log('Delete:', id);
+
+  // =========================
+  // RESET FORM
+  // =========================
+
+  resetForm(): void {
+
+    this.desktopImage = null;
+
+    this.mobileImage = null;
+
+    this.desktopPreview = null;
+
+    this.mobilePreview = null;
+
+    this.displayOrder = 0;
+
+    this.active = true;
+
   }
 
 }

@@ -5266,3 +5266,315 @@ app-categories{
     font-size: 14px;
   }
 }
+
+/* Hero slide overwrites */
+
+/* =========================================
+   FINAL DYNAMIC HERO SLIDER
+========================================= */
+
+.top-hero {
+  width: 100%;
+  padding: 14px;
+  margin: 0;
+}
+
+.top-banner-ad {
+  width: 100%;
+  overflow: hidden;
+  border-radius: 24px;
+  background: #000;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.slider {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 24px;
+}
+
+/* DESKTOP BANNER RATIO */
+.slides {
+  display: flex;
+  width: 100%;
+  height: clamp(260px, 32vw, 520px);
+  transition: transform 0.55s ease;
+}
+
+.slides picture {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.slides picture img {
+  width: 100%;
+  height: 100%;
+  display: block;
+
+  object-fit: cover;
+  object-position: center;
+
+  margin: 0;
+  padding: 0;
+}
+
+
+/* =========================================
+   SLIDER BUTTONS
+========================================= */
+
+.prev,
+.next {
+  position: absolute;
+
+  top: 50%;
+  transform: translateY(-50%);
+
+  width: 44px;
+  height: 44px;
+
+  border: none;
+  border-radius: 50%;
+
+  background: rgba(0, 0, 0, 0.38);
+  color: #fff;
+
+  font-size: 20px;
+
+  cursor: pointer;
+
+  z-index: 10;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  backdrop-filter: blur(8px);
+}
+
+.prev {
+  left: 16px;
+}
+
+.next {
+  right: 16px;
+}
+
+
+/* =========================================
+   DOTS
+========================================= */
+
+.dots {
+  position: absolute;
+
+  bottom: 14px;
+  left: 50%;
+
+  transform: translateX(-50%);
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  z-index: 10;
+}
+
+.dots span {
+  width: 9px;
+  height: 9px;
+
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.55);
+
+  cursor: pointer;
+
+  transition: all 0.3s ease;
+}
+
+.dots span.active {
+  width: 28px;
+
+  border-radius: 999px;
+
+  background: #ffd400;
+}
+
+
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 992px) {
+
+  .slides {
+    height: clamp(230px, 38vw, 380px);
+  }
+
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 768px) {
+
+  .top-hero {
+    padding: 8px;
+  }
+
+  .top-banner-ad,
+  .slider {
+    border-radius: 16px;
+  }
+
+  .slides {
+    height: auto;
+  }
+
+  .slides picture {
+    height: auto;
+  }
+
+  .slides picture img {
+    width: 100%;
+    height: auto;
+
+    object-fit: contain;
+    object-position: center;
+
+    background: #000;
+  }
+
+  .prev,
+  .next {
+    width: 34px;
+    height: 34px;
+
+    font-size: 15px;
+  }
+
+  .prev {
+    left: 8px;
+  }
+
+  .next {
+    right: 8px;
+  }
+
+  .dots {
+    bottom: 8px;
+  }
+
+}
+
+
+/* =========================================
+   SMALL MOBILE
+========================================= */
+
+@media (max-width: 480px) {
+
+  .top-hero {
+    padding: 5px;
+  }
+
+  .top-banner-ad,
+  .slider {
+    border-radius: 12px;
+  }
+
+  .prev,
+  .next {
+    width: 30px;
+    height: 30px;
+
+    font-size: 13px;
+  }
+
+  .dots span {
+    width: 7px;
+    height: 7px;
+  }
+
+  .dots span.active {
+    width: 20px;
+  }
+
+}
+/* ===== FINAL HERO SIZE FIX ===== */
+
+.top-hero {
+  width: 100%;
+  padding: 10px 14px 0;
+  margin: 0;
+}
+
+.top-banner-ad,
+.slider {
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+}
+
+.slides {
+  display: flex;
+  width: 100%;
+  height: 420px !important;
+  transition: transform 0.5s ease;
+}
+
+.slides picture {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.slides picture img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  display: block;
+}
+
+/* TABLET */
+@media (max-width: 992px) {
+  .slides {
+    height: 320px !important;
+  }
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .top-hero {
+    padding: 6px;
+  }
+
+  .top-banner-ad,
+  .slider {
+    border-radius: 14px;
+  }
+
+  .slides {
+    height: auto !important;
+  }
+
+  .slides picture {
+    height: auto !important;
+  }
+
+  .slides picture img {
+    width: 100% !important;
+    height: auto !important;
+    object-fit: contain !important;
+  }
+}
