@@ -1,0 +1,158 @@
+<section class="hero-management">
+
+  <div class="management-card">
+
+    <h2>Hero Slider Management</h2>
+
+    <p class="subtitle">
+      Upload desktop and mobile banner images for the home page slider.
+    </p>
+
+    <div class="upload-grid">
+
+      <div class="upload-box">
+        <label>Desktop Banner</label>
+
+        <input
+          type="file"
+          accept="image/*"
+          (change)="onDesktopImageSelected($event)"
+        >
+
+        <img
+          *ngIf="desktopPreview"
+          [src]="desktopPreview"
+          class="preview-image"
+          alt="Desktop Preview"
+        >
+      </div>
+
+
+      <div class="upload-box">
+        <label>Mobile Banner</label>
+
+        <input
+          type="file"
+          accept="image/*"
+          (change)="onMobileImageSelected($event)"
+        >
+
+        <img
+          *ngIf="mobilePreview"
+          [src]="mobilePreview"
+          class="preview-image mobile-preview"
+          alt="Mobile Preview"
+        >
+      </div>
+
+    </div>
+
+
+    <div class="form-row">
+
+      <div class="form-group">
+
+        <label>Display Order</label>
+
+        <input
+          type="number"
+          [(ngModel)]="displayOrder"
+          min="0"
+        >
+
+      </div>
+
+      <div class="form-group checkbox-group">
+
+        <label>
+          <input
+            type="checkbox"
+            [(ngModel)]="active"
+          >
+          Active
+        </label>
+
+      </div>
+
+    </div>
+
+
+    <button
+      class="upload-btn"
+      (click)="uploadSlider()"
+    >
+      Upload Banner
+    </button>
+
+  </div>
+
+
+  <div class="slider-list">
+
+    <h3>Uploaded Hero Banners</h3>
+
+    <div
+      class="slider-card"
+      *ngFor="let slider of heroSliders"
+    >
+
+      <div class="image-wrapper">
+
+        <p>Desktop</p>
+
+        <img
+          [src]="slider.desktopImageUrl"
+          alt="Desktop Banner"
+        >
+
+      </div>
+
+
+      <div class="image-wrapper">
+
+        <p>Mobile</p>
+
+        <img
+          [src]="slider.mobileImageUrl"
+          alt="Mobile Banner"
+        >
+
+      </div>
+
+
+      <div class="slider-info">
+
+        <p>
+          Order:
+          <strong>{{ slider.displayOrder }}</strong>
+        </p>
+
+        <p>
+          Status:
+          <strong>
+            {{ slider.active ? 'Active' : 'Inactive' }}
+          </strong>
+        </p>
+
+        <button
+          class="delete-btn"
+          (click)="deleteSlider(slider.id)"
+        >
+          Delete
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <p
+      class="empty-message"
+      *ngIf="heroSliders.length === 0"
+    >
+      No hero banners uploaded yet.
+    </p>
+
+  </div>
+
+</section>
