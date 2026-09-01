@@ -199,3 +199,40 @@ app-admin-payments {
   overflow-y: auto;
   overflow-x: hidden;
 }
+.logout-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 42px;
+  padding: 10px 17px;
+  color: #dc3545;
+  background: #fff1f2;
+  border: 1px solid #ffd2d6;
+  border-radius: 9px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.logout-btn span {
+  font-size: 17px;
+}
+
+.logout-btn:hover {
+  color: #ffffff;
+  background: #dc3545;
+  border-color: #dc3545;
+  box-shadow: 0 8px 20px rgba(220, 53, 69, 0.22);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 600px) {
+  .logout-btn {
+    min-height: 39px;
+    padding: 8px 13px;
+    font-size: 12px;
+  }
+}
