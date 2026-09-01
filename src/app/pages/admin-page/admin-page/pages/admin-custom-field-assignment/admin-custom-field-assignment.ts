@@ -47,7 +47,8 @@ editRequired:boolean = false;
 
 editSortOrder:number = 0;
 
-
+ 
+editOptionsText: string = '';
   searchText:string = '';
 
 
@@ -550,7 +551,10 @@ this.loadCategories();
   this.editSortOrder =
   item.sortOrder || 0;
 
-
+this.editOptionsText =
+  Array.isArray(item.options)
+    ? item.options.join(', ')
+    : '';
 
   // load subcategories after category selection
 
@@ -616,7 +620,6 @@ if(
 }
 
 const payload = {
-
   type: this.selectedType,
 
   categoryId: this.selectedCategoryId,
@@ -625,8 +628,12 @@ const payload = {
 
   isRequired: this.editRequired,
 
-  sortOrder: this.editSortOrder
+  sortOrder: this.editSortOrder,
 
+  options: this.editOptionsText
+    .split(',')
+    .map((option: string) => option.trim())
+    .filter((option: string) => option.length > 0)
 };
 
 

@@ -333,3 +333,476 @@ transform:rotate(360deg);
   margin-right:8px;
   vertical-align:middle;
 }
+/* =========================================
+   ADDITIONAL DETAILS PAGE
+========================================= */
+
+:host {
+  display: block;
+  min-height: 100vh;
+  padding: 40px 20px 70px;
+  background: #f4f7fc;
+  font-family: "Inter", "Poppins", sans-serif;
+  color: #15213b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.custom-container {
+  width: 100%;
+  max-width: 1050px;
+  margin: 0 auto;
+  padding: 32px;
+  background: #ffffff;
+  border: 1px solid #e6ebf3;
+  border-radius: 20px;
+  box-shadow: 0 15px 45px rgba(24, 45, 86, 0.08);
+}
+
+/* =========================================
+   CATEGORY INFORMATION
+========================================= */
+
+.info-box {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 30px;
+  padding: 18px;
+  background: linear-gradient(135deg, #f3f7ff, #f8faff);
+  border: 1px solid #dfe7f5;
+  border-radius: 14px;
+}
+
+.info-item {
+  min-width: 0;
+  padding: 14px 16px;
+  background: #ffffff;
+  border: 1px solid #e4eaf4;
+  border-radius: 11px;
+}
+
+.info-label {
+  display: block;
+  margin-bottom: 6px;
+  color: #75809a;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.info-item strong {
+  display: block;
+  color: #17213a;
+  font-size: 15px;
+  overflow-wrap: break-word;
+}
+
+/* =========================================
+   HEADER
+========================================= */
+
+.custom-header {
+  position: relative;
+  margin-bottom: 30px;
+  padding-left: 17px;
+}
+
+.custom-header::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  bottom: 2px;
+  left: 0;
+  width: 4px;
+  border-radius: 20px;
+  background: linear-gradient(#2563eb, #5b5ce2);
+}
+
+.custom-header h2 {
+  margin: 0 0 7px;
+  color: #101a30;
+  font-size: clamp(24px, 3vw, 30px);
+  font-weight: 800;
+  letter-spacing: -0.7px;
+}
+
+.custom-header p {
+  margin: 0;
+  color: #667085;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* =========================================
+   FIELDS GRID
+========================================= */
+
+.fields-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 24px;
+  row-gap: 24px;
+}
+
+.field {
+  min-width: 0;
+}
+
+.field-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+  margin-bottom: 9px;
+  color: #17213a;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.field-icon {
+  width: 21px;
+  height: 21px;
+  flex-shrink: 0;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.required-star {
+  color: #ef4444;
+  font-size: 15px;
+}
+
+/* =========================================
+   INPUTS
+========================================= */
+
+.custom-container .form-control {
+  width: 100%;
+  height: 48px;
+  padding: 0 15px;
+  border: 1px solid #d6dce7;
+  border-radius: 10px;
+  outline: none;
+  background: #ffffff;
+  color: #17213a;
+  font-family: inherit;
+  font-size: 14px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.custom-container .form-control::placeholder {
+  color: #98a2b3;
+}
+
+.custom-container .form-control:hover {
+  border-color: #aeb9cb;
+}
+
+.custom-container .form-control:focus {
+  border-color: #2563eb;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.11);
+}
+
+.custom-container select.form-control {
+  cursor: pointer;
+}
+
+.custom-container textarea.form-control {
+  height: auto;
+  min-height: 115px;
+  padding: 14px 15px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+/* =========================================
+   RADIO AND CHECKBOX OPTIONS
+========================================= */
+
+.option-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.option-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 42px;
+  padding: 9px 14px;
+  border: 1px solid #dce2eb;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #344054;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.option-card:hover {
+  border-color: #2563eb;
+  background: #f5f8ff;
+}
+
+.option-card input,
+.single-checkbox input {
+  width: 17px;
+  height: 17px;
+  accent-color: #2563eb;
+  cursor: pointer;
+}
+
+.single-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid #dce2eb;
+  border-radius: 10px;
+  background: #f9fbff;
+  color: #344054;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* =========================================
+   HELP AND VALIDATION
+========================================= */
+
+.help-text {
+  display: block;
+  margin-top: 7px;
+  color: #7b8498;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.validation-error {
+  display: block;
+  margin-top: 7px;
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.submit-error,
+.error-box {
+  margin-top: 20px;
+  padding: 14px 16px;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  background: #fff1f2;
+  color: #b42318;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.error-box .continue-btn {
+  margin-top: 14px;
+}
+
+/* =========================================
+   EMPTY AND LOADING STATES
+========================================= */
+
+.empty-box {
+  padding: 45px 25px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 14px;
+  background: #f8fafc;
+  text-align: center;
+}
+
+.empty-box h3 {
+  margin: 0 0 9px;
+  color: #17213a;
+  font-size: 18px;
+}
+
+.empty-box p {
+  max-width: 500px;
+  margin: 0 auto;
+  color: #667085;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.loading-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  color: #667085;
+}
+
+.loader {
+  width: 38px;
+  height: 38px;
+  margin-bottom: 14px;
+  border: 4px solid #dbe6ff;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: loaderSpin 0.8s linear infinite;
+}
+
+@keyframes loaderSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================
+   ACTION BUTTONS
+========================================= */
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: 36px;
+  padding-top: 24px;
+  border-top: 1px solid #e8ecf3;
+}
+
+.back-btn,
+.continue-btn {
+  min-width: 120px;
+  height: 46px;
+  padding: 0 22px;
+  border: none;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.back-btn {
+  border: 1px solid #d9dee8;
+  background: #f2f4f7;
+  color: #344054;
+}
+
+.back-btn:hover {
+  background: #e4e7ec;
+}
+
+.continue-btn {
+  background: linear-gradient(135deg, #2563eb, #173db7);
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.22);
+}
+
+.continue-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 11px 23px rgba(37, 99, 235, 0.3);
+}
+
+.back-btn:disabled,
+.continue-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 768px) {
+  :host {
+    padding: 25px 15px 50px;
+  }
+
+  .custom-container {
+    padding: 24px;
+    border-radius: 16px;
+  }
+
+  .fields-grid {
+    gap: 20px;
+  }
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 600px) {
+  :host {
+    padding: 16px 10px 40px;
+  }
+
+  .custom-container {
+    padding: 19px 15px;
+    border-radius: 14px;
+  }
+
+  .info-box,
+  .fields-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .info-box {
+    gap: 10px;
+    padding: 12px;
+    margin-bottom: 24px;
+  }
+
+  .custom-header {
+    margin-bottom: 25px;
+  }
+
+  .custom-header h2 {
+    font-size: 23px;
+  }
+
+  .custom-header p {
+    font-size: 13px;
+  }
+
+  .fields-grid {
+    row-gap: 20px;
+  }
+
+  .custom-container .form-control {
+    height: 46px;
+    font-size: 13px;
+  }
+
+  .option-list {
+    flex-direction: column;
+  }
+
+  .option-card {
+    width: 100%;
+  }
+
+  .form-actions {
+    margin-top: 28px;
+  }
+
+  .back-btn,
+  .continue-btn {
+    flex: 1;
+    min-width: 0;
+    padding: 0 14px;
+  }
+}
