@@ -23,6 +23,7 @@ import { AdminCustomFieldAssignment } from './admin-page/pages/admin-custom-fiel
 import { AdminSellersComponent } from './admin-page/pages/admin-sellers/admin-sellers';
 import { AdminPostViewComponent } from './admin-page/pages/admin-post-view/admin-post-view';
 import { HeroSliderManagement } from './admin-page/pages/hero-slider-management/hero-slider-management';
+import { Router } from '@angular/router';
 type AdminMenuKey =
   SidebarAdminMenuKey |
   'advertise' |
@@ -61,6 +62,7 @@ type AdminMenuKey =
   templateUrl: './admin-page.html',
   styleUrls: ['./admin-page.css'],
 })
+
 export class AdminPage {
   username = 'Admin';
   sidebarOpen = false;
@@ -70,7 +72,21 @@ export class AdminPage {
 
 viewingPostId: string | null = null;
 
+ constructor(private router: Router) {}
 
+  logout(): void {
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('token');
+
+    sessionStorage.removeItem('admin_token');
+    sessionStorage.removeItem('auth_token');
+    sessionStorage.removeItem('token');
+
+    this.router.navigateByUrl('/admin-login', {
+      replaceUrl: true
+    });
+  }
   setActiveMenu(menu: AdminMenuKey): void {
     this.sidebarOpen = false;
     this.searchQuery = '';

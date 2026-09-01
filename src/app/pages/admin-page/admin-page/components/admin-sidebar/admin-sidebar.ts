@@ -15,17 +15,17 @@ export type AdminMenuKey =
   | 'subscriptions'
   | 'user-subscriptions'
   | 'boost-plans'
-| 'user-boost-plans'
-| 'payments'
+  | 'user-boost-plans'
+  | 'payments'
   | 'reports'
-  |'custom-fields'
+  | 'custom-fields'
   | 'custom-field-assignment'
-
   | 'locations'
   | 'banners'
   | 'notifications'
   | 'settings'
-   | 'post-view';
+  | 'edit-post'
+  | 'post-view';
 interface AdminMenuItem {
   key: AdminMenuKey;
   label: string;
@@ -42,7 +42,7 @@ interface AdminMenuItem {
 export class AdminSidebar {
   @Input() activeMenu: AdminMenuKey = 'dashboard';
   @Input() sidebarOpen = false;
-
+    @Output() logoutClick = new EventEmitter<void>();
   @Output() menuChange = new EventEmitter<AdminMenuKey>();
 
   readonly menuItems: AdminMenuItem[] = [

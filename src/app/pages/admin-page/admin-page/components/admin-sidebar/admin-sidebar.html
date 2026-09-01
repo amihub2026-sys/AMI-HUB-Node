@@ -1,7 +1,9 @@
 <aside class="sidebar" [class.open]="sidebarOpen">
+
   <div class="sidebar-header">
     <div class="brand-wrap">
       <div class="brand-logo">A</div>
+
       <div class="brand-text">
         <h2>AMI HUB</h2>
         <p>Admin Panel</p>
@@ -23,4 +25,17 @@
       <span class="menu-label">{{ item.label }}</span>
     </button>
   </nav>
+
+  <!-- LOGOUT BUTTON -->
+  <div class="sidebar-footer">
+    <button
+      type="button"
+      class="logout-btn"
+      (click)="logoutClick.emit()"
+    >
+      <span class="logout-icon">↪</span>
+      <span>Logout</span>
+    </button>
+  </div>
+
 </aside>
