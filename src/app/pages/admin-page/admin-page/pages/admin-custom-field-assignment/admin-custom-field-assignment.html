@@ -225,8 +225,22 @@ type="number"
 />
 
 </div>
+<div class="edit-row options-edit-row">
+  <label>
+    Dropdown Options
+  </label>
 
+  <textarea
+    [(ngModel)]="editOptionsText"
+    rows="5"
+    placeholder="Example: Tata, Hyundai, Kia, Toyota"
+  ></textarea>
 
+  <small>
+    Enter each option separated by a comma.
+    Leave empty for text and number fields.
+  </small>
+</div>
 
 
 <button
