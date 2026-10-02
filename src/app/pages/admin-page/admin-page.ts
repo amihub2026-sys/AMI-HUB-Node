@@ -74,19 +74,26 @@ viewingPostId: string | null = null;
 
  constructor(private router: Router) {}
 
-  logout(): void {
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('token');
+ logout(): void {
 
-    sessionStorage.removeItem('admin_token');
-    sessionStorage.removeItem('auth_token');
-    sessionStorage.removeItem('token');
+  // remove admin session
+  localStorage.removeItem('adminToken');
+  localStorage.removeItem('adminUser');
 
-    this.router.navigateByUrl('/admin-login', {
-      replaceUrl: true
-    });
-  }
+  // optional old keys
+  localStorage.removeItem('admin_token');
+  localStorage.removeItem('auth_token');
+
+  sessionStorage.removeItem('adminToken');
+  sessionStorage.removeItem('adminUser');
+  sessionStorage.removeItem('admin_token');
+  sessionStorage.removeItem('auth_token');
+
+  // go to admin login
+  this.router.navigateByUrl('/admin-login', {
+    replaceUrl: true
+  });
+}
   setActiveMenu(menu: AdminMenuKey): void {
     this.sidebarOpen = false;
     this.searchQuery = '';

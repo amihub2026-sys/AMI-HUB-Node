@@ -4,12 +4,12 @@
     [class.show]="sidebarOpen"
     (click)="closeSidebar()"
   ></div>
-
-  <app-admin-sidebar
-    [activeMenu]="activeMenu === 'edit-post' ? 'posts' : activeMenu"
-    [sidebarOpen]="sidebarOpen"
-    (menuChange)="setActiveMenu($event)"
-  ></app-admin-sidebar>
+<app-admin-sidebar 
+  [activeMenu]="activeMenu === 'edit-post' ? 'posts' : activeMenu" 
+  [sidebarOpen]="sidebarOpen" 
+  (menuChange)="setActiveMenu($event)"
+  (logoutClick)="logout()"
+></app-admin-sidebar>
 
   <main class="main-content">
     <app-admin-topbar
