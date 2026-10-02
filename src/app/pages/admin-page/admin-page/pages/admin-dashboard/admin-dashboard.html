@@ -1,137 +1,491 @@
 <div class="dashboard-shell">
+
+  <!-- =========================
+       HEADER
+  ========================== -->
   <div class="dashboard-head">
+
     <div>
       <p class="eyebrow">Admin Analytics</p>
+
       <h2>Dashboard Overview</h2>
+
       <p class="subtext">
-        Track users, posts, subscriptions, revenue, and latest platform activity.
+        Track users, posts, subscriptions,
+        revenue, and latest platform activity.
       </p>
     </div>
 
-    <button class="refresh-btn" type="button" (click)="loadDashboard()" [disabled]="isLoading">
+    <button
+      class="refresh-btn"
+      type="button"
+      (click)="loadDashboard()"
+      [disabled]="isLoading"
+    >
       {{ isLoading ? 'Loading...' : 'Refresh' }}
     </button>
+
   </div>
 
-  <div class="error-card" *ngIf="errorMessage">
+
+  <!-- =========================
+       ERROR
+  ========================== -->
+  <div
+    class="error-card"
+    *ngIf="errorMessage"
+  >
     {{ errorMessage }}
   </div>
 
-  <div class="stats-grid" *ngIf="!isLoading; else loadingBlock">
+
+  <!-- =========================
+       TOP STAT CARDS
+  ========================== -->
+  <div
+    class="stats-grid"
+    *ngIf="!isLoading; else loadingBlock"
+  >
+
     <div
       class="stat-card"
       *ngFor="let stat of stats; trackBy: trackByStat"
       [style.background]="stat.bg"
     >
-      <div class="stat-icon" [style.color]="stat.color">{{ stat.icon }}</div>
+
+      <div
+        class="stat-icon"
+        [style.color]="stat.color"
+      >
+        {{ stat.icon }}
+      </div>
 
       <div class="stat-content">
+
         <div class="stat-top">
-          <p>{{ stat.title }}</p>
-          <span>{{ stat.change }}</span>
+
+          <p>
+            {{ stat.title }}
+          </p>
+
+          <span>
+            {{ stat.change }}
+          </span>
+
         </div>
-        <h3>{{ stat.value }}</h3>
+
+        <h3>
+          {{ stat.value }}
+        </h3>
+
       </div>
+
     </div>
+
   </div>
 
+
+  <!-- =========================
+       LOADING SKELETON
+  ========================== -->
   <ng-template #loadingBlock>
+
     <div class="stats-grid skeleton-grid">
-      <div class="skeleton-card" *ngFor="let i of [1, 2, 3, 4]"></div>
+
+      <div
+        class="skeleton-card"
+        *ngFor="let i of [1,2,3,4,5,6]"
+      ></div>
+
     </div>
+
   </ng-template>
 
+
+  <!-- =========================
+       MAIN CONTENT
+  ========================== -->
   <div class="dashboard-content">
+
+
+    <!-- =========================
+         LEFT MAIN PANEL
+    ========================== -->
     <div class="panel-card overview-card">
+
+
+      <!-- OVERVIEW HEADER -->
       <div class="card-header">
+
         <div>
           <h3>Overview</h3>
-          <p>Live business snapshot from Supabase</p>
+
+          <p>
+            Live business snapshot from Supabase
+          </p>
         </div>
+
       </div>
 
+
+      <!-- =========================
+           OVERVIEW NUMBERS
+      ========================== -->
       <div class="overview-grid">
-        <div class="overview-box">
-          <span>Total Users</span>
-          <strong>{{ totalUsers | number : '1.0-0' }}</strong>
-        </div>
 
         <div class="overview-box">
-          <span>Total Posts</span>
-          <strong>{{ totalPosts | number : '1.0-0' }}</strong>
+
+          <span>
+            Total Users
+          </span>
+
+          <strong>
+            {{ totalUsers | number : '1.0-0' }}
+          </strong>
+
         </div>
+
 
         <div class="overview-box">
-          <span>Subscriptions</span>
-          <strong>{{ activeSubscriptions | number : '1.0-0' }}</strong>
+
+          <span>
+            Total Posts
+          </span>
+
+          <strong>
+            {{ totalPosts | number : '1.0-0' }}
+          </strong>
+
         </div>
+
 
         <div class="overview-box">
-          <span>Revenue</span>
-          <strong>{{ formattedRevenue }}</strong>
+
+          <span>
+            Subscriptions
+          </span>
+
+          <strong>
+            {{ activeSubscriptions | number : '1.0-0' }}
+          </strong>
+
         </div>
-      
-    
-</div>
-<div class="revenue-grid">
-  <div class="revenue-card day-card">
-    <span>Today Revenue</span>
-    <h2>{{ todayRevenue }}</h2>
-    <p>Revenue earned today</p>
-  </div>
 
-  <div class="revenue-card week-card">
-    <span>This Week Revenue</span>
-    <h2>{{ weekRevenue }}</h2>
-    <p>Revenue earned this week</p>
-  </div>
 
-  <div class="revenue-card month-card">
-    <span>This Month Revenue</span>
-    <h2>{{ monthRevenue }}</h2>
-    <p>Revenue earned this month</p>
-  </div>
-</div>
+        <div class="overview-box">
 
-      <div class="chart-placeholder">
-        <div class="chart-inner">
-          <div class="chart-badge">📊</div>
-          <h4>Analytics Chart Area</h4>
-          <p>Once this dashboard is stable, we can connect Chart.js here with real monthly data.</p>
+          <span>
+            Revenue
+          </span>
+
+          <strong>
+            {{ formattedRevenue }}
+          </strong>
+
         </div>
-      </div>
-    </div>
 
-    <div class="panel-card activity-card">
-      <div class="card-header">
-        <div>
-          <h3>Recent Activity</h3>
-          <p>{{ totalActivities }} latest updates</p>
-        </div>
       </div>
 
-      <div class="activity-list" *ngIf="recentActivities.length; else noActivity">
-        <div
-          class="activity-item"
-          *ngFor="let item of recentActivities; trackBy: trackByActivity"
-        >
-          <div class="activity-icon">{{ item.icon }}</div>
 
-          <div class="activity-content">
-            <h4>{{ item.title }}</h4>
-            <p>{{ item.subtitle }}</p>
+      <!-- =========================
+           REVENUE CARDS
+      ========================== -->
+      <div class="revenue-grid">
+
+
+        <div class="revenue-card day-card">
+
+          <div class="revenue-top">
+
+            <span class="revenue-icon">
+              💰
+            </span>
+
+            <span>
+              Today Revenue
+            </span>
+
           </div>
 
-          <div class="activity-time">{{ item.time }}</div>
+          <h2>
+            {{ formattedTodayRevenue }}
+          </h2>
+
+          <p>
+            Revenue earned today
+          </p>
+
         </div>
+
+
+        <div class="revenue-card week-card">
+
+          <div class="revenue-top">
+
+            <span class="revenue-icon">
+              📅
+            </span>
+
+            <span>
+              This Week Revenue
+            </span>
+
+          </div>
+
+          <h2>
+            {{ formattedWeekRevenue }}
+          </h2>
+
+          <p>
+            Revenue earned this week
+          </p>
+
+        </div>
+
+
+        <div class="revenue-card month-card">
+
+          <div class="revenue-top">
+
+            <span class="revenue-icon">
+              📊
+            </span>
+
+            <span>
+              This Month Revenue
+            </span>
+
+          </div>
+
+          <h2>
+            {{ formattedMonthRevenue }}
+          </h2>
+
+          <p>
+            Revenue earned this month
+          </p>
+
+        </div>
+
       </div>
 
-      <ng-template #noActivity>
-        <div class="empty-state">
-          <div class="empty-icon">🗂️</div>
-          <p>No recent activity found.</p>
+
+      <!-- =========================
+           ANALYTICS CHARTS
+      ========================== -->
+      <div class="analytics-grid">
+
+
+        <!-- =========================
+             USER TYPE CHART
+        ========================== -->
+        <div class="analytics-card">
+
+          <div class="analytics-head">
+
+            <div>
+
+              <h3>
+                👥 Users by Type
+              </h3>
+
+              <p>
+                Total buyers vs sellers
+              </p>
+
+            </div>
+
+            <span class="chart-chip">
+              All Time
+            </span>
+
+          </div>
+
+
+          <div class="user-chart-layout">
+
+            <div class="chart-canvas-wrap">
+
+              <canvas
+                #userTypeChart
+              ></canvas>
+
+
+              <div class="chart-center">
+
+                <strong>
+                  {{ totalUsers }}
+                </strong>
+
+                <span>
+                  Total Users
+                </span>
+
+              </div>
+
+            </div>
+
+
+            <!-- CUSTOM COUNT ROW -->
+            <div class="user-count-row">
+
+              <div class="user-count-item">
+
+                <span class="count-dot buyer-dot"></span>
+
+                <div>
+                  <small>Buyers</small>
+
+                  <strong>
+                    {{ buyerCount }}
+                  </strong>
+                </div>
+
+              </div>
+
+
+              <div class="user-count-item">
+
+                <span class="count-dot seller-dot"></span>
+
+                <div>
+                  <small>Sellers</small>
+
+                  <strong>
+                    {{ sellerCount }}
+                  </strong>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
         </div>
-      </ng-template>
+
+
+        <!-- =========================
+             MONTHLY REVENUE CHART
+        ========================== -->
+        <div class="analytics-card">
+
+          <div class="analytics-head">
+
+            <div>
+
+              <h3>
+                📈 Monthly Revenue
+              </h3>
+
+              <p>
+                Revenue trend for this year
+              </p>
+
+            </div>
+
+            <span class="chart-chip">
+              This Year
+            </span>
+
+          </div>
+
+
+          <div class="monthly-chart-wrap">
+
+            <canvas
+              #monthlyRevenueChart
+            ></canvas>
+
+          </div>
+
+        </div>
+
+      </div>
+
     </div>
+
+
+    <!-- =========================
+         RECENT ACTIVITY PANEL
+    ========================== -->
+    <div class="panel-card activity-card">
+
+      <div class="card-header">
+
+        <div>
+
+          <h3>
+            Recent Activity
+          </h3>
+
+          <p>
+            {{ totalActivities }} latest updates
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div
+        class="activity-list"
+        *ngIf="recentActivities.length; else noActivity"
+      >
+
+        <div
+          class="activity-item"
+          *ngFor="
+            let item of recentActivities;
+            trackBy: trackByActivity
+          "
+        >
+
+          <div class="activity-icon">
+            {{ item.icon }}
+          </div>
+
+
+          <div class="activity-content">
+
+            <h4>
+              {{ item.title }}
+            </h4>
+
+            <p>
+              {{ item.subtitle }}
+            </p>
+
+          </div>
+
+
+          <div class="activity-time">
+            {{ item.time }}
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <ng-template #noActivity>
+
+        <div class="empty-state">
+
+          <div class="empty-icon">
+            🗂️
+          </div>
+
+          <p>
+            No recent activity found.
+          </p>
+
+        </div>
+
+      </ng-template>
+
+    </div>
+
   </div>
+
 </div>
