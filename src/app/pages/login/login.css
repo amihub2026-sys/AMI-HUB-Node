@@ -735,5 +735,59 @@
     right:6px;
   }
 }
+/* =====================================
+   LOGIN COMPONENT - MODAL MODE
+===================================== */
 
+.login-bg.modal-mode {
+  min-height: auto !important;
+  width: 100% !important;
+
+  display: block !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  background: transparent !important;
+
+  overflow: visible !important;
+}
+
+.login-bg.modal-mode .login-card {
+  width: 100% !important;
+  max-width: 100% !important;
+
+  margin: 0 !important;
+  padding: 38px 32px 32px !important;
+
+  border-radius: 20px !important;
+
+  background: #ffffff !important;
+  backdrop-filter: none !important;
+
+  box-shadow: none !important;
+
+  animation: none !important;
+}
+
+.login-bg.modal-mode .side-wrapper {
+  display: none !important;
+}
+
+@media (max-width: 600px) {
+
+  .login-bg.modal-mode {
+    padding: 0 !important;
+  }
+
+  .login-bg.modal-mode .login-card {
+    max-width: 100% !important;
+
+    margin: 0 !important;
+
+    padding: 32px 20px 24px !important;
+
+    border-radius: 18px !important;
+  }
+}
 

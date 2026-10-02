@@ -7,10 +7,16 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { SnackbarService } from '../../services/snackbar.service';
+import { Login } from '../login/login';
 @Component({
   selector: 'app-post-view',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+imports: [
+  CommonModule,
+  FormsModule,
+  RouterModule,
+  Login
+],
   templateUrl: './post-view.html',
   styleUrls: ['./post-view.css']
 })
@@ -25,7 +31,25 @@ export class PostViewComponent implements OnInit {
       Authorization: token ? `Bearer ${token}` : ''
     });
   }
+  private requireLogin(
+  action: 'call' | 'whatsapp' | 'chat' | 'favorite' | 'advertise'
+): boolean {
 
+  const token = localStorage.getItem('token');
+
+  if (token) {
+    return true;
+  }
+
+  this.pendingAction = action;
+  this.showLoginModal.set(true);
+
+  return false;
+}
+closeLoginModal(): void {
+  this.showLoginModal.set(false);
+  this.pendingAction = null;
+}
   private showAlert(
     message: string,
     type: 'success' | 'error' | 'info' = 'info'
@@ -122,7 +146,15 @@ showAllReviews = false;
   showReportForm = signal(false);
   reportText = '';
   showFullDescription = false;
+  showLoginModal = signal(false);
 
+pendingAction:
+  | 'call'
+  | 'whatsapp'
+  | 'chat'
+  | 'favorite'
+  | 'advertise'
+  | null = null;
  constructor(
   private route: ActivatedRoute,
   private router: Router,
@@ -894,114 +926,71 @@ prevMedia() {
     }
   }
 
-callSeller() {
+callSeller(): void {
 
-  const token = localStorage.getItem('token');
-
-  if(!token){
-
-    this.showAlert(
-      'Please login to contact seller',
-      'info'
-    );
-
-    this.router.navigate(['/login'],{
-      state:{
-        redirectTo:'post-view',
-        postId:this.postId
-      }
-    });
-
+  if (!this.requireLogin('call')) {
     return;
   }
 
-
   const post = this.postData();
 
+  const phone = String(
+    post?.sellerPhone || ''
+  ).replace(/\D/g, '');
 
-  if (!post?.sellerPhone) {
-
+  if (!phone) {
     this.showAlert(
       'Phone number not available',
       'error'
     );
-
     return;
-
   }
 
+  const isMobile =
+    /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-  window.location.href =
-  'tel:' + post.sellerPhone;
+  if (isMobile) {
+    // MOBILE → open dialer
+    window.location.href = `tel:${phone}`;
+    return;
+  }
 
+  // DESKTOP → show/copy phone number
+  navigator.clipboard.writeText(phone);
+
+  this.showAlert(
+    `Seller phone: ${phone} - Number copied`,
+    'success'
+  );
 }
 whatsappSeller(): void {
 
-
-  const token = localStorage.getItem('token');
-
-
-  if(!token){
-
-    this.showAlert(
-      'Please login to contact seller',
-      'info'
-    );
-
-
-    this.router.navigate(['/login'],{
-
-      state:{
-        redirectTo:'post-view',
-        postId:this.postId
-      }
-
-    });
-
-
+  if (!this.requireLogin('whatsapp')) {
     return;
-
   }
-
-
 
   const post = this.postData();
 
-
-
   let phone = String(
     post?.whatsappNumber || ''
-  ).replace(/\D/g,'');
+  ).replace(/\D/g, '');
 
-
-
-  if(!phone){
-
+  if (!phone) {
     this.showAlert(
       'WhatsApp number not available',
       'error'
     );
-
     return;
-
   }
 
-
-
-  if(phone.length === 10){
-
+  if (phone.length === 10) {
     phone = `91${phone}`;
-
   }
-
-
 
   window.open(
     `https://wa.me/${phone}`,
     '_blank'
   );
-
-
 }
   sharePost() {
     const post = this.postData();
@@ -1050,18 +1039,30 @@ async addToFavorites(): Promise<void> {
 }
 
 async chatSeller(): Promise<void> {
+
+  if (!this.requireLogin('chat')) {
+    return;
+  }
+
+  this.loadCurrentUser();
+
   const userId = this.currentUserId();
 
   if (!userId) {
-    this.showAlert('Please login first', 'error');
-    this.router.navigate(['/login']);
+    this.showAlert(
+      'Unable to load user',
+      'error'
+    );
     return;
   }
 
   const post = this.postData();
 
   if (!post?.userid) {
-    this.showAlert('Seller not available', 'error');
+    this.showAlert(
+      'Seller not available',
+      'error'
+    );
     return;
   }
 
@@ -1130,7 +1131,51 @@ goBack(): void {
     this.router.navigate(['/']);
   }
 }
+onModalLoginSuccess(user: any): void {
 
+  const action = this.pendingAction;
+
+  // close popup WITHOUT clearing action first
+  this.showLoginModal.set(false);
+
+  // refresh current logged-in user
+  this.loadCurrentUser();
+
+  // now clear it
+  this.pendingAction = null;
+
+  setTimeout(() => {
+
+    if (action === 'call') {
+      this.callSeller();
+      return;
+    }
+
+    if (action === 'whatsapp') {
+      this.whatsappSeller();
+      return;
+    }
+
+    if (action === 'chat') {
+      this.chatSeller();
+      return;
+    }
+
+    if (action === 'favorite') {
+      this.addToFavorites();
+      return;
+    }
+
+    if (action === 'advertise') {
+      this.openAdvertise();
+      return;
+    }
+
+  }, 150);
+}
+openAdvertise(): void {
+  console.log('Open advertise form');
+}
 
 openUserPage(userid:any){
 

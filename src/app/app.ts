@@ -11,6 +11,7 @@ import { AppLocationResult } from './services/location-search';
 import { SnackbarService } from './services/snackbar.service';
 import { SnackbarComponent } from './snackbar/snackbar';
 import { HostListener } from '@angular/core';
+import { Login } from './pages/login/login';
 
 @Component({
   selector: 'app-root',
@@ -21,7 +22,8 @@ imports: [
   RouterOutlet,
   RouterLink,
   LocationPickerComponent,
-  SnackbarComponent   // ✅ ADD THIS
+  SnackbarComponent ,  // ✅ ADD THIS
+  Login
 ],
   templateUrl: './app.html',
   styleUrls: ['./app.css']
@@ -48,6 +50,8 @@ export class App implements OnInit {
   showAd = true;
   showTopAd = true;
   menuOpen = false;
+showAdvertiseLoginModal = false;
+pendingAdvertise = false;
 
   searchTerm = '';
   searchCategory = 'All';
@@ -630,46 +634,27 @@ async postService(): Promise<void> {
 
   const loggedIn = await this.isLoggedIn();
 
-
   if (!loggedIn) {
-
-    this.snackbar.show(
-      'Please login first',
-      'error'
-    );
-
-    this.router.navigate(['/login'], {
-      state:{
-        redirectTo:'post-service'
-      }
-    });
-
+    this.pendingAdvertise = true;
+    this.showAdvertiseLoginModal = true;
     return;
   }
 
-
-  // get user details from localStorage
   const user =
     JSON.parse(
       localStorage.getItem('user') || '{}'
     );
 
-
-  if(!user.isSeller){
-
-    this.router.navigate(['/seller-profile'],{
-      state:{
-        next:'post-service'
+  if (!user.isSeller) {
+    this.router.navigate(['/seller-profile'], {
+      state: {
+        next: 'post-service'
       }
     });
-
     return;
-
   }
 
-
   this.router.navigate(['/service']);
-
 }
 
   toggleLocationPicker(): void {
@@ -714,7 +699,25 @@ async postService(): Promise<void> {
     this.showLocationPicker = false;
     this.cdr.detectChanges();
   }
+closeAdvertiseLoginModal(): void {
+  this.showAdvertiseLoginModal = false;
+  this.pendingAdvertise = false;
+}
 
+async onAdvertiseLoginSuccess(user: any): Promise<void> {
+
+  this.showAdvertiseLoginModal = false;
+
+  this.isLoggedInUser = await this.isLoggedIn();
+
+  if (!this.pendingAdvertise) {
+    return;
+  }
+
+  this.pendingAdvertise = false;
+
+  await this.postService();
+}
   clearSelectedLocation(): void {
     this.selectedLocation = null;
     this.selectedCity = '';
