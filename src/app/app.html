@@ -46,6 +46,7 @@
 </a>
 <!-- MY POSTS -->
 <a
+  *ngIf="isLoggedInUser"
   class="top-nav-item my-posts-link"
   (click)="goToMyPosts(); closeMenu()">
   <i class="fas fa-clipboard-list"></i>
@@ -212,7 +213,10 @@
     </div>
 
     <!-- TWO COLUMN MENU -->
-    <div class="profile-menu-grid">
+ <div
+  class="profile-menu-grid"
+  *ngIf="isLoggedInUser"
+>
 
       <button
         type="button"
