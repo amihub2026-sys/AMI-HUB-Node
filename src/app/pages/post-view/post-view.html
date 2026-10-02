@@ -658,3 +658,28 @@ class="fas fa-check-circle">
 
       
 </div>
+<div
+  class="login-modal-overlay"
+  *ngIf="showLoginModal()"
+  (click)="closeLoginModal()"
+>
+  <div
+    class="login-modal-box"
+    (click)="$event.stopPropagation()"
+  >
+
+    <button
+      type="button"
+      class="login-modal-close"
+      (click)="closeLoginModal()"
+    >
+      ×
+    </button>
+
+  <app-login
+  [modalMode]="true"
+  (loginSuccess)="onModalLoginSuccess($event)">
+</app-login>
+
+  </div>
+</div>

@@ -499,6 +499,29 @@
 
     </div>
   </div>
+  <div
+  class="advertise-login-overlay"
+  *ngIf="showAdvertiseLoginModal"
+  (click)="closeAdvertiseLoginModal()"
+>
+  <div
+    class="advertise-login-modal"
+    (click)="$event.stopPropagation()"
+  >
+    <button
+      type="button"
+      class="advertise-login-close"
+      (click)="closeAdvertiseLoginModal()"
+    >
+      ×
+    </button>
+
+    <app-login
+      [modalMode]="true"
+      (loginSuccess)="onAdvertiseLoginSuccess($event)">
+    </app-login>
+  </div>
+</div>
 
 
 <footer class="footer" *ngIf="

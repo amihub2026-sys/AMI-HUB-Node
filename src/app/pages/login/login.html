@@ -1,9 +1,13 @@
-<div class="login-bg">
+<div
+  class="login-bg"
+  [class.modal-mode]="modalMode">
   <div class="login-card">
     <h1 class="logo">AMI HUB</h1>
     <p class="tagline">Buy • Sell • Discover – All in One Hub.</p>
 
-    <div class="user-login-options">
+    <div
+  class="user-login-options"
+  *ngIf="!modalMode">
       <button
         (click)="selectUserLogin('mobileOtp')"
         [class.active]="userLoginMethod === 'mobileOtp'">
@@ -100,15 +104,24 @@
   Admin Login
 </button>    </div>
 
-    <div class="divider" *ngIf="userLoginMethod !== 'admin'">OR</div>
+    <div
+  class="divider"
+  *ngIf="userLoginMethod !== 'admin' && !modalMode">
+  OR
+</div>
 
-    <button class="social google" (click)="googleLogin()" *ngIf="userLoginMethod !== 'admin'">
+<button
+  class="social google"
+  (click)="googleLogin()"
+  *ngIf="userLoginMethod !== 'admin' && !modalMode">
       <img src="assets/icons/google.png" alt="Google">
       Continue with Google
     </button>
   </div>
 
-  <div class="side-wrapper right" *ngIf="showRightAd">
+<div
+  class="side-wrapper right"
+  *ngIf="showRightAd && !modalMode">
     <div class="side-ad">
       <span class="ad-close" (click)="closeAd('right')">×</span>
       <div class="side-poster right-poster"></div>
@@ -120,8 +133,9 @@
       </div>
     </div>
   </div>
-
-  <div class="side-wrapper left" *ngIf="showLeftAd">
+<div
+  class="side-wrapper left"
+  *ngIf="showLeftAd && !modalMode">
     <div class="side-ad green-ad">
       <span class="ad-close" (click)="closeAd('left')">×</span>
       <div class="side-poster left-poster"></div>

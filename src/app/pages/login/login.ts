@@ -1,10 +1,21 @@
-import { Component, Inject, OnInit, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';import { Router } from '@angular/router';
+import {
+  Component,
+  Inject,
+  OnInit,
+  PLATFORM_ID,
+  ChangeDetectorRef,
+  Input,
+  Output,
+  EventEmitter
+} from '@angular/core';
+import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { SupabaseService } from '../../services/supabase.service';
 import { SnackbarService } from '../../services/snackbar.service';
 import { environment } from '../../../environments/environment';
+
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -32,7 +43,11 @@ export class Login implements OnInit {
   showPassword = false;
   showNewPassword = false;
   showAdminPassword = false;
+@Input() modalMode = false;
 
+@Output() loginSuccess = new EventEmitter<any>();
+
+@Output() closeModal = new EventEmitter<void>();
   private isBrowser = false;
   private redirectTo = '/';
 
@@ -278,76 +293,41 @@ constructor(
 })
   .subscribe({
 
-   next:(res:any)=>{
+next: (res: any) => {
 
-  console.log(
-    "LOGIN RESPONSE FULL:",
-    JSON.stringify(res)
-  );
+  console.log("OTP VERIFY RESPONSE:", res);
 
-
+  // IMPORTANT
   const responseData = res.data || res;
 
+  console.log("OTP NORMALIZED DATA:", responseData);
 
+  // Save token + user correctly
   this.storeUserSession(responseData);
 
-
-
-  console.log(
-    "TOKEN AFTER SAVE:",
-    localStorage.getItem('token')
+  window.dispatchEvent(
+    new Event('userLoggedIn')
   );
-
-
-  console.log(
-    "USER ID:",
-    localStorage.getItem('userId')
-  );
-
-
 
   this.showAlert(
-    'Login Successful',
-    'success'
+    "Login Successful",
+    "success"
   );
 
+  // LOGIN USED INSIDE DETAILS POPUP
+  if (this.modalMode) {
 
+    this.loginSuccess.emit(
+      responseData.user
+    );
 
-  setTimeout(()=>{
+    return;
+  }
 
-  const user = responseData.user || responseData;
-
-
-  const onboardingDone =
-    user.isOnboardingCompleted === true ||
-    user.isonboardingcompleted === true;
-
-
-  console.log(
-    "ONBOARDING STATUS:",
-    onboardingDone
+  // NORMAL /login PAGE
+  this.redirectAfterLogin(
+    responseData.user
   );
-
-
-  if(!onboardingDone){
-
-    this.router.navigate([
-      '/account-setup'
-    ]);
-
-  }
-  else{
-
-    this.router.navigate([
-      '/'
-    ]);
-
-  }
-
-
-},1000);
-
-
 },
 
 
@@ -483,6 +463,10 @@ window.dispatchEvent(
       "success"
     );
 
+if (this.modalMode) {
+  this.loginSuccess.emit(res.user);
+  return;
+}
 
     this.redirectAfterLogin(
       res.user
