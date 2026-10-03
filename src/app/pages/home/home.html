@@ -21,7 +21,6 @@
   class="top-hero"
   *ngIf="heroSliders.length > 0"
 >
-
   <div class="top-banner-ad">
 
     <div
@@ -43,15 +42,13 @@
           *ngFor="let slider of heroSliders"
         >
 
-          <!-- MOBILE IMAGE -->
           <source
             media="(max-width: 768px)"
-            [srcset]="slider.mobileImageUrl"
+            [srcset]="slider.mobileImage"
           >
 
-          <!-- DESKTOP IMAGE -->
           <img
-            [src]="slider.desktopImageUrl"
+            [src]="slider.desktopImage"
             alt="AMI HUB Banner"
           >
 
@@ -60,7 +57,6 @@
       </div>
 
 
-      <!-- PREVIOUS -->
       <button
         *ngIf="heroSliders.length > 1"
         class="prev"
@@ -71,7 +67,6 @@
       </button>
 
 
-      <!-- NEXT -->
       <button
         *ngIf="heroSliders.length > 1"
         class="next"
@@ -82,7 +77,6 @@
       </button>
 
 
-      <!-- DOTS -->
       <div
         class="dots"
         *ngIf="heroSliders.length > 1"
@@ -105,7 +99,6 @@
     </div>
 
   </div>
-
 </section>
 <section class="mini-promos">
   <div class="promo-grid">
