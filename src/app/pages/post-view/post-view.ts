@@ -8,6 +8,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { SnackbarService } from '../../services/snackbar.service';
 import { Login } from '../login/login';
+import { ApiService } from '../../services/api.service';
 @Component({
   selector: 'app-post-view',
   standalone: true,
@@ -161,7 +162,8 @@ pendingAction:
   private http: HttpClient,
   private sanitizer: DomSanitizer,
   private snackbar: SnackbarService,
-  private location: Location
+  private location: Location,
+  private apiService: ApiService
 ) {}
 async ngOnInit(): Promise<void> {
   this.postId = this.route.snapshot.paramMap.get('id') || '';
@@ -1024,20 +1026,88 @@ async addToCart(): Promise<void> {
   );
 }
 async addToFavorites(): Promise<void> {
-  const token = localStorage.getItem('token');
+
+  const token =
+    localStorage.getItem('token');
 
   if (!token) {
-    this.showAlert('Please login first', 'error');
+
+    this.showAlert(
+      'Please login first',
+      'error'
+    );
+
     this.router.navigate(['/login']);
+
     return;
   }
 
-  this.showAlert(
-    'Favorites API will be connected next',
-    'info'
-  );
-}
+  const post =
+    this.postData();
 
+  const postId =
+    String(
+      post?.postid ||
+      post?._id ||
+      post?.id ||
+      ''
+    );
+
+  if (!postId) {
+
+    this.showAlert(
+      'Post ID not available',
+      'error'
+    );
+
+    return;
+  }
+
+  this.apiService
+    .post<any>(
+      `/favorites/${postId}`,
+      {}
+    )
+    .subscribe({
+
+      next: (res: any) => {
+
+        if (res?.isFavorite) {
+
+          this.showAlert(
+            'Added to favorites',
+            'success'
+          );
+
+        } else {
+
+          this.showAlert(
+            'Removed from favorites',
+            'info'
+          );
+
+        }
+
+      },
+
+      error: (err: any) => {
+
+        console.error(
+          'Favorite error:',
+          err
+        );
+
+        this.showAlert(
+          err?.error?.message ||
+          'Failed to update favorites',
+          'error'
+        );
+
+      }
+
+    });
+
+}
 async chatSeller(): Promise<void> {
 
   if (!this.requireLogin('chat')) {
