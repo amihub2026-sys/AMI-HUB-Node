@@ -31,531 +31,728 @@ import {
 
 @Component({
   selector: 'app-seller-profile',
-  standalone:true,
-  imports:[
+  standalone: true,
+  imports: [
     CommonModule,
     FormsModule
   ],
-  templateUrl:'./seller-profile.html',
-  styleUrls:['./seller-profile.css']
+  templateUrl: './seller-profile.html',
+  styleUrls: ['./seller-profile.css']
 })
 export class SellerProfileComponent implements OnInit, OnDestroy {
 
+  private platformId = inject(PLATFORM_ID);
 
-private platformId = inject(PLATFORM_ID);
+  seller: any = {
+    name: '',
+    email: '',
+    phone: '',
 
+    profileImage: null,
+    kycImage: null,
+    qrCodeImage: null,
 
-seller:any = {
+    termsAccepted: false
+  };
 
-  name:'',
-  email:'',
-  phone:'',
 
-  profileImage:null,
-  kycImage:null,
-  qrCodeImage:null,
+  // ==============================
+  // FILES WAITING TO UPLOAD
+  // ==============================
 
-  termsAccepted:false
+  private profileImageFile: File | null = null;
+  private kycImageFile: File | null = null;
+  private qrCodeImageFile: File | null = null;
 
-};
 
+  stars = [1, 2, 3, 4, 5];
 
-stars=[1,2,3,4,5];
+  redirectTo = '';
 
+  isLoading = false;
 
+  isEditMode = false;
 
+  showPassword = false;
 
 
-redirectTo='';
+  constructor(
+    private router: Router,
+    private apiService: ApiService,
+    private cdr: ChangeDetectorRef,
+    private snackbar: SnackbarService
+  ) {}
 
-isLoading=false;
 
-isEditMode=false;
+  ngOnInit() {
 
-showPassword=false;
+    if (!this.isBrowser()) {
+      return;
+    }
 
+    const nav =
+      this.router.getCurrentNavigation();
 
+    const state =
+      history.state;
 
-constructor(
- private router:Router,
- private apiService:ApiService,
- private cdr:ChangeDetectorRef,
- private snackbar:SnackbarService
-){}
 
+    this.redirectTo =
+      nav?.extras?.state?.['next'] ||
+      state?.['next'] ||
+      '';
 
 
-ngOnInit(){
+    this.loadSellerProfile();
 
- if(!this.isBrowser()){
-   return;
- }
+  }
 
-const nav =
- this.router.getCurrentNavigation();
 
-const state =
-history.state;
+  ngOnDestroy() {}
 
 
-this.redirectTo =
-  nav?.extras?.state?.['next'] ||
-  state?.['next'] ||
-  '';
+  private isBrowser() {
 
+    return isPlatformBrowser(
+      this.platformId
+    );
 
- this.loadSellerProfile();
+  }
 
-}
 
+  get submitButtonText() {
 
+    return this.isEditMode
+      ? 'Edit Profile'
+      : 'Create Profile';
 
-ngOnDestroy(){
+  }
 
-}
 
+  togglePassword() {
 
+    this.showPassword =
+      !this.showPassword;
 
-private isBrowser(){
+  }
 
- return isPlatformBrowser(
-   this.platformId
- );
 
-}
+  // ==============================
+  // LOAD PROFILE
+  // ==============================
 
+  loadSellerProfile() {
 
+    this.isLoading = true;
 
-get submitButtonText(){
 
- return this.isEditMode
- ? 'Edit Profile'
- : 'Create Profile';
+    this.apiService
+      .get('/profile/me')
+      .subscribe({
 
-}
+        next: (res: any) => {
 
+          const profile =
+            res.data;
 
 
-togglePassword(){
+          this.seller = {
 
- this.showPassword =
- !this.showPassword;
+            name:
+              profile.fullName || '',
 
-}
+            email:
+              profile.email || '',
 
+            phone:
+              profile.mobile || '',
 
+            profileImage:
+              profile.profileImage || null,
 
+            kycImage:
+              profile.kycImage || null,
 
+            qrCodeImage:
+              profile.qrCodeImage || null,
 
-loadSellerProfile(){
+            termsAccepted:
+              profile.termsAccepted || false
 
- this.isLoading=true;
+          };
 
 
- this.apiService
- .get('/profile/me')
- .subscribe({
+          this.isEditMode = true;
 
- next:(res:any)=>{
+          this.isLoading = false;
 
+          this.cdr.detectChanges();
 
- const profile=res.data;
+        },
 
 
- this.seller={
+        error: () => {
 
+          console.log(
+            'No profile found'
+          );
 
-  name:profile.fullName || '',
 
-  email:profile.email || '',
+          this.isEditMode = false;
 
-  phone:profile.mobile || '',
+          this.isLoading = false;
 
+          this.cdr.detectChanges();
 
-  profileImage:
-  profile.profileImage || null,
+        }
 
+      });
 
-  kycImage:
-  profile.kycImage || null,
+  }
 
 
-  qrCodeImage:
-  profile.qrCodeImage || null,
+  // ==============================
+  // PROFILE IMAGE
+  // ==============================
 
+  uploadProfileImage(event: Event) {
 
+    const input =
+      event.target as HTMLInputElement;
 
 
-  termsAccepted:
-  profile.termsAccepted || false
+    if (!input.files?.length) {
+      return;
+    }
 
 
- };
+    const file =
+      input.files[0];
 
 
- this.isEditMode=true;
+    this.profileImageFile =
+      file;
 
 
- this.isLoading=false;
+    // preview only
 
- this.cdr.detectChanges();
+    const reader =
+      new FileReader();
 
 
- },
+    reader.onload = () => {
 
+      this.seller.profileImage =
+        reader.result;
 
- error:(err)=>{
+      this.cdr.detectChanges();
 
+    };
 
- console.log(
- "No profile found"
- );
 
+    reader.readAsDataURL(file);
 
- this.isEditMode=false;
+  }
 
 
- this.isLoading=false;
+  // ==============================
+  // KYC IMAGE
+  // ==============================
 
+  uploadKYC(event: Event) {
 
- this.cdr.detectChanges();
+    const input =
+      event.target as HTMLInputElement;
 
 
- }
+    if (!input.files?.length) {
+      return;
+    }
 
 
- });
+    const file =
+      input.files[0];
 
 
-}
+    this.kycImageFile =
+      file;
 
 
+    // preview only
 
+    const reader =
+      new FileReader();
 
 
-uploadProfileImage(event:Event){
+    reader.onload = () => {
 
-const input =
-event.target as HTMLInputElement;
+      this.seller.kycImage =
+        reader.result;
 
+      this.cdr.detectChanges();
 
-if(!input.files?.length)
-return;
+    };
 
 
-const file=input.files[0];
+    reader.readAsDataURL(file);
 
+  }
 
-const reader=new FileReader();
 
+  // ==============================
+  // QR IMAGE
+  // ==============================
 
-reader.onload=()=>{
+  uploadQR(event: Event) {
 
-this.seller.profileImage =
-reader.result;
+    const input =
+      event.target as HTMLInputElement;
 
 
-this.cdr.detectChanges();
+    if (!input.files?.length) {
+      return;
+    }
 
-};
 
+    const file =
+      input.files[0];
 
-reader.readAsDataURL(file);
 
+    this.qrCodeImageFile =
+      file;
 
-}
 
+    // preview only
 
+    const reader =
+      new FileReader();
 
 
+    reader.onload = () => {
 
-uploadKYC(event:Event){
+      this.seller.qrCodeImage =
+        reader.result;
 
-const input =
-event.target as HTMLInputElement;
+      this.cdr.detectChanges();
 
+    };
 
-if(!input.files?.length)
-return;
 
+    reader.readAsDataURL(file);
 
-const file=input.files[0];
+  }
 
 
-const reader=new FileReader();
+  // ==============================
+  // REMOVE PROFILE IMAGE
+  // ==============================
 
+  removeProfileImage() {
 
-reader.onload=()=>{
+    this.seller.profileImage =
+      null;
 
-this.seller.kycImage =
-reader.result;
+    this.profileImageFile =
+      null;
 
+  }
 
-this.cdr.detectChanges();
 
-};
+  // ==============================
+  // UPLOAD ONE FILE TO R2
+  // ==============================
 
+  private uploadFileToR2(
+    file: File,
+    folder: string
+  ): Promise<string> {
 
-reader.readAsDataURL(file);
+    return new Promise(
+      (resolve, reject) => {
 
+        this.apiService
+          .uploadImage(
+            file,
+            folder
+          )
+          .subscribe({
 
-}
+            next: (res: any) => {
 
+              if (
+                res?.success &&
+                res?.publicUrl
+              ) {
 
+                resolve(
+                  res.publicUrl
+                );
 
+              }
+              else {
 
+                reject(
+                  new Error(
+                    'Upload failed'
+                  )
+                );
 
-uploadQR(event:Event){
+              }
 
-const input =
-event.target as HTMLInputElement;
+            },
 
 
-if(!input.files?.length)
-return;
+            error: (err) => {
 
+              reject(err);
 
-const file=input.files[0];
+            }
 
+          });
 
-const reader=new FileReader();
+      }
+    );
 
+  }
 
-reader.onload=()=>{
 
-this.seller.qrCodeImage =
-reader.result;
+  // ==============================
+  // SUBMIT PROFILE
+  // ==============================
 
+  async submitProfile() {
 
-this.cdr.detectChanges();
+    if (
+      !this.seller.termsAccepted
+    ) {
 
-};
+      this.showMessage(
+        'Accept Terms',
+        'info'
+      );
 
+      return;
 
-reader.readAsDataURL(file);
+    }
 
 
-}
+    if (
+      this.seller.phone &&
+      !/^\d{10}$/.test(
+        this.seller.phone
+      )
+    ) {
 
+      this.showMessage(
+        'Phone number must be exactly 10 digits',
+        'error'
+      );
 
+      return;
 
+    }
 
 
-removeProfileImage(){
+    this.isLoading = true;
 
-this.seller.profileImage=null;
 
-}
+    try {
 
+      // ======================================
+      // 1. CURRENT SAVED URLS
+      // ======================================
 
+      let profileImageUrl =
+        this.seller.profileImage;
 
+      let kycImageUrl =
+        this.seller.kycImage;
 
+      let qrCodeImageUrl =
+        this.seller.qrCodeImage;
 
-submitProfile(){
 
+      // ======================================
+      // 2. UPLOAD NEW PROFILE IMAGE
+      // ======================================
 
-if(!this.seller.termsAccepted){
+      if (
+        this.profileImageFile
+      ) {
 
- this.showMessage(
- 'Accept Terms',
- 'info'
- );
+        profileImageUrl =
+          await this.uploadFileToR2(
+            this.profileImageFile,
+            'seller-profile/profile'
+          );
 
- return;
+      }
 
-}
 
+      // ======================================
+      // 3. UPLOAD NEW KYC IMAGE
+      // ======================================
 
+      if (
+        this.kycImageFile
+      ) {
 
-if(
- this.seller.phone &&
- !/^\d{10}$/.test(this.seller.phone)
-){
+        kycImageUrl =
+          await this.uploadFileToR2(
+            this.kycImageFile,
+            'seller-profile/kyc'
+          );
 
- this.showMessage(
- 'Phone number must be exactly 10 digits',
- 'error'
- );
+      }
 
- return;
 
-}
+      // ======================================
+      // 4. UPLOAD NEW QR IMAGE
+      // ======================================
 
+      if (
+        this.qrCodeImageFile
+      ) {
 
+        qrCodeImageUrl =
+          await this.uploadFileToR2(
+            this.qrCodeImageFile,
+            'seller-profile/qr'
+          );
 
-this.isLoading=true;
+      }
 
 
+      // ======================================
+      // 5. BUILD PROFILE PAYLOAD
+      // ======================================
 
-const payload={
+      const payload = {
 
+        fullName:
+          this.seller.name,
 
-fullName:
-this.seller.name,
+        email:
+          this.seller.email,
 
+        mobile:
+          this.seller.phone,
 
-email:
-this.seller.email,
+        profileImage:
+          profileImageUrl,
 
+        kycImage:
+          kycImageUrl,
 
-mobile:
-this.seller.phone,
+        qrCodeImage:
+          qrCodeImageUrl,
 
+        termsAccepted:
+          this.seller.termsAccepted
 
-profileImage:
-this.seller.profileImage,
+      };
 
 
-kycImage:
-this.seller.kycImage,
+      // ======================================
+      // 6. CREATE / UPDATE PROFILE
+      // ======================================
 
+      const request =
+        this.isEditMode
 
-qrCodeImage:
-this.seller.qrCodeImage,
+          ? this.apiService.put(
+              '/profile/me',
+              payload
+            )
 
+          : this.apiService.post(
+              '/profile',
+              payload
+            );
 
-termsAccepted:
-this.seller.termsAccepted
 
+      request.subscribe({
 
-};
+        next: (res: any) => {
 
+          console.log(
+            'PROFILE SAVED',
+            res
+          );
 
 
+          // replace previews with real R2 URLs
 
-const request = this.isEditMode
+          this.seller.profileImage =
+            profileImageUrl;
 
-?
+          this.seller.kycImage =
+            kycImageUrl;
 
-this.apiService.put(
- '/profile/me',
- payload
-)
+          this.seller.qrCodeImage =
+            qrCodeImageUrl;
 
-:
 
-this.apiService.post(
- '/profile',
- payload
-);
+          // clear selected files
 
+          this.profileImageFile =
+            null;
 
+          this.kycImageFile =
+            null;
 
+          this.qrCodeImageFile =
+            null;
 
 
-request.subscribe({
+          const user =
+            JSON.parse(
+              localStorage.getItem(
+                'user'
+              ) || '{}'
+            );
 
-next:(res:any)=>{
 
+          user.isSeller =
+            true;
 
-console.log(
-"PROFILE SAVED",
-res
-);
+          user.isOnboardingCompleted =
+            true;
 
-const user =
-JSON.parse(localStorage.getItem('user') || '{}');
+          user.fullName =
+            this.seller.name;
 
+          user.mobile =
+            this.seller.phone;
 
-user.isSeller = true;
+          user.email =
+            this.seller.email;
 
 
-user.isOnboardingCompleted = true;
+          localStorage.setItem(
+            'user',
+            JSON.stringify(user)
+          );
 
-user.fullName = this.seller.name;
-user.mobile = this.seller.phone;
-user.email = this.seller.email;
-localStorage.setItem(
-  'user',
-  JSON.stringify(user)
-);
-this.isLoading=false;
 
-this.isEditMode=true;
+          this.isLoading =
+            false;
 
+          this.isEditMode =
+            true;
 
-this.showMessage(
-'Profile saved successfully',
-'success'
-);
 
+          this.showMessage(
+            'Profile saved successfully',
+            'success'
+          );
 
 
-if(this.redirectTo==='post-product'){
+          if (
+            this.redirectTo ===
+            'post-product'
+          ) {
 
-this.router.navigate(['/post-ad']);
+            this.router.navigate(
+              ['/post-ad']
+            );
 
-}
+          }
 
-else if(this.redirectTo==='post-service'){
+          else if (
+            this.redirectTo ===
+            'post-service'
+          ) {
 
-this.router.navigate(['/service']);
+            this.router.navigate(
+              ['/service']
+            );
 
-}
+          }
 
-else{
+          else {
 
-this.router.navigate(['/']);
+            this.router.navigate(
+              ['/']
+            );
 
-}
+          }
 
+        },
 
-},
 
+        error: (err) => {
 
-error:(err)=>{
+          console.error(
+            'PROFILE ERROR',
+            err
+          );
 
 
-console.error(
-"PROFILE ERROR",
-err
-);
+          this.isLoading =
+            false;
 
 
-this.isLoading=false;
+          this.showMessage(
+            'Failed to save profile',
+            'error'
+          );
 
+        }
 
-this.showMessage(
-'Failed to save profile',
-'error'
-);
+      });
 
 
-}
+    }
+    catch (error) {
 
+      console.error(
+        'IMAGE UPLOAD ERROR',
+        error
+      );
 
-});
 
-}
+      this.isLoading =
+        false;
 
 
+      this.showMessage(
+        'Failed to upload image',
+        'error'
+      );
 
+    }
 
+  }
 
-private showMessage(
-message:string,
-type:'success'|'error'|'info'='info'
-){
 
-this.snackbar.show(
-message,
-type
-);
+  private showMessage(
+    message: string,
+    type:
+      'success' |
+      'error' |
+      'info' =
+      'info'
+  ) {
 
-}
+    this.snackbar.show(
+      message,
+      type
+    );
 
+  }
 
 
+  goBack(event: Event) {
 
-goBack(event:Event){
+    event.preventDefault();
 
-event.preventDefault();
+    event.stopPropagation();
 
-event.stopPropagation();
+    this.router.navigateByUrl(
+      '/home'
+    );
 
-this.router.navigateByUrl('/home');
-
-}
-
+  }
 
 }

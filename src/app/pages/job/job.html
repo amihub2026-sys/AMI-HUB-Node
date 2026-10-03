@@ -394,32 +394,26 @@
       </div>
 
     </div>
+<div class="contact-buttons">
 
-    <div class="popup-contact-actions">
+  <a
+    class="whatsapp-btn"
+    [href]="'https://wa.me/91' + selectedJob?.contact_phone"
+    target="_blank"
+    aria-label="WhatsApp"
+  >
+    <i class="fab fa-whatsapp"></i>
+  </a>
 
-      <a
-        class="whatsapp-btn"
-        [href]="getWhatsAppUrl(selectedJob)"
-        target="_blank"
-        rel="noopener noreferrer"
-        *ngIf="selectedJob?.contact_phone">
+  <a
+    class="call-btn"
+    [href]="'tel:' + selectedJob?.contact_phone"
+    aria-label="Call"
+  >
+    <i class="fas fa-phone"></i>
+  </a>
 
-        <i class="fab fa-whatsapp"></i>
-        WhatsApp
-
-      </a>
-
-      <a
-        class="call-btn"
-        [href]="getCallUrl(selectedJob)"
-        *ngIf="selectedJob?.phone || selectedJob?.contact_phone">
-
-        <i class="fas fa-phone-alt"></i>
-        Call
-
-      </a>
-
-    </div>
+</div>
 
   </div>
 
