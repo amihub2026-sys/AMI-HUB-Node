@@ -20,6 +20,7 @@ import { ApiService } from '../../services/api.service';
 
 
 interface DynamicCustomField {
+
   _id: string;
 
   fieldName: string;
@@ -67,8 +68,11 @@ interface DynamicCustomField {
   styleUrls: ['./custom-fields.css']
 })
 export class CustomFields implements OnInit {
-flowType = '';
-postId = '';
+
+  flowType = '';
+
+  postId = '';
+
   private router = inject(Router);
 
   private route = inject(ActivatedRoute);
@@ -83,7 +87,9 @@ postId = '';
   subcategoryId = '';
 
   subcategoryName = '';
- listingType = '';
+
+  listingType = '';
+
 
   fields: DynamicCustomField[] = [];
 
@@ -102,9 +108,14 @@ postId = '';
   submitError = '';
 
 
+  // =========================================================
+  // INIT
+  // =========================================================
+
   ngOnInit(): void {
 
     this.readNavigationData();
+
 
     if (!this.subcategoryId) {
 
@@ -114,58 +125,112 @@ postId = '';
       return;
     }
 
+
     this.loadCustomFields();
   }
 
+
+  // =========================================================
+  // READ DATA FROM SERVICE PAGE
+  // =========================================================
 
   private readNavigationData(): void {
 
     const navigationState =
       this.router.getCurrentNavigation()?.extras?.state;
 
-    const historyState = history.state || {};
+
+    const historyState =
+      history.state || {};
+
 
     const state = {
-      ...historyState,
-      ...navigationState
-    };
-this.flowType =
-  state['flow'] || '';
 
-this.postId =
-  state['postId'] || '';
+      ...historyState,
+
+      ...navigationState
+
+    };
+
+
+    this.flowType =
+      state['flow'] || '';
+
+
+    this.postId =
+      state['postId'] || '';
+
 
     this.categoryId =
+
       state['categoryId'] ||
-      this.route.snapshot.queryParamMap.get('categoryId') ||
+
+      this.route.snapshot.queryParamMap.get(
+        'categoryId'
+      ) ||
+
       '';
 
 
     this.categoryName =
+
       state['categoryName'] ||
+
       state['category'] ||
-      this.route.snapshot.queryParamMap.get('categoryName') ||
+
+      this.route.snapshot.queryParamMap.get(
+        'categoryName'
+      ) ||
+
       '';
 
 
     this.subcategoryId =
+
       state['subcategoryId'] ||
-      this.route.snapshot.queryParamMap.get('subcategoryId') ||
+
+      this.route.snapshot.queryParamMap.get(
+        'subcategoryId'
+      ) ||
+
       '';
 
 
     this.subcategoryName =
+
       state['subcategoryName'] ||
+
       state['subcategory'] ||
-      this.route.snapshot.queryParamMap.get('subcategoryName') ||
+
+      this.route.snapshot.queryParamMap.get(
+        'subcategoryName'
+      ) ||
+
       '';
-this.listingType =
-  state['type'] ||
-  state['listingType'] ||
-  localStorage.getItem('listingType') ||
-  '';
+
+
+    this.listingType =
+
+      state['type'] ||
+
+      state['listingType'] ||
+
+      localStorage.getItem(
+        'listingType'
+      ) ||
+
+      localStorage.getItem(
+        'pending_post_type'
+      ) ||
+
+      '';
+
   }
 
+
+  // =========================================================
+  // LOAD CUSTOM FIELDS
+  // =========================================================
 
   loadCustomFields(): void {
 
@@ -185,83 +250,137 @@ this.listingType =
     this.fields = [];
 
 
-    /*
-      Expected backend route:
+    this.api
 
-      GET /custom-fields/subcategory/:subcategoryId
+      .get(
+        `/custom-field-assignment?categoryId=${this.categoryId}&subcategoryId=${this.subcategoryId}&type=${this.listingType}`
+      )
 
-      The backend should return only fields assigned
-      to the selected subcategory.
-    */
-
- this.api
-.get(
- `/custom-field-assignment?categoryId=${this.categoryId}&subcategoryId=${this.subcategoryId}&type=${this.listingType}`
-)
       .subscribe({
 
         next: (response: any) => {
 
           const receivedFields =
+
             response?.data ||
+
             response?.fields ||
+
             response?.customFields ||
+
             response ||
+
             [];
 
-this.fields = Array.isArray(receivedFields)
-  ? receivedFields
-      .map((field: any) =>
-        this.normalizeField(field)
-      )
 
-      // Only active fields
-      .filter(
-        (field: DynamicCustomField) =>
-          field.isActive
-      )
+          this.fields = Array.isArray(
+            receivedFields
+          )
 
-      // Hide City / State / Country
-      .filter((field: DynamicCustomField) => {
+            ? receivedFields
 
-        const normalize = (value: string) =>
-          String(value || '')
-            .trim()
-            .toLowerCase()
-            .replace(/[\s_-]+/g, '');
+                .map(
+                  (field: any) =>
+                    this.normalizeField(field)
+                )
 
-        const fieldName = normalize(field.fieldName);
-        const label = normalize(field.label);
 
-        const hiddenLocationFields = [
-          'city',
-          'cityname',
-          'state',
-          'statename',
-          'country',
-          'countryname'
-        ];
+                // Only active fields
+                .filter(
+                  (
+                    field: DynamicCustomField
+                  ) =>
+                    field.isActive
+                )
 
-        return (
-          !hiddenLocationFields.includes(fieldName) &&
-          !hiddenLocationFields.includes(label)
-        );
-      })
 
-      .sort(
-        (
-          first: DynamicCustomField,
-          second: DynamicCustomField
-        ) =>
-          (first.sortOrder || 0) -
-          (second.sortOrder || 0)
-      )
-  : [];
+                // Hide City / State / Country
+                .filter(
+                  (
+                    field: DynamicCustomField
+                  ) => {
+
+                    const normalize =
+                      (value: string) =>
+
+                        String(value || '')
+
+                          .trim()
+
+                          .toLowerCase()
+
+                          .replace(
+                            /[\s_-]+/g,
+                            ''
+                          );
+
+
+                    const fieldName =
+                      normalize(
+                        field.fieldName
+                      );
+
+
+                    const label =
+                      normalize(
+                        field.label
+                      );
+
+
+                    const hiddenLocationFields = [
+
+                      'city',
+
+                      'cityname',
+
+                      'state',
+
+                      'statename',
+
+                      'country',
+
+                      'countryname'
+
+                    ];
+
+
+                    return (
+
+                      !hiddenLocationFields.includes(
+                        fieldName
+                      ) &&
+
+                      !hiddenLocationFields.includes(
+                        label
+                      )
+
+                    );
+
+                  }
+                )
+
+
+                .sort(
+
+                  (
+                    first: DynamicCustomField,
+                    second: DynamicCustomField
+                  ) =>
+
+                    (first.sortOrder || 0) -
+
+                    (second.sortOrder || 0)
+
+                )
+
+            : [];
 
 
           this.initializeFormData();
 
+
           this.isLoading = false;
+
         },
 
 
@@ -272,139 +391,239 @@ this.fields = Array.isArray(receivedFields)
             error
           );
 
+
           this.loadError =
+
             error?.error?.message ||
+
             'Unable to load additional fields. Please try again.';
 
+
           this.isLoading = false;
+
         }
 
       });
+
   }
 
 
-private normalizeField(field:any): DynamicCustomField {
+  // =========================================================
+  // NORMALIZE FIELD
+  // =========================================================
+
+  private normalizeField(
+    field: any
+  ): DynamicCustomField {
 
 
-const actualField =
-  field.customFieldId || field;
+    const actualField =
+
+      field.customFieldId ||
+
+      field;
 
 
-return {
+    return {
 
-  _id:
-    actualField._id || '',
+      _id:
 
+        actualField._id ||
 
-  fieldName:
-    actualField.fieldName ||
-    actualField.name ||
-    this.createFieldName(
-      actualField.label || 'field'
-    ),
+        '',
 
 
-  label:
-    actualField.label ||
-    actualField.fieldName ||
-    'Field',
+      fieldName:
+
+        actualField.fieldName ||
+
+        actualField.name ||
+
+        this.createFieldName(
+          actualField.label ||
+          'field'
+        ),
 
 
-  icon:
-    actualField.icon || '',
+      label:
+
+        actualField.label ||
+
+        actualField.fieldName ||
+
+        'Field',
 
 
-  fieldType:
-    actualField.fieldType ||
-    actualField.type ||
-    'text',
+      icon:
+
+        actualField.icon ||
+
+        '',
 
 
-  options:
-    Array.isArray(actualField.options)
-    ? actualField.options
-    : [],
+      fieldType:
+
+        actualField.fieldType ||
+
+        actualField.type ||
+
+        'text',
 
 
-  placeholder:
-    actualField.placeholder || '',
+      options:
+
+        Array.isArray(
+          actualField.options
+        )
+
+          ? actualField.options
+
+          : [],
 
 
-  helpText:
-    actualField.helpText ||
-    actualField.description ||
-    '',
+      placeholder:
+
+        actualField.placeholder ||
+
+        '',
 
 
-  isRequired:
-    Boolean(
-      field.isRequired ||
-      actualField.isRequired
-    ),
+      helpText:
+
+        actualField.helpText ||
+
+        actualField.description ||
+
+        '',
 
 
-  isActive:
-    actualField.isActive !== false,
+      isRequired:
+
+        Boolean(
+
+          field.isRequired ||
+
+          actualField.isRequired
+
+        ),
 
 
-  sortOrder:
-    Number(
-      field.sortOrder ||
-      actualField.sortOrder ||
-      0
-    )
+      isActive:
 
-};
+        actualField.isActive !== false,
 
-}
+
+      sortOrder:
+
+        Number(
+
+          field.sortOrder ||
+
+          actualField.sortOrder ||
+
+          0
+
+        )
+
+    };
+
+  }
+
+
+  // =========================================================
+  // CREATE SAFE FIELD NAME
+  // =========================================================
 
   private createFieldName(
     value: string
   ): string {
 
     return value
+
       .toLowerCase()
+
       .trim()
-      .replace(/[^a-z0-9]+/g, '_')
-      .replace(/^_+|_+$/g, '');
+
+      .replace(
+        /[^a-z0-9]+/g,
+        '_'
+      )
+
+      .replace(
+        /^_+|_+$/g,
+        ''
+      );
+
   }
 
+
+  // =========================================================
+  // INITIALIZE FORM VALUES
+  // =========================================================
 
   private initializeFormData(): void {
 
     this.fields.forEach(
-      (field: DynamicCustomField) => {
+
+      (
+        field: DynamicCustomField
+      ) => {
 
         if (
-          this.formData[field.fieldName] !== undefined
+          this.formData[
+            field.fieldName
+          ] !== undefined
         ) {
+
           return;
+
         }
 
 
         if (
-          field.fieldType === 'checkbox' &&
+
+          field.fieldType ===
+            'checkbox' &&
+
           field.options.length > 0
+
         ) {
 
-          this.formData[field.fieldName] = [];
+          this.formData[
+            field.fieldName
+          ] = [];
 
-        } else if (
-          field.fieldType === 'checkbox'
+        }
+
+        else if (
+          field.fieldType ===
+          'checkbox'
         ) {
 
-          this.formData[field.fieldName] = false;
+          this.formData[
+            field.fieldName
+          ] = false;
 
-        } else {
+        }
 
-          this.formData[field.fieldName] = '';
+        else {
+
+          this.formData[
+            field.fieldName
+          ] = '';
 
         }
 
       }
+
     );
+
   }
 
+
+  // =========================================================
+  // CHECKBOX
+  // =========================================================
 
   isCheckboxSelected(
     fieldName: string,
@@ -412,12 +631,23 @@ return {
   ): boolean {
 
     const selectedValues =
-      this.formData[fieldName];
+      this.formData[
+        fieldName
+      ];
+
 
     return (
-      Array.isArray(selectedValues) &&
-      selectedValues.includes(option)
+
+      Array.isArray(
+        selectedValues
+      ) &&
+
+      selectedValues.includes(
+        option
+      )
+
     );
+
   }
 
 
@@ -428,59 +658,105 @@ return {
   ): void {
 
     if (
-      !Array.isArray(this.formData[fieldName])
+      !Array.isArray(
+        this.formData[fieldName]
+      )
     ) {
 
-      this.formData[fieldName] = [];
+      this.formData[
+        fieldName
+      ] = [];
+
     }
 
 
     if (checked) {
 
       if (
-        !this.formData[fieldName].includes(option)
+        !this.formData[
+          fieldName
+        ].includes(
+          option
+        )
       ) {
 
-        this.formData[fieldName].push(option);
+        this.formData[
+          fieldName
+        ].push(
+          option
+        );
+
       }
 
-    } else {
+    }
 
-      this.formData[fieldName] =
-        this.formData[fieldName].filter(
-          (selectedOption: string) =>
-            selectedOption !== option
+    else {
+
+      this.formData[
+        fieldName
+      ] =
+
+        this.formData[
+          fieldName
+        ].filter(
+
+          (
+            selectedOption: string
+          ) =>
+
+            selectedOption !==
+            option
+
         );
 
     }
+
   }
 
+
+  // =========================================================
+  // VALIDATE FIELD VALUE
+  // =========================================================
 
   hasFieldValue(
     field: DynamicCustomField
   ): boolean {
 
     const value =
-      this.formData[field.fieldName];
+      this.formData[
+        field.fieldName
+      ];
 
 
     if (
-      field.fieldType === 'checkbox' &&
+
+      field.fieldType ===
+        'checkbox' &&
+
       field.options.length > 0
+
     ) {
 
       return (
-        Array.isArray(value) &&
+
+        Array.isArray(
+          value
+        ) &&
+
         value.length > 0
+
       );
+
     }
 
 
     if (
-      field.fieldType === 'checkbox'
+      field.fieldType ===
+      'checkbox'
     ) {
 
       return value === true;
+
     }
 
 
@@ -490,406 +766,579 @@ return {
     ) {
 
       return false;
+
     }
 
 
-    return String(value).trim().length > 0;
+    return String(
+      value
+    ).trim().length > 0;
+
   }
 
 
-  private validateRequiredFields(): boolean {
+  private validateRequiredFields():
+    boolean {
 
     return this.fields.every(
-      (field: DynamicCustomField) => {
 
-        if (!field.isRequired) {
-          return true;
-        }
-
-        return this.hasFieldValue(field);
-      }
-    );
-  }
-
-
-isLoggedIn(): boolean {
-  return Boolean(
-    localStorage.getItem('token')
-  );
-}
-
-  submitCustomFields(
-    form: NgForm
-  ): void {
-
-    this.submitted = true;
-
-    this.submitError = '';
-
-
-    if (
-      form.invalid ||
-      !this.validateRequiredFields()
-    ) {
-
-      this.submitError =
-        'Please complete all required fields.';
-
-      this.scrollToFirstError();
-
-      return;
-    }
-
-
-    const customFieldValues =
-      this.buildCustomFieldValues();
-
-
-    if (!this.isLoggedIn()) {
-
-      this.router.navigate(
-        ['/login'],
-        {
-          state: {
-
-            categoryId:
-              this.categoryId,
-
-            categoryName:
-              this.categoryName,
-
-            subcategoryId:
-              this.subcategoryId,
-
-            subcategoryName:
-              this.subcategoryName,
-
-            customFieldValues:
-              customFieldValues,
-
-            returnUrl:
-              '/custom-fields'
-          }
-        }
-      );
-
-      return;
-    }
-
-
-    this.isSubmitting = true;
-
-if (this.flowType === 'edit') {
-  this.updateEditedPost(customFieldValues);
-  return;
-}
-else {
-
-  this.createPostUsingSubscription(
-    customFieldValues
-  );
-
-}
-  }
-private createPostUsingSubscription(
-  customFieldValues: any[]
-): void {
-
-  const savedPayload =
-    localStorage.getItem(
-      'pending_post_payload'
-    );
-
-  if (!savedPayload) {
-
-    this.isSubmitting = false;
-
-    this.submitError =
-      'Post information was not found. Please go back and try again.';
-
-    return;
-  }
-
-  let pendingPost: any;
-
-  try {
-
-    pendingPost =
-      JSON.parse(savedPayload);
-
-  } catch (error) {
-
-    console.error(
-      'INVALID PENDING POST PAYLOAD:',
-      error
-    );
-
-    this.isSubmitting = false;
-
-    this.submitError =
-      'Unable to read the post information.';
-
-    return;
-  }
-
-  const finalPayload = {
-
-    ...pendingPost,
-
-    categoryId:
-      this.categoryId ||
-      pendingPost?.categoryId ||
-      null,
-
-    subcategoryId:
-      this.subcategoryId ||
-      pendingPost?.subcategoryId ||
-      null,
-
-    listingType:
-      this.listingType ||
-      pendingPost?.listingType ||
-      pendingPost?.adtype ||
-      'service',
-
-    customFields:
-      customFieldValues,
-
-    custom_fields:
-      customFieldValues
-
-  };
-
-  this.api
-    .post(
-      '/posts',
-      finalPayload
-    )
-    .subscribe({
-
-      next: (response: any) => {
-
-        this.isSubmitting = false;
-
-        localStorage.removeItem(
-          'pending_post_payload'
-        );
-
-        localStorage.removeItem(
-          'pending_service_catalog_payload'
-        );
-
-        localStorage.removeItem(
-          'pending_post_flow'
-        );
-
-        localStorage.removeItem(
-          'pending_post_type'
-        );
-
-        localStorage.removeItem(
-          'pending_post_userid'
-        );
-
-        alert(
-          response?.message ||
-          'Post created successfully and sent for admin approval.'
-        );
-
-        this.router.navigate([
-          '/my-posts'
-        ]);
-
-      },
-
-      error: (error: any) => {
-
-        console.error(
-          'CREATE POST ERROR:',
-          error
-        );
-
-        this.isSubmitting = false;
-
-        const response =
-          error?.error || {};
+      (
+        field:
+          DynamicCustomField
+      ) => {
 
         if (
-          error?.status === 402 ||
-          response?.requiresPayment === true
+          !field.isRequired
         ) {
 
-          localStorage.setItem(
-            'pending_post_payload',
-            JSON.stringify(finalPayload)
-          );
+          return true;
 
-          this.router.navigate(
-            ['/subscription-plan'],
-            {
-              queryParams: {
-                flow: 'normal'
-              },
-              state: {
-
-                categoryId:
-                  this.categoryId,
-
-                categoryName:
-                  this.categoryName,
-
-                subcategoryId:
-                  this.subcategoryId,
-
-                subcategoryName:
-                  this.subcategoryName,
-
-                customFieldValues:
-                  customFieldValues,
-
-                returnAfterPayment:
-                  true
-
-              }
-            }
-          );
-
-          return;
         }
 
-        this.submitError =
-          response?.message ||
-          'Unable to create the post. Please try again.';
+
+        return this.hasFieldValue(
+          field
+        );
 
       }
 
-    });
+    );
 
-}
-private updateEditedPost(customFieldValues: any[]): void {
-  const savedEditPayload =
-    localStorage.getItem('edit_post_payload');
+  }
 
-  if (!savedEditPayload) {
-    this.isSubmitting = false;
+
+  // =========================================================
+  // LOGIN CHECK
+  // =========================================================
+
+  isLoggedIn(): boolean {
+
+    return Boolean(
+      localStorage.getItem(
+        'token'
+      )
+    );
+
+  }
+
+
+  // =========================================================
+  // SUBMIT CUSTOM FIELDS
+  // =========================================================
+
+ submitCustomFields(form: NgForm): void {
+
+  this.submitted = true;
+  this.submitError = '';
+
+  if (
+    form.invalid ||
+    !this.validateRequiredFields()
+  ) {
     this.submitError =
-      'Edited post data not found. Please go back and try again.';
+      'Please complete all required fields.';
+
+    this.scrollToFirstError();
     return;
   }
 
-  let editData: any;
+  const customFieldValues =
+    this.buildCustomFieldValues();
 
-  try {
-    editData = JSON.parse(savedEditPayload);
-  } catch (error) {
-    console.error('Invalid edit payload:', error);
+  if (!this.isLoggedIn()) {
 
-    this.isSubmitting = false;
-    this.submitError =
-      'Unable to read edited post data.';
-    return;
-  }
-
-  const postId =
-    this.postId ||
-    editData?.postId;
-
-  if (!postId) {
-    this.isSubmitting = false;
-    this.submitError =
-      'Post ID not found.';
-    return;
-  }
-
-  const finalPayload = {
-    ...(editData?.payload || {}),
-    custom_fields: customFieldValues
-  };
-
-  this.api
-    .put(`/posts/${postId}`, finalPayload)
-    .subscribe({
-      next: (response: any) => {
-        console.log(
-          'Post updated successfully:',
-          response
-        );
-
-        localStorage.removeItem(
-          'edit_post_payload'
-        );
-
-        this.isSubmitting = false;
-
-        this.router.navigate(['/my-posts']);
-      },
-
-      error: (error: any) => {
-        console.error(
-          'Post update error:',
-          error
-        );
-
-        this.isSubmitting = false;
-
-        this.submitError =
-          error?.error?.message ||
-          'Unable to update the post. Please try again.';
+    this.router.navigate(
+      ['/login'],
+      {
+        state: {
+          categoryId: this.categoryId,
+          categoryName: this.categoryName,
+          subcategoryId: this.subcategoryId,
+          subcategoryName: this.subcategoryName,
+          customFieldValues: customFieldValues,
+          returnUrl: '/custom-fields'
+        }
       }
-    });
+    );
+
+    return;
+  }
+
+  this.isSubmitting = true;
+
+  // EDIT MODE ONLY
+  if (this.flowType === 'edit') {
+
+    this.updateEditedPost(
+      customFieldValues
+    );
+
+    return;
+  }
+
+  // NORMAL ADVERTISEMENT FLOW
+  this.saveCustomFieldsAndContinue(
+    customFieldValues
+  );
 }
 
-private buildCustomFieldValues(): any[] {
 
-  return this.fields.map(
-    (field: DynamicCustomField) => ({
+  // =========================================================
+  // SAVE CUSTOM FIELD DRAFT
+  // THEN GO TO ACCOUNT DETAILS
+  // =========================================================
 
-      customFieldId:
-        field._id,
+  private saveCustomFieldsAndContinue(
+    customFieldValues: any[]
+  ): void {
 
-      fieldName:
-        field.fieldName,
+    const savedPayload =
 
-      label:
-        field.label,
+      localStorage.getItem(
+        'pending_post_payload'
+      );
 
-      icon:
-        field.icon || '',
 
-      fieldType:
-        field.fieldType,
+    if (!savedPayload) {
 
-      value:
-        this.formData[field.fieldName]
+      this.isSubmitting =
+        false;
 
-    })
+
+      this.submitError =
+        'Post information was not found. Please go back and try again.';
+
+
+      return;
+
+    }
+
+
+    let pendingPost: any;
+
+
+    try {
+
+      pendingPost =
+        JSON.parse(
+          savedPayload
+        );
+
+    }
+
+    catch (error) {
+
+      console.error(
+        'INVALID PENDING POST PAYLOAD:',
+        error
+      );
+
+
+      this.isSubmitting =
+        false;
+
+
+      this.submitError =
+        'Unable to read the post information.';
+
+
+      return;
+
+    }
+
+
+    const finalPendingPayload = {
+
+      ...pendingPost,
+
+
+      categoryId:
+
+        this.categoryId ||
+
+        pendingPost?.categoryId ||
+
+        null,
+
+
+      subcategoryId:
+
+        this.subcategoryId ||
+
+        pendingPost?.subcategoryId ||
+
+        null,
+
+
+      listingType:
+
+        this.listingType ||
+
+        pendingPost?.listingType ||
+
+        pendingPost?.adtype ||
+
+        'service',
+
+
+      customFields:
+        customFieldValues,
+
+
+      custom_fields:
+        customFieldValues
+
+    };
+
+
+    // ===============================================
+    // STORE UPDATED POST DRAFT
+    // DO NOT CREATE POST HERE
+    // ===============================================
+
+    localStorage.setItem(
+
+      'pending_post_payload',
+
+      JSON.stringify(
+        finalPendingPayload
+      )
+
+    );
+
+
+    // ===============================================
+    // STORE CUSTOM FIELD DATA
+    // PAYMENT PAGE WILL USE THIS LATER
+    // ===============================================
+
+    localStorage.setItem(
+
+      'pending_custom_fields',
+
+      JSON.stringify(
+        customFieldValues
+      )
+
+    );
+
+
+    // ===============================================
+    // MARK THIS AS ADVERTISEMENT FLOW
+    // ===============================================
+
+    localStorage.setItem(
+      'advertisement_flow',
+      'true'
+    );
+
+
+    this.isSubmitting =
+      false;
+
+
+    // ===============================================
+    // NEXT STEP = ACCOUNT DETAILS
+    // ===============================================
+
+  const user = JSON.parse(
+  localStorage.getItem('user') || '{}'
+);
+
+const accountAlreadyCompleted =
+  user?.isSeller === true &&
+  user?.isOnboardingCompleted === true;
+
+
+// IF PROFILE ALREADY SAVED
+if (accountAlreadyCompleted) {
+
+  this.router.navigate(
+    ['/subscription-plan'],
+    {
+      queryParams: {
+        flow: 'normal'
+      }
+    }
   );
 
+  return;
 }
 
-  private scrollToFirstError(): void {
 
-    setTimeout(() => {
+// FIRST TIME ONLY
+this.router.navigate(
+  ['/seller-profile'],
+  {
+    state: {
+      next: 'plan-selection',
+      flow: 'advertisement',
 
-      const errorElement =
-        document.querySelector(
-          '.validation-error'
-        );
+      categoryId: this.categoryId,
+      categoryName: this.categoryName,
 
-      errorElement?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center'
-      });
+      subcategoryId: this.subcategoryId,
+      subcategoryName: this.subcategoryName,
 
-    }, 50);
+      listingType: this.listingType
+    }
+  }
+);
+
   }
 
+
+  // =========================================================
+  // UPDATE EXISTING POST
+  // EDIT FLOW ONLY
+  // =========================================================
+
+  private updateEditedPost(
+    customFieldValues: any[]
+  ): void {
+
+    const savedEditPayload =
+
+      localStorage.getItem(
+        'edit_post_payload'
+      );
+
+
+    if (!savedEditPayload) {
+
+      this.isSubmitting =
+        false;
+
+
+      this.submitError =
+        'Edited post data not found. Please go back and try again.';
+
+
+      return;
+
+    }
+
+
+    let editData: any;
+
+
+    try {
+
+      editData =
+        JSON.parse(
+          savedEditPayload
+        );
+
+    }
+
+    catch (error) {
+
+      console.error(
+        'Invalid edit payload:',
+        error
+      );
+
+
+      this.isSubmitting =
+        false;
+
+
+      this.submitError =
+        'Unable to read edited post data.';
+
+
+      return;
+
+    }
+
+
+    const postId =
+
+      this.postId ||
+
+      editData?.postId;
+
+
+    if (!postId) {
+
+      this.isSubmitting =
+        false;
+
+
+      this.submitError =
+        'Post ID not found.';
+
+
+      return;
+
+    }
+
+
+    const finalPayload = {
+
+      ...(editData?.payload || {}),
+
+      customFields:
+        customFieldValues,
+
+      custom_fields:
+        customFieldValues
+
+    };
+
+
+    this.api
+
+      .put(
+        `/posts/${postId}`,
+        finalPayload
+      )
+
+      .subscribe({
+
+        next: (
+          response: any
+        ) => {
+
+          console.log(
+            'Post updated successfully:',
+            response
+          );
+
+
+          localStorage.removeItem(
+            'edit_post_payload'
+          );
+
+
+          this.isSubmitting =
+            false;
+
+
+          this.router.navigate(
+            ['/my-posts']
+          );
+
+        },
+
+
+        error: (
+          error: any
+        ) => {
+
+          console.error(
+            'Post update error:',
+            error
+          );
+
+
+          this.isSubmitting =
+            false;
+
+
+          this.submitError =
+
+            error?.error?.message ||
+
+            'Unable to update the post. Please try again.';
+
+        }
+
+      });
+
+  }
+
+
+  // =========================================================
+  // BUILD CUSTOM FIELD ARRAY
+  // =========================================================
+
+  private buildCustomFieldValues():
+    any[] {
+
+    return this.fields.map(
+
+      (
+        field:
+          DynamicCustomField
+      ) => ({
+
+        customFieldId:
+          field._id,
+
+
+        fieldName:
+          field.fieldName,
+
+
+        label:
+          field.label,
+
+
+        icon:
+          field.icon || '',
+
+
+        fieldType:
+          field.fieldType,
+
+
+        value:
+          this.formData[
+            field.fieldName
+          ]
+
+      })
+
+    );
+
+  }
+
+
+  // =========================================================
+  // SCROLL TO VALIDATION ERROR
+  // =========================================================
+
+  private scrollToFirstError():
+    void {
+
+    setTimeout(
+      () => {
+
+        const errorElement =
+          document.querySelector(
+            '.validation-error'
+          );
+
+
+        errorElement?.scrollIntoView(
+          {
+            behavior: 'smooth',
+            block: 'center'
+          }
+        );
+
+      },
+      50
+    );
+
+  }
+
+
+  // =========================================================
+  // BACK
+  // =========================================================
 
   goBack(): void {
 
     window.history.back();
+
   }
 
+
+  // =========================================================
+  // TRACK BY
+  // =========================================================
 
   trackByField(
     index: number,
@@ -897,24 +1346,15 @@ private buildCustomFieldValues(): any[] {
   ): string {
 
     return (
+
       field._id ||
+
       field.fieldName ||
+
       String(index)
+
     );
+
   }
-goToSubscription(): void {
 
-  this.router.navigate(['/subscription-plan'], {
-    queryParams: {
-      flow: 'normal'
-    },
-    state: {
-      categoryId: this.categoryId,
-      categoryName: this.categoryName,
-      subcategoryId: this.subcategoryId,
-      subcategoryName: this.subcategoryName
-    }
-  });
-
-}
 }

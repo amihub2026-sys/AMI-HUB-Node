@@ -1050,7 +1050,6 @@ if (!accessToken) {
 const data: any = await this.api.post(
   '/payment/create-order',
   {
-    postId: this.postData._id,
     planId: this.getSelectedPlanId()
   }
 ).toPromise();
@@ -1190,10 +1189,9 @@ this.snackbar.show(msg, 'error');
     this.router.navigate(['/']);
   }
 
-  goToMyAds(): void {
-    this.router.navigate(['/my-ads']);
-  }
-
+ goToMyAds(): void {
+  this.router.navigate(['/my-posts']);
+}
   retryPayment(): void {
     this.paymentFailed.set(false);
     this.errorMessage.set('');
