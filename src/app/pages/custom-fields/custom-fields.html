@@ -4,48 +4,83 @@
   <div class="info-box">
 
     <div class="info-item">
-      <span class="info-label">Category</span>
-      <strong>{{ categoryName || 'Not selected' }}</strong>
+      <span class="info-label">
+        Category
+      </span>
+
+      <strong>
+        {{ categoryName || 'Not selected' }}
+      </strong>
     </div>
 
+
     <div class="info-item">
-      <span class="info-label">Subcategory</span>
-      <strong>{{ subcategoryName || 'Not selected' }}</strong>
+      <span class="info-label">
+        Subcategory
+      </span>
+
+      <strong>
+        {{ subcategoryName || 'Not selected' }}
+      </strong>
     </div>
 
   </div>
 
+
+  <!-- Header -->
   <div class="custom-header">
-    <h2>Additional Details</h2>
+
+    <h2>
+      Additional Details
+    </h2>
 
     <p>
       Enter the information below to continue posting your ad.
     </p>
+
   </div>
 
+
   <!-- Loading -->
-  <div class="loading-box" *ngIf="isLoading">
+  <div
+    class="loading-box"
+    *ngIf="isLoading"
+  >
+
     <div class="loader"></div>
-    <p>Loading additional fields...</p>
+
+    <p>
+      Loading additional fields...
+    </p>
+
   </div>
+
 
   <!-- API Error -->
   <div
     class="error-box"
     *ngIf="!isLoading && loadError"
   >
-    {{ loadError }}
 
-<button
-  type="button"
-  class="continue-btn"
-  (click)="goToSubscription()"
->
-  Post Ad
-</button>
+    <p>
+      {{ loadError }}
+    </p>
+
+    <button
+      type="button"
+      class="back-btn"
+      (click)="goBack()"
+    >
+      Back
+    </button>
+
   </div>
 
-  <!-- Dynamic Custom Fields Form -->
+
+  <!-- ========================================= -->
+  <!-- DYNAMIC CUSTOM FIELDS FORM -->
+  <!-- ========================================= -->
+
   <form
     *ngIf="!isLoading && !loadError"
     #customFieldsForm="ngForm"
@@ -53,20 +88,29 @@
     novalidate
   >
 
+
     <!-- No Custom Fields -->
     <div
       class="empty-box"
       *ngIf="fields.length === 0"
     >
-      <h3>No additional details required</h3>
+
+      <h3>
+        No additional details required
+      </h3>
 
       <p>
         No custom fields are assigned to this subcategory.
         You can continue to the next step.
       </p>
+
     </div>
 
-    <!-- Fields -->
+
+    <!-- ========================================= -->
+    <!-- CUSTOM FIELD LIST -->
+    <!-- ========================================= -->
+
     <div
       class="fields-grid"
       *ngIf="fields.length > 0"
@@ -74,21 +118,29 @@
 
       <div
         class="field"
-        *ngFor="let field of fields; trackBy: trackByField"
+        *ngFor="
+          let field of fields;
+          trackBy: trackByField
+        "
       >
 
+
+        <!-- Field Label -->
         <label
           class="field-label"
           [for]="field.fieldName"
         >
-<img
-  *ngIf="field.icon"
-  class="field-icon"
-  [src]="field.icon"
-  alt="icon"
-/>
+
+          <img
+            *ngIf="field.icon"
+            class="field-icon"
+            [src]="field.icon"
+            alt="icon"
+          >
+
 
           {{ field.label }}
+
 
           <span
             class="required-star"
@@ -96,48 +148,83 @@
           >
             *
           </span>
+
         </label>
 
-        <!-- Text Field -->
+
+        <!-- ========================================= -->
+        <!-- TEXT -->
+        <!-- ========================================= -->
+
         <input
-          *ngIf="field.fieldType === 'text'"
+          *ngIf="
+            field.fieldType === 'text'
+          "
           type="text"
           class="form-control"
           [id]="field.fieldName"
           [name]="field.fieldName"
-          [placeholder]="field.placeholder || ('Enter ' + field.label)"
-          [(ngModel)]="formData[field.fieldName]"
+          [placeholder]="
+            field.placeholder ||
+            ('Enter ' + field.label)
+          "
+          [(ngModel)]="
+            formData[field.fieldName]
+          "
           [required]="field.isRequired"
-          #textControl="ngModel"
         >
 
-        <!-- Number Field -->
+
+        <!-- ========================================= -->
+        <!-- NUMBER -->
+        <!-- ========================================= -->
+
         <input
-          *ngIf="field.fieldType === 'number'"
+          *ngIf="
+            field.fieldType === 'number'
+          "
           type="number"
           class="form-control"
           [id]="field.fieldName"
           [name]="field.fieldName"
-          [placeholder]="field.placeholder || ('Enter ' + field.label)"
-          [(ngModel)]="formData[field.fieldName]"
+          [placeholder]="
+            field.placeholder ||
+            ('Enter ' + field.label)
+          "
+          [(ngModel)]="
+            formData[field.fieldName]
+          "
           [required]="field.isRequired"
-          #numberControl="ngModel"
         >
 
-        <!-- Textarea -->
+
+        <!-- ========================================= -->
+        <!-- TEXTAREA -->
+        <!-- ========================================= -->
+
         <textarea
-          *ngIf="field.fieldType === 'textarea'"
+          *ngIf="
+            field.fieldType === 'textarea'
+          "
           class="form-control textarea-control"
           [id]="field.fieldName"
           [name]="field.fieldName"
           rows="4"
-          [placeholder]="field.placeholder || ('Enter ' + field.label)"
-          [(ngModel)]="formData[field.fieldName]"
+          [placeholder]="
+            field.placeholder ||
+            ('Enter ' + field.label)
+          "
+          [(ngModel)]="
+            formData[field.fieldName]
+          "
           [required]="field.isRequired"
-          #textareaControl="ngModel"
         ></textarea>
 
-        <!-- Dropdown -->
+
+        <!-- ========================================= -->
+        <!-- DROPDOWN / SELECT -->
+        <!-- ========================================= -->
+
         <select
           *ngIf="
             field.fieldType === 'dropdown' ||
@@ -146,74 +233,118 @@
           class="form-control"
           [id]="field.fieldName"
           [name]="field.fieldName"
-          [(ngModel)]="formData[field.fieldName]"
+          [(ngModel)]="
+            formData[field.fieldName]
+          "
           [required]="field.isRequired"
-          #selectControl="ngModel"
         >
+
           <option value="">
             Select {{ field.label }}
           </option>
 
+
           <option
-            *ngFor="let option of field.options"
+            *ngFor="
+              let option of field.options
+            "
             [value]="option"
           >
             {{ option }}
           </option>
+
         </select>
 
-        <!-- Date -->
+
+        <!-- ========================================= -->
+        <!-- DATE -->
+        <!-- ========================================= -->
+
         <input
-          *ngIf="field.fieldType === 'date'"
+          *ngIf="
+            field.fieldType === 'date'
+          "
           type="date"
           class="form-control"
           [id]="field.fieldName"
           [name]="field.fieldName"
-          [(ngModel)]="formData[field.fieldName]"
+          [(ngModel)]="
+            formData[field.fieldName]
+          "
           [required]="field.isRequired"
-          #dateControl="ngModel"
         >
 
-        <!-- Radio Buttons -->
+
+        <!-- ========================================= -->
+        <!-- RADIO -->
+        <!-- ========================================= -->
+
         <div
           class="option-list"
-          *ngIf="field.fieldType === 'radio'"
+          *ngIf="
+            field.fieldType === 'radio'
+          "
         >
+
           <label
             class="option-card"
-            *ngFor="let option of field.options"
+            *ngFor="
+              let option of field.options
+            "
           >
+
             <input
               type="radio"
               [name]="field.fieldName"
               [value]="option"
-              [(ngModel)]="formData[field.fieldName]"
+              [(ngModel)]="
+                formData[field.fieldName]
+              "
               [required]="field.isRequired"
             >
 
-            <span>{{ option }}</span>
+            <span>
+              {{ option }}
+            </span>
+
           </label>
+
         </div>
 
-        <!-- Single Checkbox -->
+
+        <!-- ========================================= -->
+        <!-- SINGLE CHECKBOX -->
+        <!-- ========================================= -->
+
         <label
           class="single-checkbox"
           *ngIf="
             field.fieldType === 'checkbox' &&
-            (!field.options || field.options.length === 0)
+            (!field.options ||
+            field.options.length === 0)
           "
         >
+
           <input
             type="checkbox"
             [id]="field.fieldName"
             [name]="field.fieldName"
-            [(ngModel)]="formData[field.fieldName]"
+            [(ngModel)]="
+              formData[field.fieldName]
+            "
           >
 
-          <span>{{ field.label }}</span>
+          <span>
+            {{ field.label }}
+          </span>
+
         </label>
 
-        <!-- Multiple Checkbox Options -->
+
+        <!-- ========================================= -->
+        <!-- MULTIPLE CHECKBOX OPTIONS -->
+        <!-- ========================================= -->
+
         <div
           class="option-list"
           *ngIf="
@@ -222,36 +353,58 @@
             field.options.length > 0
           "
         >
+
           <label
             class="option-card"
-            *ngFor="let option of field.options"
+            *ngFor="
+              let option of field.options
+            "
           >
+
             <input
               type="checkbox"
-              [checked]="isCheckboxSelected(
-                field.fieldName,
-                option
-              )"
-              (change)="onCheckboxChange(
-                field.fieldName,
-                option,
-                $any($event.target).checked
-              )"
+              [checked]="
+                isCheckboxSelected(
+                  field.fieldName,
+                  option
+                )
+              "
+              (change)="
+                onCheckboxChange(
+                  field.fieldName,
+                  option,
+                  $any($event.target).checked
+                )
+              "
             >
 
-            <span>{{ option }}</span>
+            <span>
+              {{ option }}
+            </span>
+
           </label>
+
         </div>
 
-        <!-- Help Text -->
+
+        <!-- ========================================= -->
+        <!-- HELP TEXT -->
+        <!-- ========================================= -->
+
         <small
           class="help-text"
           *ngIf="field.helpText"
         >
+
           {{ field.helpText }}
+
         </small>
 
-        <!-- Validation Message -->
+
+        <!-- ========================================= -->
+        <!-- VALIDATION -->
+        <!-- ========================================= -->
+
         <small
           class="validation-error"
           *ngIf="
@@ -260,46 +413,72 @@
             !hasFieldValue(field)
           "
         >
+
           {{ field.label }} is required.
+
         </small>
 
       </div>
 
     </div>
 
-    <!-- Submit Error -->
+
+    <!-- ========================================= -->
+    <!-- SUBMIT ERROR -->
+    <!-- ========================================= -->
+
     <div
       class="submit-error"
       *ngIf="submitError"
     >
+
       {{ submitError }}
+
     </div>
 
-    <!-- Buttons -->
+
+    <!-- ========================================= -->
+    <!-- BUTTONS -->
+    <!-- ========================================= -->
+
     <div class="form-actions">
 
+
+      <!-- Back -->
       <button
         type="button"
         class="back-btn"
         (click)="goBack()"
         [disabled]="isSubmitting"
       >
+
         Back
+
       </button>
 
+
+      <!-- NEXT -->
       <button
         type="submit"
         class="continue-btn"
         [disabled]="isSubmitting"
       >
-        <span *ngIf="!isSubmitting">
-          Continue
+
+        <span
+          *ngIf="!isSubmitting"
+        >
+          NEXT
         </span>
 
-        <span *ngIf="isSubmitting">
+
+        <span
+          *ngIf="isSubmitting"
+        >
           Please wait...
         </span>
+
       </button>
+
 
     </div>
 

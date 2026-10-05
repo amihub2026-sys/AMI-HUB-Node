@@ -43,17 +43,18 @@ export class SellerProfileComponent implements OnInit, OnDestroy {
 
   private platformId = inject(PLATFORM_ID);
 
-  seller: any = {
-    name: '',
-    email: '',
-    phone: '',
+ seller: any = {
+  name: '',
+  email: '',
+  phone: '',
+  address: '',
 
-    profileImage: null,
-    kycImage: null,
-    qrCodeImage: null,
+  profileImage: null,
+  kycImage: null,
+  qrCodeImage: null,
 
-    termsAccepted: false
-  };
+  termsAccepted: false
+};
 
 
   // ==============================
@@ -118,16 +119,20 @@ export class SellerProfileComponent implements OnInit, OnDestroy {
     );
 
   }
+ get isAdvertisementFlow(): boolean {
+  return this.redirectTo === 'plan-selection';
+}
 
+ get submitButtonText() {
 
-  get submitButtonText() {
-
-    return this.isEditMode
-      ? 'Edit Profile'
-      : 'Create Profile';
-
+  if (this.isAdvertisementFlow) {
+    return 'Save & Continue';
   }
 
+  return this.isEditMode
+    ? 'Edit Profile'
+    : 'Create Profile';
+}
 
   togglePassword() {
 
@@ -166,6 +171,8 @@ export class SellerProfileComponent implements OnInit, OnDestroy {
 
             phone:
               profile.mobile || '',
+              address:
+  profile.address || '',
 
             profileImage:
               profile.profileImage || null,
@@ -534,7 +541,8 @@ export class SellerProfileComponent implements OnInit, OnDestroy {
 
         email:
           this.seller.email,
-
+        address:
+  this.seller.address,
         mobile:
           this.seller.phone,
 
@@ -647,37 +655,34 @@ export class SellerProfileComponent implements OnInit, OnDestroy {
             'success'
           );
 
+if (this.redirectTo === 'plan-selection') {
 
-          if (
-            this.redirectTo ===
-            'post-product'
-          ) {
+  this.router.navigate([
+    '/subscription-plan'
+  ]);
 
-            this.router.navigate(
-              ['/post-ad']
-            );
+}
+else if (this.redirectTo === 'post-product') {
 
-          }
+  this.router.navigate([
+    '/post-ad'
+  ]);
 
-          else if (
-            this.redirectTo ===
-            'post-service'
-          ) {
+}
+else if (this.redirectTo === 'post-service') {
 
-            this.router.navigate(
-              ['/service']
-            );
+  this.router.navigate([
+    '/service'
+  ]);
 
-          }
+}
+else {
 
-          else {
+  this.router.navigate([
+    '/'
+  ]);
 
-            this.router.navigate(
-              ['/']
-            );
-
-          }
-
+}
         },
 
 

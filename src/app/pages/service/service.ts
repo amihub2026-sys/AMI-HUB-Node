@@ -1048,19 +1048,14 @@ if (this.isEditMode && this.editPostId) {
 this.router.navigate(
   ['/custom-fields'],
   {
-    state:{
-      flow:'edit',
-
-      postId:this.editPostId,
-
-      categoryId:selectedCategory?._id,
-      categoryName:this.mainAd.category,
-
-      subcategoryId:selectedSubcategory?._id,
-      subcategoryName:this.mainAd.subcategory,
-
-      listingType:finalType,
-      type:finalType
+    state: {
+      categoryId: selectedCategory?._id,
+      categoryName: this.mainAd.category,
+      subcategoryId: selectedSubcategory?._id,
+      subcategoryName: this.mainAd.subcategory,
+      listingType: this.adType,
+      type: this.adType,
+      flow: 'advertisement'
     }
   }
 );
@@ -1208,24 +1203,16 @@ this.router.navigate(
   ['/custom-fields'],
   {
     state: {
-
-     categoryId: selectedCategory?._id,
-
+      categoryId: selectedCategory?._id,
       categoryName: this.mainAd.category,
 
-
-    subcategoryId:
- selectedSubcategory?._id,
-
+      subcategoryId: selectedSubcategory?._id,
       subcategoryName: this.mainAd.subcategory,
 
-
       listingType: this.adType,
-
       type: this.adType,
 
-
-      flow:'normal'
+      flow: 'normal'
     }
   }
 );

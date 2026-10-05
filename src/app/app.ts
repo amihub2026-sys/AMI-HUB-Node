@@ -645,14 +645,6 @@ async postService(): Promise<void> {
       localStorage.getItem('user') || '{}'
     );
 
-  if (!user.isSeller) {
-    this.router.navigate(['/seller-profile'], {
-      state: {
-        next: 'post-service'
-      }
-    });
-    return;
-  }
 
   this.router.navigate(['/service']);
 }
