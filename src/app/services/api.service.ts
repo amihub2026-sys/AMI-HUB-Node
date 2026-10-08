@@ -14,28 +14,27 @@ export class ApiService {
   ) {}
 
 
-  getToken() {
-    return (
-      localStorage.getItem('adminToken') ||
-      localStorage.getItem('token')
-    );
+ 
+getToken(): string | null {
+  return localStorage.getItem('token');
+}
+
+getHeaders(isAdmin: boolean = false) {
+  const token = isAdmin
+    ? localStorage.getItem('adminToken')
+    : localStorage.getItem('token');
+
+  if (token) {
+    return {
+      headers: new HttpHeaders({
+        Authorization: `Bearer ${token}`
+      })
+    };
   }
 
+  return {};
+}
 
-  getHeaders() {
-
-    const token = this.getToken();
-
-    if (token) {
-      return {
-        headers: new HttpHeaders({
-          Authorization: `Bearer ${token}`
-        })
-      };
-    }
-
-    return {};
-  }
 
 
   // ======================
@@ -139,7 +138,7 @@ export class ApiService {
 
     return this.http.get(
       `${this.baseUrl}/dashboard/admin`,
-      this.getHeaders()
+     this.getHeaders(true)
     );
 
   }
@@ -149,7 +148,7 @@ export class ApiService {
 
     return this.http.get(
       `${this.baseUrl}/dashboard/top/businesses`,
-      this.getHeaders()
+        this.getHeaders(true)
     );
 
   }
@@ -159,7 +158,7 @@ export class ApiService {
 
     return this.http.get(
       `${this.baseUrl}/dashboard/recent-activity`,
-      this.getHeaders()
+       this.getHeaders(true)
     );
 
   }
@@ -169,7 +168,7 @@ export class ApiService {
 
     return this.http.get(
       `${this.baseUrl}/dashboard/user-growth?filter=${filter}`,
-      this.getHeaders()
+        this.getHeaders(true)
     );
 
   }
@@ -179,7 +178,7 @@ export class ApiService {
 
     return this.http.get(
       `${this.baseUrl}/dashboard/business-growth?filter=${filter}`,
-      this.getHeaders()
+        this.getHeaders(true)
     );
 
   }
@@ -189,7 +188,7 @@ export class ApiService {
 
     return this.http.get(
       `${this.baseUrl}/dashboard/business/${businessId}`,
-      this.getHeaders()
+       this.getHeaders(true)
     );
 
   }
