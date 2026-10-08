@@ -2,15 +2,24 @@
    MY POSTS PAGE
 ========================= */
 
+
+
 .my-posts-page {
-
-  max-width:1200px;
-
-  margin:2rem auto;
-
-  padding:0 1rem 2rem;
-
+  width: 100%;
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem 2rem;
+  box-sizing: border-box;
 }
+
+/* Loading and empty states */
+.loading-text,
+.empty-text {
+  text-align: center;
+  color: #666;
+  padding: 24px 12px;
+}
+
 
 
 .my-posts-page h2{
