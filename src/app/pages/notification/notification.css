@@ -1,8 +1,28 @@
+
+/* NOTIFICATION PAGE HEIGHT FIX */
+
 .notifications-page {
+  width: 100%;
   max-width: 800px;
+
+  min-height: calc(100vh - 280px);
+
   margin: 40px auto;
-  padding: 0 16px;
+  padding: 0 16px 40px;
+
+  box-sizing: border-box;
 }
+
+/* MOBILE */
+
+@media (max-width: 768px) {
+  .notifications-page {
+    min-height: calc(100dvh - 230px);
+    margin: 20px auto;
+    padding: 0 16px 30px;
+  }
+}
+
 
 .notifications-header {
   display: flex;
@@ -170,4 +190,66 @@
     padding-left:50px;
   }
 
+}
+
+/* ======================================
+   EMPTY NOTIFICATION DESIGN
+====================================== */
+
+.empty-state {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 55px 24px;
+  text-align: center;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+}
+
+.empty-icon {
+  width: 76px;
+  height: 76px;
+  margin: 0 auto 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 32px;
+}
+
+.empty-state h3 {
+  margin: 0 0 12px;
+  color: #0f172a;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.empty-state p {
+  max-width: 420px;
+  margin: 0 auto;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #64748b;
+}
+
+@media (max-width: 768px) {
+  .empty-state {
+    padding: 40px 18px;
+  }
+
+  .empty-icon {
+    width: 64px;
+    height: 64px;
+    font-size: 27px;
+  }
+
+  .empty-state h3 {
+    font-size: 19px;
+  }
+
+  .empty-state p {
+    font-size: 13px;
+  }
 }
