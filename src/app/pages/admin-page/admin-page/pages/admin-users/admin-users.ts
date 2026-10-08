@@ -94,9 +94,9 @@ export class AdminUsers implements OnInit {
 
     this.errorMessage = '';
 
-    this.api
-      .get<any>('/admin/users')
-      .subscribe({
+  this.api
+  .getAdmin<any>('/admin/users')
+  .subscribe({
 
         next: (response: any) => {
 
@@ -429,15 +429,14 @@ export class AdminUsers implements OnInit {
 
     this.cdr.detectChanges();
 
-
-    this.api
-      .patch<any>(
-        `/admin/users/${user.id}/status`,
-        {
-          isActive: nextIsActive
-        }
-      )
-      .subscribe({
+this.api
+  .patchAdmin<any>(
+    `/admin/users/${user.id}/status`,
+    {
+      isActive: nextIsActive
+    }
+  )
+  .subscribe({
 
         next: (response: any) => {
 
