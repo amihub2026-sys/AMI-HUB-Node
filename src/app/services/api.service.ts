@@ -354,12 +354,59 @@ getActiveHeroSliders() {
 }
 
 
-deleteHeroSlider(id: string) {
 
+deleteHeroSlider(id: string) {
   return this.delete<any>(
     `/hero-slider/${id}`
   );
+}
 
+// ========================================
+// ADMIN API METHODS
+// ========================================
+
+// ADMIN GET
+getAdmin<T = any>(url: string) {
+  return this.http.get<T>(
+    `${this.baseUrl}${url}`,
+    this.getHeaders(true)
+  );
+}
+
+// ADMIN POST
+postAdmin<T = any>(url: string, data: any) {
+  return this.http.post<T>(
+    `${this.baseUrl}${url}`,
+    data,
+    this.getHeaders(true)
+  );
+}
+
+// ADMIN PUT
+putAdmin<T = any>(url: string, data: any) {
+  return this.http.put<T>(
+    `${this.baseUrl}${url}`,
+    data,
+    this.getHeaders(true)
+  );
+}
+
+// ADMIN PATCH
+patchAdmin<T = any>(url: string, data: any) {
+  return this.http.patch<T>(
+    `${this.baseUrl}${url}`,
+    data,
+    this.getHeaders(true)
+  );
+}
+
+// ADMIN DELETE
+deleteAdmin<T = any>(url: string) {
+  return this.http.delete<T>(
+    `${this.baseUrl}${url}`,
+    this.getHeaders(true)
+  );
 }
 
 }
+
