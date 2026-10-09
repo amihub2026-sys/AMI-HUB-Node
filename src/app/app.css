@@ -3599,10 +3599,3 @@ body app-root {
   font-size: 22px;
   cursor: pointer;
 }
-/* TEMPORARY TEST — GLOBAL PAGE ALIGNMENT */
-
-.main-content {
-  position: relative;
-  padding-top: 140px !important;
-  box-sizing: border-box;
-}
