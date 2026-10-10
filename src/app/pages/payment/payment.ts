@@ -1,1207 +1,2395 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+
 import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
+
 import { Router, RouterModule } from '@angular/router';
+
 import { PostDraftService } from '../../services/post-draft.service';
+
 import { SnackbarService } from '../../services/snackbar.service';
+
 import { ApiService } from '../../services/api.service';
+
 declare global {
-  interface Window {
-    Razorpay: any;
-  }
+
+  interface Window {
+
+    Razorpay: any;
+
+  }
+
 }
 
+
+
 @Component({
-  selector: 'app-payment',
-  standalone: true,
-  imports: [CommonModule, RouterModule],
-  templateUrl: './payment.html',
-  styleUrls: ['./payment.css']
+
+  selector: 'app-payment',
+
+  standalone: true,
+
+  imports: [CommonModule, RouterModule],
+
+  templateUrl: './payment.html',
+
+  styleUrls: ['./payment.css']
+
 })
+
 export class Payment implements OnInit {
-  private router = inject(Router);
-  private platformId = inject(PLATFORM_ID);
-  private postDraftService = inject(PostDraftService);
+
+  private router = inject(Router);
+
+  private platformId = inject(PLATFORM_ID);
+
+  private postDraftService = inject(PostDraftService);
+
 private snackbar = inject(SnackbarService);
+
 private api = inject(ApiService);
-  private isBrowser = isPlatformBrowser(this.platformId);
 
-  isPaying = signal(false);
-  paymentSuccess = signal(false);
-  paymentFailed = signal(false);
-  errorMessage = signal('');
-  isRetryingSave = signal(false);
+  private isBrowser = isPlatformBrowser(this.platformId);
 
-  planData: any = null;
-  postData: any = null;
 
-  private readonly razorpayKey = 'rzp_live_S7g9JgHJea4xYt';
-  private readonly verifiedPaymentStorageKey = 'verified_payment_payload';
-  private readonly featureEditContextStorageKey = 'feature_edit_post_context';
-  private readonly subscriptionCreatedStorageKey ='current_payment_subscription_created';
 
-  async ngOnInit(): Promise<void> {
-    if (!this.isBrowser) return;
-    await this.loadStoredData();
-    this.loadRazorpayScript();
-    this.restoreVerifiedPaymentState();
-  }
+  isPaying = signal(false);
 
-  async loadStoredData(): Promise<void> {
-    try {
-      const rawPlan = localStorage.getItem('selected_plan_payload');
-      const rawPost = localStorage.getItem('pending_post_payload');
-      const rawFeatureEditContext = localStorage.getItem(
-        this.featureEditContextStorageKey
-      );
+  paymentSuccess = signal(false);
 
-      this.planData = rawPlan ? JSON.parse(rawPlan) : null;
-      this.postData = rawPost ? JSON.parse(rawPost) : null;
+  paymentFailed = signal(false);
 
-      const isFeaturedFlow =
-        !!this.planData?.boost_plan_id ||
-        !!this.planData?.featured_plan_id ||
-        this.planData?.isfeatured === true ||
-        this.planData?.is_featured === true;
+  errorMessage = signal('');
 
-      if (!this.postData && isFeaturedFlow && rawFeatureEditContext) {
-        const featureEditContext = JSON.parse(rawFeatureEditContext);
+  isRetryingSave = signal(false);
 
-        if (featureEditContext?.postData) {
-          this.postData = featureEditContext.postData;
-        } else if (featureEditContext?.postId) {
-          const fetchedPost = await this.fetchPostById(
-  String(featureEditContext.postId)
+
+
+  planData: any = null;
+
+  postData: any = null;
+
+
+
+  private readonly razorpayKey = 'rzp_live_S7g9JgHJea4xYt';
+
+  private readonly verifiedPaymentStorageKey = 'verified_payment_payload';
+
+  private readonly featureEditContextStorageKey = 'feature_edit_post_context';
+
+  // Subscription eligibility is checked with the backend, not localStorage.
+
+
+
+  async ngOnInit(): Promise<void> {
+
+    if (!this.isBrowser) return;
+
+    await this.loadStoredData();
+
+    this.loadRazorpayScript();
+
+    this.restoreVerifiedPaymentState();
+
+  }
+
+
+
+  async loadStoredData(): Promise<void> {
+
+    try {
+
+      const rawPlan = localStorage.getItem('selected_plan_payload');
+
+      const rawPost = localStorage.getItem('pending_post_payload');
+
+      const rawFeatureEditContext = localStorage.getItem(
+
+        this.featureEditContextStorageKey
+
+      );
+
+
+
+      this.planData = rawPlan ? JSON.parse(rawPlan) : null;
+
+      this.postData = rawPost ? JSON.parse(rawPost) : null;
+
+
+
+      const isFeaturedFlow =
+
+        !!this.planData?.boost_plan_id ||
+
+        !!this.planData?.featured_plan_id ||
+
+        this.planData?.isfeatured === true ||
+
+        this.planData?.is_featured === true;
+
+
+
+      if (!this.postData && isFeaturedFlow && rawFeatureEditContext) {
+
+        const featureEditContext = JSON.parse(rawFeatureEditContext);
+
+
+
+        if (featureEditContext?.postData) {
+
+          this.postData = featureEditContext.postData;
+
+        } else if (featureEditContext?.postId) {
+
+          const fetchedPost = await this.fetchPostById(
+
+  String(featureEditContext.postId)
+
 );
-          if (fetchedPost) {
-            this.postData = fetchedPost;
-          }
-        }
-      }
 
-      const existingPostId =
-  this.postData?._id ||
-  this.postData?.postid ||
-  this.postData?.id ||
-  '';
+          if (fetchedPost) {
+
+            this.postData = fetchedPost;
+
+          }
+
+        }
+
+      }
+
+
+
+      const existingPostId =
+
+  this.postData?._id ||
+
+  this.postData?.postid ||
+
+  this.postData?.id ||
+
+  '';
+
+
 
 if ((!this.postData || !existingPostId) && isFeaturedFlow) {
+
 const postIdFromPlan = String(
-  this.planData?.postId ||
-  this.planData?.post_id ||
-  this.planData?.selected_post_id ||
-  ''
+
+  this.planData?.postId ||
+
+  this.planData?.post_id ||
+
+  this.planData?.selected_post_id ||
+
+  ''
+
 );
 
+
+
 if (postIdFromPlan) {
-  const fetchedPost = await this.fetchPostById(postIdFromPlan);
-          if (fetchedPost) {
-            this.postData = fetchedPost;
-          }
-        }
-      }
+
+  const fetchedPost = await this.fetchPostById(postIdFromPlan);
+
+          if (fetchedPost) {
+
+            this.postData = fetchedPost;
+
+          }
+
+        }
+
+      }
 
 
-      if (!this.postData) {
-        this.errorMessage.set('Post details not found. Please fill the form again.');
-      }
-    } catch (error) {
-      console.error('Error loading payment data:', error);
-      this.errorMessage.set('Unable to load payment details.');
-    }
-  }
+
+
+
+      if (!this.postData) {
+
+        this.errorMessage.set('Post details not found. Please fill the form again.');
+
+      }
+
+    } catch (error) {
+
+      console.error('Error loading payment data:', error);
+
+      this.errorMessage.set('Unable to load payment details.');
+
+    }
+
+  }
+
+
 
 private async fetchPostById(postId: string): Promise<any | null> {
 
-  try{
 
-    const res:any = await this.api
-    .get(`/posts/${postId}`)
-    .toPromise();
 
-    return res?.data || null;
+  try{
 
-  }
-  catch(error){
 
-    console.error(
-      "FETCH POST ERROR",
-      error
-    );
 
-    return null;
+    const res:any = await this.api
 
-  }
+    .get(`/posts/${postId}`)
+
+    .toPromise();
+
+
+
+    return res?.data || null;
+
+
+
+  }
+
+  catch(error){
+
+
+
+    console.error(
+
+      "FETCH POST ERROR",
+
+      error
+
+    );
+
+
+
+    return null;
+
+
+
+  }
+
+
 
 }
 
-  private restoreVerifiedPaymentState(): void {
-    try {
-      const raw = localStorage.getItem(this.verifiedPaymentStorageKey);
-      if (!raw) return;
 
-      const verifiedPayment = JSON.parse(raw);
 
-      if (verifiedPayment?.verified === true) {
-        this.paymentFailed.set(true);
-        this.errorMessage.set(
-          'Payment was already completed. Post save failed earlier. Click retry to save the post without paying again.'
-        );
-      }
-    } catch (error) {
-      console.error('Error restoring verified payment state:', error);
-    }
-  }
+  private restoreVerifiedPaymentState(): void {
 
-  private saveVerifiedPaymentState(payload: any): void {
-    try {
-      localStorage.setItem(
-        this.verifiedPaymentStorageKey,
-        JSON.stringify({
-          verified: true,
-          savedAt: new Date().toISOString(),
-          ...payload
-        })
-      );
-    } catch (error) {
-      console.error('Error saving verified payment state:', error);
-    }
-  }
+    try {
 
-  private clearVerifiedPaymentState(): void {
-    try {
-      localStorage.removeItem(this.verifiedPaymentStorageKey);
-    } catch (error) {
-      console.error('Error clearing verified payment state:', error);
-    }
-  }
+      const raw = localStorage.getItem(this.verifiedPaymentStorageKey);
 
-  private loadRazorpayScript(): void {
-    if (!this.isBrowser) return;
+      if (!raw) return;
 
-    const existing = document.getElementById('razorpay-checkout-js');
-    if (existing) return;
 
-    const script = document.createElement('script');
-    script.id = 'razorpay-checkout-js';
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.async = true;
-    document.body.appendChild(script);
-  }
+
+      const verifiedPayment = JSON.parse(raw);
+
+
+
+      if (verifiedPayment?.verified === true) {
+
+        this.paymentFailed.set(true);
+
+        this.errorMessage.set(
+
+          'Payment was already completed. Post save failed earlier. Click retry to save the post without paying again.'
+
+        );
+
+      }
+
+    } catch (error) {
+
+      console.error('Error restoring verified payment state:', error);
+
+    }
+
+  }
+
+
+
+  private saveVerifiedPaymentState(payload: any): void {
+
+    try {
+
+      localStorage.setItem(
+
+        this.verifiedPaymentStorageKey,
+
+        JSON.stringify({
+
+          verified: true,
+
+          savedAt: new Date().toISOString(),
+
+          ...payload
+
+        })
+
+      );
+
+    } catch (error) {
+
+      console.error('Error saving verified payment state:', error);
+
+    }
+
+  }
+
+
+
+  private clearVerifiedPaymentState(): void {
+
+    try {
+
+      localStorage.removeItem(this.verifiedPaymentStorageKey);
+
+    } catch (error) {
+
+      console.error('Error clearing verified payment state:', error);
+
+    }
+
+  }
+
+
+
+  private loadRazorpayScript(): void {
+
+    if (!this.isBrowser) return;
+
+
+
+    const existing = document.getElementById('razorpay-checkout-js');
+
+    if (existing) return;
+
+
+
+    const script = document.createElement('script');
+
+    script.id = 'razorpay-checkout-js';
+
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+
+    script.async = true;
+
+    document.body.appendChild(script);
+
+  }
+
+
 
 private getSelectedPlanId(): string | null {
 
-  return (
-    this.planData?.subscriptionplanid ||
-    this.planData?._id ||
-    this.planData?.boost_plan_id ||
-    this.planData?.featured_plan_id ||
-    this.planData?.plan_id ||
-    null
-  );
+
+
+  return (
+
+    this.planData?.subscriptionplanid ||
+
+    this.planData?._id ||
+
+    this.planData?.boost_plan_id ||
+
+    this.planData?.featured_plan_id ||
+
+    this.planData?.plan_id ||
+
+    null
+
+  );
+
+
 
 }
+
+
 
 private getSelectedPlanName(): string {
-  return (
-    this.planData?.boostName ||
-    this.planData?.boost_name ||
-    this.planData?.featured_plan_name ||
-    this.planData?.plan_name ||
-    'Selected Plan'
-  );
+
+  return (
+
+    this.planData?.boostName ||
+
+    this.planData?.boost_name ||
+
+    this.planData?.featured_plan_name ||
+
+    this.planData?.plan_name ||
+
+    'Selected Plan'
+
+  );
+
 }
-  private getSelectedPlanIsFeatured(): boolean {
-    if (typeof this.planData?.isfeatured === 'boolean') {
-      return this.planData.isfeatured;
-    }
 
-    if (typeof this.planData?.is_featured === 'boolean') {
-      return this.planData.is_featured;
-    }
+  private getSelectedPlanIsFeatured(): boolean {
 
-    if (this.planData?.boost_plan_id || this.planData?.featured_plan_id) {
-      return true;
-    }
+    if (typeof this.planData?.isfeatured === 'boolean') {
 
-    return false;
-  }
+      return this.planData.isfeatured;
 
-  private isFeaturedPlanFlow(): boolean {
-    return !!(
-      this.planData?.boost_plan_id ||
-      this.planData?.featured_plan_id ||
-      this.planData?.isfeatured === true ||
-      this.planData?.is_featured === true
-    );
-  }
+    }
+
+
+
+    if (typeof this.planData?.is_featured === 'boolean') {
+
+      return this.planData.is_featured;
+
+    }
+
+
+
+    if (this.planData?.boost_plan_id || this.planData?.featured_plan_id) {
+
+      return true;
+
+    }
+
+
+
+    return false;
+
+  }
+
+
+
+  private isFeaturedPlanFlow(): boolean {
+
+    return !!(
+
+      this.planData?.boost_plan_id ||
+
+      this.planData?.featured_plan_id ||
+
+      this.planData?.isfeatured === true ||
+
+      this.planData?.is_featured === true
+
+    );
+
+  }
+
+
 
 private isExistingPostFeaturedFlow(): boolean {
-  const postId =
-    this.postData?._id ||
-    this.postData?.postid ||
-    this.postData?.id ||
-    this.planData?.postId ||
-    '';
 
-  return this.isFeaturedPlanFlow() && !!postId;
+  const postId =
+
+    this.postData?._id ||
+
+    this.postData?.postid ||
+
+    this.postData?.id ||
+
+    this.planData?.postId ||
+
+    '';
+
+
+
+  return this.isFeaturedPlanFlow() && !!postId;
+
 }
 
-  private isSubscriptionPlanFlow(): boolean {
-    return !this.isFeaturedPlanFlow();
-  }
 
-  get planName(): string {
-    return this.getSelectedPlanName();
-  }
 
-  get amount(): number {
-    const value = Number(this.planData?.amount || this.planData?.price || 0);
-    return Number.isFinite(value) ? value : 0;
-  }
+  private isSubscriptionPlanFlow(): boolean {
 
-  get postTitle(): string {
-    return this.postData?.title || 'Your Ad';
-  }
+    return !this.isFeaturedPlanFlow();
+
+  }
+
+
+
+  get planName(): string {
+
+    return this.getSelectedPlanName();
+
+  }
+
+
+
+  get amount(): number {
+
+    const value = Number(this.planData?.amount || this.planData?.price || 0);
+
+    return Number.isFinite(value) ? value : 0;
+
+  }
+
+
+
+  get postTitle(): string {
+
+    return this.postData?.title || 'Your Ad';
+
+  }
+
+
 
 get adType(): string {
-  return (
-    this.postData?.listingType ||
-    this.postData?.adtype ||
-    this.postData?.conditiontype ||
-    this.planData?.ad_type ||
-    'post'
-  );
+
+  return (
+
+    this.postData?.listingType ||
+
+    this.postData?.adtype ||
+
+    this.postData?.conditiontype ||
+
+    this.planData?.ad_type ||
+
+    'post'
+
+  );
+
 }
+
 get sellerName(): string {
-  return (
-    this.postData?.sellerId?.fullName ||
-    this.postData?.fullName ||
-    this.postData?.contactname ||
-    this.postData?.name ||
-    'User'
-  );
+
+  return (
+
+    this.postData?.sellerId?.fullName ||
+
+    this.postData?.fullName ||
+
+    this.postData?.contactname ||
+
+    this.postData?.name ||
+
+    'User'
+
+  );
+
 }
+
+
 
 get sellerEmail(): string {
-  return (
-    this.postData?.sellerId?.email ||
-    this.postData?.email ||
-    this.postData?.contactemail ||
-    ''
-  );
+
+  return (
+
+    this.postData?.sellerId?.email ||
+
+    this.postData?.email ||
+
+    this.postData?.contactemail ||
+
+    ''
+
+  );
+
 }
+
+
 
 get sellerPhone(): string {
-  return (
-    this.postData?.sellerId?.mobile ||
-    this.postData?.mobile ||
-    this.postData?.contactphone ||
-    this.postData?.whatsappnumber ||
-    ''
-  );
+
+  return (
+
+    this.postData?.sellerId?.mobile ||
+
+    this.postData?.mobile ||
+
+    this.postData?.contactphone ||
+
+    this.postData?.whatsappnumber ||
+
+    ''
+
+  );
+
 }
 
-  private isValidFile(file: unknown): file is File {
-    return !!file && file instanceof File;
-  }
+
+
+  private isValidFile(file: unknown): file is File {
+
+    return !!file && file instanceof File;
+
+  }
+
 private async getAccessToken(): Promise<string | null> {
-  return (
-    localStorage.getItem('adminToken') ||
-    localStorage.getItem('token')
-  );
+
+  return (
+
+    localStorage.getItem('adminToken') ||
+
+    localStorage.getItem('token')
+
+  );
+
 }
-  private parseJsonArray<T = any>(value: any): T[] {
-    if (Array.isArray(value)) {
-      return value;
-    }
 
-    if (typeof value === 'string' && value.trim()) {
-      try {
-        const parsed = JSON.parse(value);
-        return Array.isArray(parsed) ? parsed : [];
-      } catch {
-        return [];
-      }
-    }
+  private parseJsonArray<T = any>(value: any): T[] {
 
-    return [];
-  }
+    if (Array.isArray(value)) {
 
-  private async readEdgeFunctionError(error: any): Promise<string> {
-    try {
-      const response = error?.context;
+      return value;
 
-      if (!response) {
-        return error?.message || 'Payment verification failed';
-      }
-
-      if (typeof response.text === 'function') {
-        const rawText = await response.text();
+    }
 
 
-        if (!rawText) {
-          return error?.message || 'Payment verification failed';
-        }
 
-        try {
-          const parsed = JSON.parse(rawText);
-          return (
-            parsed?.error?.toString() ||
-            parsed?.message?.toString() ||
-            rawText
-          );
-        } catch {
-          return rawText;
-        }
-      }
+    if (typeof value === 'string' && value.trim()) {
 
-      return error?.message || 'Payment verification failed';
-    } catch (readError) {
-      console.error('Failed to read edge function error body:', readError);
-      return error?.message || 'Payment verification failed';
-    }
-  }
+      try {
 
-  private async uploadMainPhoto(
-    uploadedFiles: { bucket: string; url: string }[]
-  ): Promise<string> {
-    const file = this.postDraftService.getMainPhoto();
+        const parsed = JSON.parse(value);
 
-    if (!this.isValidFile(file)) {
-      return '';
-    }
+        return Array.isArray(parsed) ? parsed : [];
 
-    const response:any =
+      } catch {
+
+        return [];
+
+      }
+
+    }
+
+
+
+    return [];
+
+  }
+
+
+
+  private async readEdgeFunctionError(error: any): Promise<string> {
+
+    try {
+
+      const response = error?.context;
+
+
+
+      if (!response) {
+
+        return error?.message || 'Payment verification failed';
+
+      }
+
+
+
+      if (typeof response.text === 'function') {
+
+        const rawText = await response.text();
+
+
+
+
+
+        if (!rawText) {
+
+          return error?.message || 'Payment verification failed';
+
+        }
+
+
+
+        try {
+
+          const parsed = JSON.parse(rawText);
+
+          return (
+
+            parsed?.error?.toString() ||
+
+            parsed?.message?.toString() ||
+
+            rawText
+
+          );
+
+        } catch {
+
+          return rawText;
+
+        }
+
+      }
+
+
+
+      return error?.message || 'Payment verification failed';
+
+    } catch (readError) {
+
+      console.error('Failed to read edge function error body:', readError);
+
+      return error?.message || 'Payment verification failed';
+
+    }
+
+  }
+
+
+
+  private async uploadMainPhoto(
+
+    uploadedFiles: { bucket: string; url: string }[]
+
+  ): Promise<string> {
+
+    const file = this.postDraftService.getMainPhoto();
+
+
+
+    if (!this.isValidFile(file)) {
+
+      return '';
+
+    }
+
+
+
+    const response:any =
+
 await this.api
+
 .uploadImage(file,'main-images')
+
 .toPromise();
+
+
+
 
 
 const url = response?.publicUrl;
 
-    if (!url) {
-      throw new Error('Main image upload failed');
-    }
 
-    uploadedFiles.push({ bucket: 'main-images', url });
-    return url;
-  }
 
-  private async uploadOtherImages(
-    uploadedFiles: { bucket: string; url: string }[]
-  ): Promise<string[]> {
-    const files = this.postDraftService
-      .getOtherImages()
-      .filter((file): file is File => this.isValidFile(file))
-      .slice(0, 5);
+    if (!url) {
 
-    if (!files.length) {
-      return [];
-    }
+      throw new Error('Main image upload failed');
 
-    const urls: string[] = [];
+    }
+
+
+
+    uploadedFiles.push({ bucket: 'main-images', url });
+
+    return url;
+
+  }
+
+
+
+  private async uploadOtherImages(
+
+    uploadedFiles: { bucket: string; url: string }[]
+
+  ): Promise<string[]> {
+
+    const files = this.postDraftService
+
+      .getOtherImages()
+
+      .filter((file): file is File => this.isValidFile(file))
+
+      .slice(0, 5);
+
+
+
+    if (!files.length) {
+
+      return [];
+
+    }
+
+
+
+    const urls: string[] = [];
+
+
 
 for (const file of files) {
 
-  const response:any = await this.api
-    .uploadImage(
-      file,
-      'additional-images'
-    )
-    .toPromise();
 
 
-  const url = response?.publicUrl;
+  const response:any = await this.api
+
+    .uploadImage(
+
+      file,
+
+      'additional-images'
+
+    )
+
+    .toPromise();
 
 
-  if (!url) {
-    throw new Error('Additional image upload failed');
-  }
 
 
-  uploadedFiles.push({
-    bucket:'additional-images',
-    url:url
-  });
+
+  const url = response?.publicUrl;
 
 
-  urls.push(url);
+
+
+
+  if (!url) {
+
+    throw new Error('Additional image upload failed');
+
+  }
+
+
+
+
+
+  uploadedFiles.push({
+
+    bucket:'additional-images',
+
+    url:url
+
+  });
+
+
+
+
+
+  urls.push(url);
+
+
 
 }
 
-    return urls;
-  }
 
-  private async uploadVideos(
-    uploadedFiles: { bucket: string; url: string }[]
-  ): Promise<string[]> {
-    const files = this.postDraftService
-      .getVideos()
-      .filter((file): file is File => this.isValidFile(file))
-      .slice(0, 2);
 
-    if (!files.length) {
-      return [];
-    }
+    return urls;
 
-    const urls: string[] = [];
+  }
 
-    for (const file of files) {
-     const response:any = await this.api
+
+
+  private async uploadVideos(
+
+    uploadedFiles: { bucket: string; url: string }[]
+
+  ): Promise<string[]> {
+
+    const files = this.postDraftService
+
+      .getVideos()
+
+      .filter((file): file is File => this.isValidFile(file))
+
+      .slice(0, 2);
+
+
+
+    if (!files.length) {
+
+      return [];
+
+    }
+
+
+
+    const urls: string[] = [];
+
+
+
+    for (const file of files) {
+
+     const response:any = await this.api
+
 .uploadImage(
- file,
- 'videos'
+
+ file,
+
+ 'videos'
+
 )
+
 .toPromise();
+
+
+
 
 
 const url = response?.publicUrl;
 
-      if (!url) {
-        throw new Error('Video upload failed');
-      }
 
-      uploadedFiles.push({ bucket: 'videos', url });
-      urls.push(url);
-    }
 
-    return urls;
-  }
+      if (!url) {
+
+        throw new Error('Video upload failed');
+
+      }
+
+
+
+      uploadedFiles.push({ bucket: 'videos', url });
+
+      urls.push(url);
+
+    }
+
+
+
+    return urls;
+
+  }
+
+
 
 private async buildCatalog(
-  uploadedFiles: { bucket: string; url: string }[]
+
+  uploadedFiles: { bucket: string; url: string }[]
+
 ): Promise<Array<{ title: string; price: number; image: string }>> {
-    const blocks = this.postDraftService.getServiceBlocks();
 
-    const result: Array<{ title: string; price: number; image: string }> = [];
+    const blocks = this.postDraftService.getServiceBlocks();
 
-    for (const block of blocks) {
 
-      if (!block.title || block.price == null) {
-        continue;
-      }
 
-      let imageUrl = '';
+    const result: Array<{ title: string; price: number; image: string }> = [];
+
+
+
+    for (const block of blocks) {
+
+
+
+      if (!block.title || block.price == null) {
+
+        continue;
+
+      }
+
+
+
+      let imageUrl = '';
+
+
 
 if (this.isValidFile(block.image)) {
 
-  const response:any = await this.api
-    .uploadImage(
-      block.image,
-      'service-images'
-    )
-    .toPromise();
 
 
-  const url = response?.publicUrl;
+  const response:any = await this.api
+
+    .uploadImage(
+
+      block.image,
+
+      'service-images'
+
+    )
+
+    .toPromise();
 
 
-  if (!url) {
-    throw new Error(
-      'Catalog image upload failed'
-    );
-  }
 
 
-  uploadedFiles.push({
-    bucket:'service-images',
-    url:url
-  });
+
+  const url = response?.publicUrl;
 
 
-  imageUrl = url;
-  console.log(
-  "CATALOG IMAGE UPLOADED URL:",
-  imageUrl
+
+
+
+  if (!url) {
+
+    throw new Error(
+
+      'Catalog image upload failed'
+
+    );
+
+  }
+
+
+
+
+
+  uploadedFiles.push({
+
+    bucket:'service-images',
+
+    url:url
+
+  });
+
+
+
+
+
+  imageUrl = url;
+
+  console.log(
+
+  "CATALOG IMAGE UPLOADED URL:",
+
+  imageUrl
+
 );
+
 }
+
 result.push({
-  title:block.title,
-  price:Number(block.price),
-  image:imageUrl
+
+  title:block.title,
+
+  price:Number(block.price),
+
+  image:imageUrl
+
 });
-    }
 
-    return result;
-  }
+    }
 
-  private async saveBoostEntry(
-  paymentPayload: {
-    razorpay_payment_id?: string;
-    razorpay_order_id?: string;
-    razorpay_signature?: string;
-  } = {}
+
+
+    return result;
+
+  }
+
+
+
+  private async saveBoostEntry(
+
+  paymentPayload: {
+
+    razorpay_payment_id?: string;
+
+    razorpay_order_id?: string;
+
+    razorpay_signature?: string;
+
+  } = {}
+
 ): Promise<void> {
 
+
+
 const postId = String(
-  this.postData?._id ||
-  this.postData?.postid ||
-  this.postData?.id ||
-  this.planData?.postId ||
-  ''
+
+  this.postData?._id ||
+
+  this.postData?.postid ||
+
+  this.postData?.id ||
+
+  this.planData?.postId ||
+
+  ''
+
 );
 
+
+
 if (!postId) {
-  throw new Error('Post id not found for featured ad');
+
+  throw new Error('Post id not found for featured ad');
+
 }
 
-  const planId = this.getSelectedPlanId();
-  const planName = this.getSelectedPlanName();
+
+
+  const planId = this.getSelectedPlanId();
+
+  const planName = this.getSelectedPlanName();
+
+
 
 const durationDays = Number(
-  this.planData?.durationDays ||
-  this.planData?.duration_days ||
-  1
+
+  this.planData?.durationDays ||
+
+  this.planData?.duration_days ||
+
+  1
+
 );
 
-  const amount = Number(
-    this.planData?.amount ||
-    this.planData?.price ||
-    0
-  );
 
-  const startDate = new Date();
 
-  const endDate = new Date();
+  const amount = Number(
 
-  endDate.setDate(
-    startDate.getDate() + durationDays
-  );
+    this.planData?.amount ||
+
+    this.planData?.price ||
+
+    0
+
+  );
+
+
+
+  const startDate = new Date();
+
+
+
+  const endDate = new Date();
+
+
+
+  endDate.setDate(
+
+    startDate.getDate() + durationDays
+
+  );
+
+
 
 const userId =
-  localStorage.getItem('userId') ||
-  localStorage.getItem('userid') ||
-  null;
+
+  localStorage.getItem('userId') ||
+
+  localStorage.getItem('userid') ||
+
+  null;
+
+
 
 const boostPayload = {
+
 userId: userId,
+
 postId: postId,
 
-    ad_type:
-      this.postData?.adtype ||
-      this.postData?.conditiontype ||
-      this.adType,
 
-    boost_plan_id: planId,
 
-    boost_name: planName,
+    ad_type:
 
-    amount: amount,
+      this.postData?.adtype ||
 
-    paymentstatus: 'paid',
+      this.postData?.conditiontype ||
 
-    razorpay_payment_id:
-      paymentPayload.razorpay_payment_id || null,
+      this.adType,
 
-    razorpay_order_id:
-      paymentPayload.razorpay_order_id || null,
 
-    startdate: startDate.toISOString(),
 
-    enddate: endDate.toISOString(),
+    boost_plan_id: planId,
 
-    isactive: true,
 
-    createdon: new Date().toISOString()
-  };
+
+    boost_name: planName,
+
+
+
+    amount: amount,
+
+
+
+    paymentstatus: 'paid',
+
+
+
+    razorpay_payment_id:
+
+      paymentPayload.razorpay_payment_id || null,
+
+
+
+    razorpay_order_id:
+
+      paymentPayload.razorpay_order_id || null,
+
+
+
+    startdate: startDate.toISOString(),
+
+
+
+    enddate: endDate.toISOString(),
+
+
+
+    isactive: true,
+
+
+
+    createdon: new Date().toISOString()
+
+  };
+
+
 
 await this.api
+
 .post(
- '/boost-plans/purchase',
- boostPayload
+
+ '/boost-plans/purchase',
+
+ boostPayload
+
 )
+
 .toPromise();
+
 }
-  private async updateExistingPostAsFeatured(
-    paymentPayload: {
-      razorpay_payment_id?: string;
-      razorpay_order_id?: string;
-      razorpay_signature?: string;
-    } = {}
-  ): Promise<void> {
+
+  private async updateExistingPostAsFeatured(
+
+    paymentPayload: {
+
+      razorpay_payment_id?: string;
+
+      razorpay_order_id?: string;
+
+      razorpay_signature?: string;
+
+    } = {}
+
+  ): Promise<void> {
+
 const postId = String(
-  this.postData?._id ||
-  this.postData?.postid ||
-  this.postData?.id ||
-  this.planData?.postId ||
-  ''
+
+  this.postData?._id ||
+
+  this.postData?.postid ||
+
+  this.postData?.id ||
+
+  this.planData?.postId ||
+
+  ''
+
 );
 
+
+
 if (!postId) {
-  throw new Error('Post id not found');
+
+  throw new Error('Post id not found');
+
 }
 
-    const selectedPlanId = this.getSelectedPlanId();
-    const selectedPlanName = this.getSelectedPlanName();
-    const selectedIsFeatured = this.getSelectedPlanIsFeatured();
+
+
+    const selectedPlanId = this.getSelectedPlanId();
+
+    const selectedPlanName = this.getSelectedPlanName();
+
+    const selectedIsFeatured = this.getSelectedPlanIsFeatured();
+
+
 
 const updatePayload: any = {
-  isFeatured: selectedIsFeatured,
-  featuredPlanId: selectedPlanId,
-  featuredPlanName: selectedPlanName,
-  status: this.postData?.status || 'approved',
-  isActive: true
+
+  isFeatured: selectedIsFeatured,
+
+  featuredPlanId: selectedPlanId,
+
+  featuredPlanName: selectedPlanName,
+
+  status: this.postData?.status || 'approved',
+
+  isActive: true
+
 };
 
+
+
 await this.api
-  .put(
-    `/posts/${postId}`,
-    updatePayload
-  )
-  .toPromise();
-    await this.saveBoostEntry(paymentPayload);
-  }
 
-  private async insertNewPostAfterPayment(
-    paymentPayload: {
-      razorpay_payment_id?: string;
-      razorpay_order_id?: string;
-      razorpay_signature?: string;
-    } = {}
-  ): Promise<void> {
-    const uploadedFiles: { bucket: string; url: string }[] = [];
+  .put(
 
-    try {
-      const pendingPost = this.postData || {};
-      const savedCustomFields =
-  JSON.parse(
-    localStorage.getItem('pending_custom_fields') || '[]'
-  );
+    `/posts/${postId}`,
+
+    updatePayload
+
+  )
+
+  .toPromise();
+
+    await this.saveBoostEntry(paymentPayload);
+
+  }
+
+
+
+  private async insertNewPostAfterPayment(
+
+    paymentPayload: {
+
+      razorpay_payment_id?: string;
+
+      razorpay_order_id?: string;
+
+      razorpay_signature?: string;
+
+    } = {}
+
+  ): Promise<void> {
+
+    const uploadedFiles: { bucket: string; url: string }[] = [];
+
+
+
+    try {
+
+      const pendingPost = this.postData || {};
+
+      const savedCustomFields =
+
+  JSON.parse(
+
+    localStorage.getItem('pending_custom_fields') || '[]'
+
+  );
+
+
+
 
 
 const customFieldsObject = savedCustomFields;
-      const selectedPlanId = this.getSelectedPlanId();
-      const selectedPlanName = this.getSelectedPlanName();
-      const selectedIsFeatured = this.getSelectedPlanIsFeatured();
 
-      const mainPhoto =
-  pendingPost.image_url ||
-  await this.uploadMainPhoto(uploadedFiles);
+      const selectedPlanId = this.getSelectedPlanId();
+
+      const selectedPlanName = this.getSelectedPlanName();
+
+      const selectedIsFeatured = this.getSelectedPlanIsFeatured();
+
+
+
+      const mainPhoto =
+
+  pendingPost.image_url ||
+
+  await this.uploadMainPhoto(uploadedFiles);
+
 let otherImages = this.parseJsonArray<string>(
-  pendingPost.image_urls
+
+  pendingPost.image_urls
+
 );
+
+
+
 
 
 if(!otherImages.length){
 
-  otherImages =
-  await this.uploadOtherImages(uploadedFiles);
+
+
+  otherImages =
+
+  await this.uploadOtherImages(uploadedFiles);
+
+
 
 }
+
+
+
+
 
 
 
 let videos = this.parseJsonArray<string>(
-  pendingPost.video_urls
+
+  pendingPost.video_urls
+
 );
+
+
+
 
 
 if(!videos.length){
 
-  videos =
-  await this.uploadVideos(uploadedFiles);
+
+
+  videos =
+
+  await this.uploadVideos(uploadedFiles);
+
+
 
 }
+
+
+
+
 
 
 
 let catalog =
+
 await this.buildCatalog(uploadedFiles);
-      // const oldImageUrls = this.parseJsonArray<string>(pendingPost.image_urls);
-      // const oldVideoUrls = this.parseJsonArray<string>(pendingPost.video_urls);
-      // const oldCatalog = this.parseJsonArray<any>(pendingPost.catalog);
+
+      // const oldImageUrls = this.parseJsonArray<string>(pendingPost.image_urls);
+
+      // const oldVideoUrls = this.parseJsonArray<string>(pendingPost.video_urls);
+
+      // const oldCatalog = this.parseJsonArray<any>(pendingPost.catalog);
+
+
 
 const finalPayload:any = {
 
+
+
 title:
+
 pendingPost.title,
 
+
+
 categoryId:
+
 pendingPost.categoryId,
 
+
+
 subcategoryId:
+
 pendingPost.subcategoryId || null,
 
+
+
 listingType:
+
 pendingPost.listingType || 'service',
 
+
+
 description:
+
 pendingPost.description || '',
 
 
+
+
+
 price:
+
 Number(pendingPost.price || 0),
 
 
+
+
+
 images:[
- mainPhoto,
- ...otherImages
+
+ mainPhoto,
+
+ ...otherImages
+
 ].filter(Boolean),
 
 
+
+
+
 videos:
+
 videos,
 
 
+
+
+
 catalog:
+
 catalog,
 
 
+
+
+
 location:
+
 pendingPost.location || {},
+
+
 
 customFields: customFieldsObject,
 
+
+
 isFeatured:
+
 selectedIsFeatured,
 
 
+
+
+
 status:
-"approved"
+
+"pending"
+
+
 
 };
-      delete finalPayload.postid;
-      delete finalPayload.id;
+
+      delete finalPayload.postid;
+
+      delete finalPayload.id;
+
+
 
 await this.api
+
 .post(
-  '/posts',
-  finalPayload
+
+  '/posts',
+
+  finalPayload
+
 )
+
 .toPromise();
 
 
-    } catch (error: any) {
-      console.error('Payment/save error:', error);
 
-      for (const file of uploadedFiles.reverse()) {
-        try {
-         console.log(
+
+
+    } catch (error: any) {
+
+      console.error('Payment/save error:', error);
+
+
+
+      for (const file of uploadedFiles.reverse()) {
+
+        try {
+
+         console.log(
+
 "R2 cleanup skipped:",
+
 file.url
+
 );
-        } catch (deleteErr) {
-          console.error('Failed to cleanup uploaded file:', deleteErr);
-        }
-      }
 
-      throw error;
-    }
-  }
+        } catch (deleteErr) {
+
+          console.error('Failed to cleanup uploaded file:', deleteErr);
+
+        }
+
+      }
+
+
+
+      throw error;
+
+    }
+
+  }
+
 private async createUserSubscription(): Promise<void> {
+  if (!this.isSubscriptionPlanFlow()) return;
 
-  if (!this.isSubscriptionPlanFlow()) {
-    return;
-  }
-
-  const alreadyCreated =
-    localStorage.getItem(
-      this.subscriptionCreatedStorageKey
-    ) === 'true';
-
-  if (alreadyCreated) {
-    console.log(
-      'Subscription already created for this payment'
-    );
-    return;
-  }
-
-  const selectedPlanId =
-    this.planData?.subscriptionplanid ||
-    this.planData?._id ||
-    null;
+  const selectedPlanId = String(
+    this.planData?.subscriptionplanid || this.planData?._id || ''
+  );
 
   if (!selectedPlanId) {
+    throw new Error('Subscription plan ID not found. Please select a plan again.');
+  }
+
+  // The server is the source of truth; a localStorage flag cannot establish entitlement.
+  let existing: any = null;
+  try {
+    const res: any = await this.api
+      .get('/subscriptions/my-subscription')
+      .toPromise();
+    existing = res?.data || null;
+  } catch (error: any) {
+    if (error?.status !== 404) throw error;
+  }
+
+  const expiryMs = new Date(existing?.expiryDate || 0).getTime();
+  const validSubscription =
+    existing?.status === 'active' &&
+    Number.isFinite(expiryMs) &&
+    expiryMs > Date.now();
+
+  if (validSubscription && Number(existing.remainingPosts) > 0) {
+    // For a free post, any current active entitlement with allowance works.
+    // Paid activation must be performed by a verified server-side flow.
+    if (this.amount <= 0) {
+      console.log('Existing active subscription is eligible for posting');
+      return;
+    }
+    throw new Error('Payment received. The server must activate the paid subscription before this post can be published. Do not pay again.');
+  }
+
+  if (existing) {
+    const reason = validSubscription
+      ? 'Your subscription has no remaining posts.'
+      : 'Your subscription is expired or inactive.';
     throw new Error(
-      'Subscription plan ID not found'
+      `${reason} Please renew or contact the administrator. Existing free allowances are not reset automatically.`
     );
   }
 
-  const response: any =
-    await this.api
-      .post(
-        '/subscriptions/create',
-        {
-          planId: selectedPlanId
-        }
-      )
-      .toPromise();
+  if (this.amount > 0) {
+    // /subscriptions/create currently activates paid plans without verifying Razorpay.
+    // Never use that endpoint for paid plans until the backend securely links
+    // payment verification to subscription activation.
+    throw new Error(
+      'Payment verification finished, but paid subscription activation must be completed on the server. Do not pay again; contact support with your payment ID.'
+    );
+  }
 
+  // Only when no subscription exists: activate an eligible free plan.
+  // Backend must enforce one-time free-plan eligibility and verify plan.price === 0.
+  const response: any = await this.api.post('/subscriptions/create', {
+    planId: selectedPlanId
+  }).toPromise();
+
+  if (response?.success !== true) {
+    throw new Error(response?.message || 'Failed to activate the free subscription');
+  }
+
+  const created: any = response?.data;
+  const createdExpiry = new Date(created?.expiryDate || 0).getTime();
   if (
-    !response ||
-    response.success !== true
+    created?.status !== 'active' ||
+    !Number.isFinite(createdExpiry) ||
+    createdExpiry <= Date.now() ||
+    Number(created?.remainingPosts) <= 0
   ) {
     throw new Error(
-      response?.message ||
-      'Failed to activate subscription'
+      'The free subscription was created but has no valid posting allowance. Check subscription duration and post limit in Admin.'
     );
   }
 
-  localStorage.setItem(
-    this.subscriptionCreatedStorageKey,
-    'true'
-  );
-
-  console.log(
-    'USER SUBSCRIPTION CREATED:',
-    response
-  );
+  console.log('Free subscription activated and validated');
 }
-  private async savePostAfterPayment(
-    paymentPayload: {
-      razorpay_payment_id?: string;
-      razorpay_order_id?: string;
-      razorpay_signature?: string;
-    } = {}
-  ): Promise<void> {
-    try {
+
+private async savePostAfterPayment(
+
+    paymentPayload: {
+
+      razorpay_payment_id?: string;
+
+      razorpay_order_id?: string;
+
+      razorpay_signature?: string;
+
+    } = {}
+
+  ): Promise<void> {
+
+    try {
+
 if (this.isExistingPostFeaturedFlow()) {
 
-  await this.updateExistingPostAsFeatured(
-    paymentPayload
-  );
+
+
+  await this.updateExistingPostAsFeatured(
+
+    paymentPayload
+
+  );
+
+
 
 } else {
 
-  // Create the user's purchased subscription first.
-  await this.createUserSubscription();
 
-  // Then create the post.
-  await this.insertNewPostAfterPayment(
-    paymentPayload
-  );
+
+  // Create the user's purchased subscription first.
+
+  await this.createUserSubscription();
+
+
+
+  // Then create the post.
+
+  await this.insertNewPostAfterPayment(
+
+    paymentPayload
+
+  );
+
+
 
 }
 
-      this.clearVerifiedPaymentState();
 
-      localStorage.removeItem('pending_post_payload');
-      localStorage.removeItem('selected_plan_payload');
-      localStorage.removeItem('pending_service_catalog_payload');
-      localStorage.removeItem('pending_post_flow');
-      localStorage.removeItem('pending_post_type');
-      localStorage.removeItem('pending_post_userid');
-      localStorage.removeItem(this.featureEditContextStorageKey);
-      localStorage.removeItem(this.subscriptionCreatedStorageKey);
 
-      this.postDraftService.clearDraft();
-  this.paymentSuccess.set(true);
+      this.clearVerifiedPaymentState();
+
+
+
+      localStorage.removeItem('pending_post_payload');
+
+      localStorage.removeItem('selected_plan_payload');
+
+      localStorage.removeItem('pending_service_catalog_payload');
+
+      localStorage.removeItem('pending_post_flow');
+
+      localStorage.removeItem('pending_post_type');
+
+      localStorage.removeItem('pending_post_userid');
+
+      localStorage.removeItem(this.featureEditContextStorageKey);
+
+      localStorage.removeItem('current_payment_subscription_created');
+
+
+
+      this.postDraftService.clearDraft();
+
+  this.paymentSuccess.set(true);
+
 this.paymentFailed.set(false);
+
 this.errorMessage.set('');
 
-this.snackbar.show('Payment successful & post saved!', 'success');
-    } catch (error: any) {
-      console.error('Final savePostAfterPayment error:', error);
-      this.paymentFailed.set(true);
-     const msg = error?.message || 'Payment succeeded but post saving failed.';
+
+
+this.snackbar.show(this.amount <= 0 ? 'Free post saved!' : 'Payment confirmed & post saved!', 'success');
+
+    } catch (error: any) {
+
+      console.error('Final savePostAfterPayment error:', error);
+
+      this.paymentFailed.set(true);
+
+     const msg = error?.message || 'Payment succeeded but post saving failed.';
+
 this.errorMessage.set(msg);
+
 this.snackbar.show(msg, 'error');
-      throw error;
-    }
-  }
 
-  private async verifyPaymentOnBackend(payload: {
-    razorpay_payment_id: string;
-    razorpay_order_id: string;
-    razorpay_signature: string;
-  }): Promise<void> {
-    const accessToken = await this.getAccessToken();
-   const userUuid = null;
-    const selectedPlanId = this.getSelectedPlanId();
-    const selectedPlanName = this.getSelectedPlanName();
+      throw error;
+
+    }
+
+  }
+
+
+
+  private async verifyPaymentOnBackend(payload: {
+
+    razorpay_payment_id: string;
+
+    razorpay_order_id: string;
+
+    razorpay_signature: string;
+
+  }): Promise<void> {
+
+    const accessToken = await this.getAccessToken();
+
+   const userUuid = null;
+
+    const selectedPlanId = this.getSelectedPlanId();
+
+    const selectedPlanName = this.getSelectedPlanName();
+
 const userId =
-  localStorage.getItem('userId') ||
-  localStorage.getItem('userid') ||
-  null;
 
-    const verifyPayload = {
-  plan_id: selectedPlanId,
-  plan_name: selectedPlanName,
-  amount: this.amount,
-  currency: 'INR',
-  receipt: `post_${Date.now()}`,
-  razorpay_payment_id: payload.razorpay_payment_id,
-  razorpay_order_id: payload.razorpay_order_id,
-  razorpay_signature: payload.razorpay_signature,
+  localStorage.getItem('userId') ||
 
-  userId: userId,
- 
+  localStorage.getItem('userid') ||
 
-  post_payload: this.postData || {},
-  plan_payload: this.planData || {},
-  ad_type: this.adType
+  null;
+
+
+
+    const verifyPayload = {
+
+  plan_id: selectedPlanId,
+
+  plan_name: selectedPlanName,
+
+  amount: this.amount,
+
+  currency: 'INR',
+
+  receipt: `post_${Date.now()}`,
+
+  razorpay_payment_id: payload.razorpay_payment_id,
+
+  razorpay_order_id: payload.razorpay_order_id,
+
+  razorpay_signature: payload.razorpay_signature,
+
+
+
+  userId: userId,
+
+
+
+
+
+  post_payload: this.postData || {},
+
+  plan_payload: this.planData || {},
+
+  ad_type: this.adType
+
 };
 
 
 
-   const invokeOptions: any = {
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  body: verifyPayload
+
+
+
+
+   const invokeOptions: any = {
+
+  headers: {
+
+    'Content-Type': 'application/json'
+
+  },
+
+  body: verifyPayload
+
 };
 
-console.log('ACCESS TOKEN:', accessToken);
+
+
+// Never print authentication tokens in the browser console.
+
+
 
 if (accessToken) {
-  invokeOptions.headers.Authorization = `Bearer ${accessToken}`;
+
+  invokeOptions.headers.Authorization = `Bearer ${accessToken}`;
+
 }
 
+
+
 const data:any =
+
 await this.api
+
 .post(
+
 '/payment/verify-payment',
+
 verifyPayload
+
 )
+
 .toPromise();
+
+
+
+
 
 
 
 if (!data || data.success !== true) {
 
-  if (this.isFeaturedPlanFlow()) {
-    console.warn(
-      'Featured verification failed, continuing'
-    );
-    return;
-  }
 
-  throw new Error(
-    data?.message ||
-    'Payment verification failed'
-  );
+
+  if (this.isFeaturedPlanFlow()) {
+
+    console.warn(
+
+      'Featured verification failed, continuing'
+
+    );
+
+    return;
+
+  }
+
+
+
+  throw new Error(
+
+    data?.message ||
+
+    'Payment verification failed'
+
+  );
+
+
 
 }
-  }
 
-  async payNow(): Promise<void> {
-    if (!this.isBrowser) return;
+  }
 
-    if (!this.postData) {
-    const msg = 'Post data missing. Please go back and submit again.';
+
+
+  async payNow(): Promise<void> {
+
+    if (!this.isBrowser) return;
+
+
+
+    if (!this.postData) {
+
+    const msg = 'Post data missing. Please go back and submit again.';
+
 this.errorMessage.set(msg);
+
 this.snackbar.show(msg, 'error');
 
-      return;
-    }
+
+
+      return;
+
+    }
+
 if (!this.amount || this.amount <= 0) {
-  this.isPaying.set(true);
-  this.paymentFailed.set(false);
-  this.errorMessage.set('');
 
-  try {
-    await this.savePostAfterPayment({});
-    this.snackbar.show('Free post saved successfully!', 'success');
-    this.router.navigate(['/my-ads']);
-  } catch (error: any) {
-    const msg = error?.message || 'Post save failed.';
-    this.paymentFailed.set(true);
-    this.errorMessage.set(msg);
-    this.snackbar.show(msg, 'error');
-  } finally {
-    this.isPaying.set(false);
-  }
+  this.isPaying.set(true);
 
-  return;
+  this.paymentFailed.set(false);
+
+  this.errorMessage.set('');
+
+
+
+  try {
+
+    await this.savePostAfterPayment({});
+
+    this.snackbar.show('Free post saved successfully!', 'success');
+
+    this.router.navigate(['/my-posts']);
+
+  } catch (error: any) {
+
+    const msg = error?.message || 'Post save failed.';
+
+    this.paymentFailed.set(true);
+
+    this.errorMessage.set(msg);
+
+    this.snackbar.show(msg, 'error');
+
+  } finally {
+
+    this.isPaying.set(false);
+
+  }
+
+
+
+  return;
+
 }
 
-    if (!window.Razorpay) {
-     const msg = 'Razorpay SDK not loaded. Please refresh and try again.';
+
+
+    if (!window.Razorpay) {
+
+     const msg = 'Razorpay SDK not loaded. Please refresh and try again.';
+
 this.errorMessage.set(msg);
+
 this.snackbar.show(msg, 'error');
-      return;
-    }
 
-    this.isPaying.set(true);
-    this.paymentFailed.set(false);
-    this.errorMessage.set('');
+      return;
 
-    try {
-      const accessToken = await this.getAccessToken();
+    }
+
+
+
+    this.isPaying.set(true);
+
+    this.paymentFailed.set(false);
+
+    this.errorMessage.set('');
+
+
+
+    try {
+
+      const accessToken = await this.getAccessToken();
+
+
 
 if (!accessToken) {
-  throw new Error(
-    'Login required. Please login again.'
-  );
+
+  throw new Error(
+
+    'Login required. Please login again.'
+
+  );
+
 }
-      const selectedPlanId = this.getSelectedPlanId();
-      const selectedPlanName = this.getSelectedPlanName();
+
+      const selectedPlanId = this.getSelectedPlanId();
+
+      const selectedPlanName = this.getSelectedPlanName();
 
 
 
 
-      const invokeOptions: any = {
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: {
-          plan_id: selectedPlanId,
-          plan_name: selectedPlanName,
-          amount: Math.round(this.amount * 100),
-          currency: 'INR',
-          receipt: `post_${Date.now()}`
-        }
-      };
 
-      if (accessToken) {
-        invokeOptions.headers.Authorization = `Bearer ${accessToken}`;
-      }
+
+
+
+
+      const invokeOptions: any = {
+
+        headers: {
+
+          'Content-Type': 'application/json'
+
+        },
+
+        body: {
+
+          plan_id: selectedPlanId,
+
+          plan_name: selectedPlanName,
+
+          amount: Math.round(this.amount * 100),
+
+          currency: 'INR',
+
+          receipt: `post_${Date.now()}`
+
+        }
+
+      };
+
+
+
+      if (accessToken) {
+
+        invokeOptions.headers.Authorization = `Bearer ${accessToken}`;
+
+      }
+
+
 
 const data: any = await this.api.post(
-  '/payment/create-order',
-  {
-    planId: this.getSelectedPlanId()
-  }
+
+  '/payment/create-order',
+
+  {
+
+    planId: this.getSelectedPlanId()
+
+  }
+
 ).toPromise();
+
+
 
 if (!data?.order?.id) {
 
-  console.log(
-    "RAZORPAY RESPONSE ERROR",
-    data
-  );
 
-  throw new Error(
-    'Failed to create Razorpay order'
-  );
+
+  console.log(
+
+    "RAZORPAY RESPONSE ERROR",
+
+    data
+
+  );
+
+
+
+  throw new Error(
+
+    'Failed to create Razorpay order'
+
+  );
+
+
 
 }
-      const options = {
-        key: this.razorpayKey,
-        amount: Math.round(this.amount * 100),
-        currency: 'INR',
-        name: 'AmiHub',
-        description: this.planName,
-        order_id: data.order.id,
-        prefill: {
-          name: this.sellerName,
-          email: this.sellerEmail,
-          contact: this.sellerPhone
-        },
-        notes: {
-          post_title: this.postTitle,
-          plan_name: this.planName,
-          ad_type: this.adType
-        },
-        theme: {
-          color: '#1f4bff'
-        },
-        modal: {
-          ondismiss: () => {
-            this.isPaying.set(false);
-          }
-        },
-        handler: async (paymentResponse: any) => {
-          this.isPaying.set(true);
-          this.errorMessage.set('');
-          this.paymentFailed.set(false);
 
-          try {
-            await this.verifyPaymentOnBackend({
-              razorpay_payment_id: paymentResponse.razorpay_payment_id,
-              razorpay_order_id: paymentResponse.razorpay_order_id,
-              razorpay_signature: paymentResponse.razorpay_signature
-            });
+      const options = {
 
-            this.saveVerifiedPaymentState({
-              razorpay_payment_id: paymentResponse.razorpay_payment_id,
-              razorpay_order_id: paymentResponse.razorpay_order_id,
-              razorpay_signature: paymentResponse.razorpay_signature
-            });
+        key: this.razorpayKey,
 
-            await this.savePostAfterPayment({
-              razorpay_payment_id: paymentResponse.razorpay_payment_id,
-              razorpay_order_id: paymentResponse.razorpay_order_id,
-              razorpay_signature: paymentResponse.razorpay_signature
-            });
-          } catch (error: any) {
-            console.error('Verification/Post save failed:', error);
-            this.paymentFailed.set(true);
-            const msg = error?.message || 'Payment succeeded but post saving failed.';
+        amount: Math.round(this.amount * 100),
+
+        currency: 'INR',
+
+        name: 'AmiHub',
+
+        description: this.planName,
+
+        order_id: data.order.id,
+
+        prefill: {
+
+          name: this.sellerName,
+
+          email: this.sellerEmail,
+
+          contact: this.sellerPhone
+
+        },
+
+        notes: {
+
+          post_title: this.postTitle,
+
+          plan_name: this.planName,
+
+          ad_type: this.adType
+
+        },
+
+        theme: {
+
+          color: '#1f4bff'
+
+        },
+
+        modal: {
+
+          ondismiss: () => {
+
+            this.isPaying.set(false);
+
+          }
+
+        },
+
+        handler: async (paymentResponse: any) => {
+
+          this.isPaying.set(true);
+
+          this.errorMessage.set('');
+
+          this.paymentFailed.set(false);
+
+
+
+          try {
+
+            await this.verifyPaymentOnBackend({
+
+              razorpay_payment_id: paymentResponse.razorpay_payment_id,
+
+              razorpay_order_id: paymentResponse.razorpay_order_id,
+
+              razorpay_signature: paymentResponse.razorpay_signature
+
+            });
+
+
+
+            this.saveVerifiedPaymentState({
+
+              razorpay_payment_id: paymentResponse.razorpay_payment_id,
+
+              razorpay_order_id: paymentResponse.razorpay_order_id,
+
+              razorpay_signature: paymentResponse.razorpay_signature
+
+            });
+
+
+
+            await this.savePostAfterPayment({
+
+              razorpay_payment_id: paymentResponse.razorpay_payment_id,
+
+              razorpay_order_id: paymentResponse.razorpay_order_id,
+
+              razorpay_signature: paymentResponse.razorpay_signature
+
+            });
+
+          } catch (error: any) {
+
+            console.error('Verification/Post save failed:', error);
+
+            this.paymentFailed.set(true);
+
+            const msg = error?.message || 'Payment succeeded but post saving failed.';
+
 this.errorMessage.set(msg);
+
 this.snackbar.show(msg, 'error');
-          } finally {
-            this.isPaying.set(false);
-          }
-        }
-      };
 
-      const razorpayInstance = new window.Razorpay(options);
+          } finally {
 
-      razorpayInstance.on('payment.failed', (failureResponse: any) => {
-        console.error('Razorpay payment failed:', failureResponse);
+            this.isPaying.set(false);
+
+          }
+
+        }
+
+      };
+
+
+
+      const razorpayInstance = new window.Razorpay(options);
+
+
+
+      razorpayInstance.on('payment.failed', (failureResponse: any) => {
+
+        console.error('Razorpay payment failed:', failureResponse);
+
+        this.paymentFailed.set(true);
+
+      const msg = failureResponse?.error?.description || 'Payment failed. Please try again.';
+
+this.errorMessage.set(msg);
+
+this.snackbar.show(msg, 'error');
+
+        this.isPaying.set(false);
+
+      });
+
+
+
+      razorpayInstance.open();
+
+    } catch (error: any) {
+
+      console.error('Pay now error:', error);
+
+      this.paymentFailed.set(true);
+
+    const msg = error?.message || 'Unable to start payment.';
+
+this.errorMessage.set(msg);
+
+this.snackbar.show(msg, 'error');
+
+      this.isPaying.set(false);
+
+    }
+
+  }
+
+
+
+  async retrySavePost(): Promise<void> {
+
+    if (!this.isBrowser) return;
+
+    // Free subscriptions do not have a Razorpay verification payload.
+    if (this.amount <= 0) {
+      this.isRetryingSave.set(true);
+      this.paymentFailed.set(false);
+      this.errorMessage.set('');
+      try {
+        await this.savePostAfterPayment({});
+        this.router.navigate(['/my-posts']);
+      } catch (error: any) {
         this.paymentFailed.set(true);
-      const msg = failureResponse?.error?.description || 'Payment failed. Please try again.';
-this.errorMessage.set(msg);
-this.snackbar.show(msg, 'error');
-        this.isPaying.set(false);
-      });
-
-      razorpayInstance.open();
-    } catch (error: any) {
-      console.error('Pay now error:', error);
-      this.paymentFailed.set(true);
-    const msg = error?.message || 'Unable to start payment.';
-this.errorMessage.set(msg);
-this.snackbar.show(msg, 'error');
-      this.isPaying.set(false);
-    }
-  }
-
-  async retrySavePost(): Promise<void> {
-    if (!this.isBrowser) return;
-
-    const raw = localStorage.getItem(this.verifiedPaymentStorageKey);
-
-    if (!raw) {
-      this.errorMessage.set('Verified payment record not found. Please contact support before paying again.');
+        this.errorMessage.set(error?.error?.message || error?.message || 'Free post save failed.');
+      } finally {
+        this.isRetryingSave.set(false);
+      }
       return;
     }
 
-    const verifiedPayment = JSON.parse(raw);
 
-    this.isRetryingSave.set(true);
-    this.paymentFailed.set(false);
-    this.errorMessage.set('');
 
-    try {
-      await this.savePostAfterPayment({
-        razorpay_payment_id: verifiedPayment?.razorpay_payment_id,
-        razorpay_order_id: verifiedPayment?.razorpay_order_id,
-        razorpay_signature: verifiedPayment?.razorpay_signature
-      });
-    } catch (error: any) {
-      console.error('Retry save failed:', error);
-      this.paymentFailed.set(true);
-      this.errorMessage.set(
-        error?.message || 'Post save retry failed.'
-      );
-    } finally {
-      this.isRetryingSave.set(false);
-    }
-  }
 
-  goBackToPlans(): void {
-    this.router.navigate(['/subscription-plan']);
-  }
+    const raw = localStorage.getItem(this.verifiedPaymentStorageKey);
 
-  goHome(): void {
-    this.router.navigate(['/']);
-  }
 
- goToMyAds(): void {
-  this.router.navigate(['/my-posts']);
+
+    if (!raw) {
+
+      this.errorMessage.set('Verified payment record not found. Please contact support before paying again.');
+
+      return;
+
+    }
+
+
+
+    const verifiedPayment = JSON.parse(raw);
+
+
+
+    this.isRetryingSave.set(true);
+
+    this.paymentFailed.set(false);
+
+    this.errorMessage.set('');
+
+
+
+    try {
+
+      await this.savePostAfterPayment({
+
+        razorpay_payment_id: verifiedPayment?.razorpay_payment_id,
+
+        razorpay_order_id: verifiedPayment?.razorpay_order_id,
+
+        razorpay_signature: verifiedPayment?.razorpay_signature
+
+      });
+
+    } catch (error: any) {
+
+      console.error('Retry save failed:', error);
+
+      this.paymentFailed.set(true);
+
+      this.errorMessage.set(
+
+        error?.message || 'Post save retry failed.'
+
+      );
+
+    } finally {
+
+      this.isRetryingSave.set(false);
+
+    }
+
+  }
+
+
+
+  goBackToPlans(): void {
+
+    this.router.navigate(['/subscription-plan']);
+
+  }
+
+
+
+  goHome(): void {
+
+    this.router.navigate(['/']);
+
+  }
+
+
+
+ goToMyAds(): void {
+
+  this.router.navigate(['/my-posts']);
+
 }
-  retryPayment(): void {
-    this.paymentFailed.set(false);
-    this.errorMessage.set('');
-    this.payNow();
-  }
 
-  formatAmount(value: number): string {
-    return new Intl.NumberFormat('en-IN', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2
-    }).format(value || 0);
-  }
+  retryPayment(): void {
+
+    this.paymentFailed.set(false);
+
+    this.errorMessage.set('');
+
+    this.payNow();
+
+  }
+
+
+
+  formatAmount(value: number): string {
+
+    return new Intl.NumberFormat('en-IN', {
+
+      minimumFractionDigits: 0,
+
+      maximumFractionDigits: 2
+
+    }).format(value || 0);
+
+  }
+
 }

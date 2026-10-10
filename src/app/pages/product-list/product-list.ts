@@ -138,7 +138,11 @@ private getAuthHeaders(): HttpHeaders {
   displayedPosts = signal<any[]>([]);
   isLoading = signal(false);
   hasMore = signal(true);
+// Favourite product IDs
+favouriteIds = signal<Set<string>>(new Set<string>());
 
+// Prevent double-click requests
+pendingFavouriteIds = signal<Set<string>>(new Set<string>());
   subcategories = signal<SubcategoryItem[]>([]);
   categoriesData: CategoryItem[] = [];
   allSubcategories: SubcategoryItem[] = [];
@@ -213,6 +217,7 @@ constructor(
 async ngOnInit(): Promise<void> {
 
   this.loadCurrentUser();
+    this.loadFavourites();
   this.loadSelectedLocationAndRadius();
 
   await Promise.all([
@@ -295,6 +300,120 @@ private loadCurrentUser(): void {
 
     this.currentUserId.set('');
   }
+}
+// ===============================
+// FAVOURITES FUNCTIONALITY
+// ===============================
+
+private getPostId(item: any): string {
+  return String(item?._id || item?.postid || '');
+}
+
+isFavourite(item: any): boolean {
+  return this.favouriteIds().has(this.getPostId(item));
+}
+
+isFavouritePending(item: any): boolean {
+  return this.pendingFavouriteIds().has(this.getPostId(item));
+}
+
+loadFavourites(): void {
+  if (typeof window === 'undefined') return;
+
+  const token = localStorage.getItem('token');
+
+  if (!token) {
+    this.favouriteIds.set(new Set<string>());
+    return;
+  }
+
+  this.http.get<any>(
+    `${environment.apiUrl}/favorites`,
+    { headers: this.getAuthHeaders() }
+  ).subscribe({
+    next: (res) => {
+      const items = Array.isArray(res?.data)
+        ? res.data
+        : [];
+
+      const ids = items
+        .map((fav: any) =>
+          typeof fav?.postId === 'object'
+            ? fav.postId?._id
+            : fav?.postId
+        )
+        .filter(Boolean)
+        .map(String);
+
+      this.favouriteIds.set(new Set<string>(ids));
+    },
+
+    error: (error) => {
+      console.error('Load favourites failed:', error);
+    }
+  });
+}
+
+toggleFavourite(item: any, event: MouseEvent): void {
+  event.preventDefault();
+  event.stopPropagation();
+
+  if (typeof window === 'undefined') return;
+
+  const postId = this.getPostId(item);
+
+  if (!postId) return;
+
+  const token = localStorage.getItem('token');
+
+  if (!token) {
+    this.router.navigate(['/login'], {
+      queryParams: {
+        returnUrl: this.router.url
+      }
+    });
+    return;
+  }
+
+  if (this.pendingFavouriteIds().has(postId)) return;
+
+  this.pendingFavouriteIds.update(ids => {
+    const next = new Set(ids);
+    next.add(postId);
+    return next;
+  });
+
+  this.http.post<any>(
+    `${environment.apiUrl}/favorites/${postId}`,
+    {},
+    { headers: this.getAuthHeaders() }
+  ).subscribe({
+    next: () => {
+      this.loadFavourites();
+      this.finishFavouriteRequest(postId);
+    },
+
+    error: (error) => {
+      console.error('Favourite request failed:', error);
+      this.finishFavouriteRequest(postId);
+
+      if (error.status === 401) {
+        this.router.navigate(['/login'], {
+          queryParams: {
+            returnUrl: this.router.url
+          }
+        });
+      }
+    }
+  });
+}
+
+private finishFavouriteRequest(postId: string): void {
+  this.pendingFavouriteIds.update(ids => {
+    const next = new Set(ids);
+    next.delete(postId);
+    return next;
+  });
 }
 
 async loadResults(): Promise<void> {

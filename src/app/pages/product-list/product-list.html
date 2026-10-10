@@ -147,21 +147,40 @@
 
         <!-- IMAGE -->
 
-        <div class="card-image">
+      <div class="card-image">
 
-          <span class="card-badge">
+  <span class="card-badge">
+    {{ item.displayType }}
+  </span>
 
-            {{item.displayType}}
+  <!-- FAVOURITE HEART -->
+ <button
+  type="button"
+  class="favourite-btn"
+  [class.is-favourite]="isFavourite(item)"
+  [disabled]="isFavouritePending(item)"
+  [attr.aria-label]="
+    isFavourite(item)
+      ? 'Remove from favourites'
+      : 'Add to favourites'
+  "
+  [attr.aria-pressed]="isFavourite(item)"
+  (click)="toggleFavourite(item, $event)"
+>
+  <i
+    [class]="
+      isFavourite(item)
+        ? 'fas fa-heart'
+        : 'far fa-heart'
+    "
+  ></i>
+</button>
 
-          </span>
+  <img
+    [src]="item.mainImage"
+    [alt]="item.displayTitle">
 
-
-          <img
-            [src]="item.mainImage"
-            [alt]="item.displayTitle">
-
-
-        </div>
+</div>
 
         <!-- BODY -->
 
