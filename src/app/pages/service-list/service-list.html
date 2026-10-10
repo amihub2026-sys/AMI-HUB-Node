@@ -142,20 +142,43 @@
     >
 
       <!-- SERVICE IMAGE -->
-      <div class="service-card-image">
+ <div class="service-card-image">
 
-        <img
-          [src]="getServiceImage(service)"
-          [alt]="getServiceTitle(service)"
-          (error)="onServiceImageError($event)"
-        >
+  <img
+    [src]="getServiceImage(service)"
+    [alt]="getServiceTitle(service)"
+    (error)="onServiceImageError($event)"
+  >
 
-        <!-- ONLY SERVICE BADGE -->
-        <span class="service-card-badge">
-          Service
-        </span>
+  <!-- SERVICE BADGE -->
+  <span class="service-card-badge">
+    Service
+  </span>
 
-      </div>
+  <!-- FAVOURITE HEART -->
+  <button
+    type="button"
+    class="service-favourite-btn"
+    [class.is-favourite]="isFavourite(service)"
+    [disabled]="isFavouritePending(service)"
+    [attr.aria-label]="
+      isFavourite(service)
+        ? 'Remove from favourites'
+        : 'Add to favourites'
+    "
+    [attr.aria-pressed]="isFavourite(service)"
+    (click)="toggleFavourite(service, $event)"
+  >
+    <i
+      [class]="
+        isFavourite(service)
+          ? 'fas fa-heart'
+          : 'far fa-heart'
+      "
+    ></i>
+  </button>
+
+</div>
 
 
       <!-- SERVICE CARD BODY -->

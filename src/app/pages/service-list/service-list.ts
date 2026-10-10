@@ -1,7 +1,16 @@
 import { CommonModule } from '@angular/common';
-import { Component, ChangeDetectorRef } from '@angular/core';
+
 import { RouterModule } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
+import {
+  Component,
+  ChangeDetectorRef,
+  signal
+} from '@angular/core';
+
+import {
+  HttpClient,
+  HttpHeaders
+} from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { SearchResults } from '../search-results/search-results';
 import { Category } from '../categories/categories';
@@ -44,6 +53,147 @@ isLoading = false;
 filteredServices: any[] = [];
 
 isLoadingServices = false;
+
+// ========================================
+// SERVICE FAVOURITES
+// ========================================
+
+favouriteIds = signal<Set<string>>(new Set<string>());
+pendingFavouriteIds = signal<Set<string>>(new Set<string>());
+
+private getPostId(service: any): string {
+  return String(
+    service?._id ||
+    service?.postid ||
+    service?.id ||
+    ''
+  );
+}
+
+private getAuthHeaders(): HttpHeaders {
+  const token = typeof window !== 'undefined'
+    ? localStorage.getItem('token')
+    : null;
+
+  return new HttpHeaders({
+    Authorization: token ? `Bearer ${token}` : ''
+  });
+}
+
+isFavourite(service: any): boolean {
+  return this.favouriteIds().has(this.getPostId(service));
+}
+
+isFavouritePending(service: any): boolean {
+  return this.pendingFavouriteIds().has(this.getPostId(service));
+}
+
+loadFavourites(): void {
+  if (typeof window === 'undefined') return;
+
+  const token = localStorage.getItem('token');
+
+  if (!token) {
+    this.favouriteIds.set(new Set<string>());
+    return;
+  }
+
+  this.http.get<any>(
+    `${environment.apiUrl}/favorites`,
+    {
+      headers: this.getAuthHeaders()
+    }
+  ).subscribe({
+    next: (res) => {
+      const items = Array.isArray(res?.data)
+        ? res.data
+        : [];
+
+      const ids = items
+        .map((fav: any) =>
+          typeof fav?.postId === 'object'
+            ? fav.postId?._id
+            : fav?.postId
+        )
+        .filter(Boolean)
+        .map(String);
+
+      this.favouriteIds.set(new Set<string>(ids));
+    },
+
+    error: (error) => {
+      console.error(
+        'Error loading service favourites:',
+        error
+      );
+    }
+  });
+}
+
+toggleFavourite(service: any, event: MouseEvent): void {
+  event.preventDefault();
+  event.stopPropagation();
+
+  if (typeof window === 'undefined') return;
+
+  const postId = this.getPostId(service);
+
+  if (!postId) {
+    console.error('Service post ID missing');
+    return;
+  }
+
+  const token = localStorage.getItem('token');
+
+  if (!token) {
+    this.router.navigate(['/login'], {
+      queryParams: {
+        returnUrl: this.router.url
+      }
+    });
+    return;
+  }
+
+  if (this.pendingFavouriteIds().has(postId)) {
+    return;
+  }
+
+  this.pendingFavouriteIds.update(ids => {
+    const next = new Set(ids);
+    next.add(postId);
+    return next;
+  });
+
+  this.http.post<any>(
+    `${environment.apiUrl}/favorites/${postId}`,
+    {},
+    {
+      headers: this.getAuthHeaders()
+    }
+  ).subscribe({
+    next: () => {
+      this.loadFavourites();
+      this.finishFavouriteRequest(postId);
+    },
+
+    error: (error) => {
+      console.error(
+        'Service favourite request failed:',
+        error
+      );
+
+      this.finishFavouriteRequest(postId);
+    }
+  });
+}
+
+private finishFavouriteRequest(postId: string): void {
+  this.pendingFavouriteIds.update(ids => {
+    const next = new Set(ids);
+    next.delete(postId);
+    return next;
+  });
+}
 onCategorySelected(category: any): void {
 
   console.log(
@@ -238,6 +388,7 @@ viewService(service: any): void {
   ]);
 }
 ngOnInit(): void {
+    this.loadFavourites();
   this.loadServices();
 }
 

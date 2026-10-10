@@ -112,7 +112,9 @@ description:item.description || '',
 
 price:item.price,
 
-validitydays:item.validity,
+validitydays: Number(
+  item.duration ?? item.validity ?? 30
+),
 
 postlimit:item.postLimit,
 
@@ -308,17 +310,17 @@ if(this.isEditMode && this.editingPlanId){
 this.api.put(
   `/subscription-plans/${this.editingPlanId}`,
   {
-    planName: this.formModel.planname,
-    planId: this.formModel.plan_id,
-    description: this.formModel.description,
-    price: this.formModel.price,
-    validity: this.formModel.validitydays,
-    postLimit: this.formModel.postlimit,
-    adLimit: this.formModel.ad_limit,
-    remaining: this.formModel.remaining_ads,
-    videoEnabled: this.formModel.video_enabled,
-    isActive: this.formModel.isactive
-  }
+  planName: this.formModel.planname.trim(),
+  planId: this.formModel.plan_id.trim(),
+  description: this.formModel.description.trim(),
+  price: Number(this.formModel.price),
+  duration: Number(this.formModel.validitydays),
+  postLimit: Number(this.formModel.postlimit),
+  adLimit: Number(this.formModel.ad_limit),
+  remainingAds: Number(this.formModel.remaining_ads),
+  videoEnabled: !!this.formModel.video_enabled,
+  isActive: !!this.formModel.isactive
+}
 )
 .subscribe({
 
@@ -362,16 +364,16 @@ else {
 this.api.post(
 '/subscription-plans',
 {
-planName:this.formModel.planname,
-planId:this.formModel.plan_id,
-description:this.formModel.description,
-price:this.formModel.price,
-validity:this.formModel.validitydays,
-postLimit:this.formModel.postlimit,
-adLimit:this.formModel.ad_limit,
-remaining:this.formModel.remaining_ads,
-videoEnabled:this.formModel.video_enabled,
-isActive:this.formModel.isactive
+  planName: this.formModel.planname.trim(),
+  planId: this.formModel.plan_id.trim(),
+  description: this.formModel.description.trim(),
+  price: Number(this.formModel.price),
+  duration: Number(this.formModel.validitydays),
+  postLimit: Number(this.formModel.postlimit),
+  adLimit: Number(this.formModel.ad_limit),
+  remainingAds: Number(this.formModel.remaining_ads),
+  videoEnabled: !!this.formModel.video_enabled,
+  isActive: !!this.formModel.isactive
 }
 )
 .subscribe({

@@ -837,3 +837,119 @@
 }
 
 }
+/* ====================================
+   SERVICE CARD FAVOURITE BUTTON
+==================================== */
+
+.service-card-image {
+  position: relative;
+}
+
+.service-favourite-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+
+  width: 40px;
+  height: 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #ffffff;
+  color: #64748b;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 50%;
+
+  font-size: 19px;
+  cursor: pointer;
+
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12);
+  transition: 0.2s ease;
+}
+
+.service-favourite-btn:hover:not(:disabled) {
+  transform: scale(1.08);
+}
+
+.service-favourite-btn.is-favourite {
+  color: #ef4444;
+  background: #fff1f2;
+  border-color: #fecdd3;
+}
+
+.service-favourite-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+@media (max-width: 600px) {
+  .service-favourite-btn {
+    width: 36px;
+    height: 36px;
+    top: 10px;
+    right: 10px;
+    font-size: 17px;
+  }
+}
+/* ====================================
+   SERVICE CARD FAVOURITE BUTTON
+==================================== */
+
+.service-card-image {
+  position: relative;
+}
+
+.service-favourite-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+
+  width: 40px;
+  height: 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #ffffff;
+  color: #64748b;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 50%;
+
+  font-size: 19px;
+  cursor: pointer;
+
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12);
+  transition: 0.2s ease;
+}
+
+.service-favourite-btn:hover:not(:disabled) {
+  transform: scale(1.08);
+}
+
+.service-favourite-btn.is-favourite {
+  color: #ef4444;
+  background: #fff1f2;
+  border-color: #fecdd3;
+}
+
+.service-favourite-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+@media (max-width: 600px) {
+  .service-favourite-btn {
+    width: 36px;
+    height: 36px;
+    top: 10px;
+    right: 10px;
+    font-size: 17px;
+  }
+}
