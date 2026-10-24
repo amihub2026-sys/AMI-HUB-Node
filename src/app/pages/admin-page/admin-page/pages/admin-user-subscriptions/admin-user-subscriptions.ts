@@ -297,7 +297,7 @@ export class AdminUserSubscriptionsComponent implements OnInit {
 
     try {
       const response: any = await firstValueFrom(
-        this.api.get('/subscriptions')
+        this.api.getAdmin('/subscriptions')
       );
 
       const rows = Array.isArray(response?.data)
@@ -335,11 +335,11 @@ export class AdminUserSubscriptionsComponent implements OnInit {
       const [usersResponse, plansResponse]: any[] =
         await Promise.all([
           firstValueFrom(
-            this.api.get('/admin/users')
+            this.api.getAdmin('/admin/users')
           ),
 
           firstValueFrom(
-            this.api.get('/subscription-plans')
+            this.api.getAdmin('/subscription-plans')
           )
         ]);
 
@@ -634,7 +634,7 @@ export class AdminUserSubscriptionsComponent implements OnInit {
         this.editingId
       ) {
         await firstValueFrom(
-          this.api.put(
+          this.api.putAdmin(
             `/subscriptions/${this.editingId}`,
             payload
           )
@@ -645,7 +645,7 @@ export class AdminUserSubscriptionsComponent implements OnInit {
         );
       } else {
         await firstValueFrom(
-          this.api.post(
+          this.api.postAdmin(
             '/subscriptions/admin-create',
             payload
           )
@@ -705,7 +705,7 @@ export class AdminUserSubscriptionsComponent implements OnInit {
 
     try {
       await firstValueFrom(
-        this.api.patch(
+        this.api.patchAdmin(
           `/subscriptions/${item._id}/status`,
           {}
         )
@@ -745,7 +745,7 @@ export class AdminUserSubscriptionsComponent implements OnInit {
 
     try {
       await firstValueFrom(
-        this.api.delete(
+        this.api.deleteAdmin(
           `/subscriptions/${item._id}`
         )
       );

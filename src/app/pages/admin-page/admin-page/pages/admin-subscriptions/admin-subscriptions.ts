@@ -95,7 +95,7 @@ async fetchSubscriptionPlans(): Promise<void>{
 this.loading=true;
 
 
-this.api.get('/subscription-plans')
+this.api.getAdmin('/subscription-plans')
 .subscribe({
 
 next:(res:any)=>{
@@ -307,7 +307,7 @@ try {
 
 if(this.isEditMode && this.editingPlanId){
 
-this.api.put(
+this.api.putAdmin(
   `/subscription-plans/${this.editingPlanId}`,
   {
   planName: this.formModel.planname.trim(),
@@ -361,7 +361,7 @@ this.api.put(
 else {
 
 
-this.api.post(
+this.api.postAdmin(
 '/subscription-plans',
 {
   planName: this.formModel.planname.trim(),
@@ -434,7 +434,7 @@ async toggleSubscriptionStatus(
 plan: AdminSubscriptionPlanItem
 ){
 
-this.api.patch(
+this.api.patchAdmin(
 `/subscription-plans/${plan.subscriptionplanid}/status`,
 {}
 )
@@ -464,7 +464,7 @@ async deleteSubscription(plan: AdminSubscriptionPlanItem): Promise<void> {
   this.deletingId = plan.subscriptionplanid;
 
 
-  this.api.delete(
+  this.api.deleteAdmin(
     `/subscription-plans/${plan.subscriptionplanid}`
   )
   .subscribe(()=>{
