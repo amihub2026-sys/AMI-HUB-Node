@@ -322,17 +322,18 @@ const payload = {
 };
 
     if (this.editingCategoryId) {
-      await firstValueFrom(
-        this.api.put(
-          `/categories/${this.editingCategoryId}`,
-          payload
-        )
-      );
+     await firstValueFrom(
+  this.api.putAdmin(
+    `/categories/${this.editingCategoryId}`,
+    payload
+  )
+);
+      
 
       this.successMessage = 'Category updated successfully';
     } else {
       await firstValueFrom(
-        this.api.post('/categories', payload)
+        this.api.postAdmin('/categories', payload)
       );
 
       this.successMessage = 'Category created successfully';

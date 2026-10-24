@@ -352,8 +352,12 @@ private async uploadToR2(
   file: File,
   folder: string
 ): Promise<string> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('folder', folder);
+
   const response: any = await firstValueFrom(
-    this.api.uploadImage(file, folder)
+    this.api.postAdmin('/uploads/r2', formData)
   );
 
   const uploadedUrl = response?.publicUrl;
