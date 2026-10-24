@@ -437,7 +437,7 @@ const payload = {
 
     if (this.editingSubcategoryId) {
       await firstValueFrom(
-        this.api.put(
+        this.api.putAdmin(
           `/subcategories/${this.editingSubcategoryId}`,
           payload
         )
@@ -447,7 +447,7 @@ const payload = {
         'Subcategory updated successfully.';
     } else {
       await firstValueFrom(
-        this.api.post('/subcategories', payload)
+       this.api.postAdmin('/subcategories', payload) 
       );
 
       this.successMessage =
@@ -541,7 +541,7 @@ const payload = {
     this.successMessage = '';
 
     this.api
-      .delete(`/subcategories/${subcategory.subcategoryid}`)
+      .deleteAdmin(`/subcategories/${subcategory.subcategoryid}`)
       .subscribe({
         next: (response: any) => {
           this.successMessage =

@@ -80,7 +80,7 @@ constructor(
 fetchUserBoostPlans(): void {
   this.loading = true;
 
-  this.api.get<any>('/boost-plans/user-purchases').subscribe({
+this.api.getAdmin<any>('/boost-plans/user-purchases').subscribe({
     next: (res: any) => {
       console.log('BOOST PURCHASE RESPONSE:', res);
 

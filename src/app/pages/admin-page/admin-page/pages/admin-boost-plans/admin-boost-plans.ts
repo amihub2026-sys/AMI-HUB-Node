@@ -143,7 +143,7 @@ fetchBoostPlans(): void {
  this.loading = true;
 
 
- this.api.get('/boost-plans')
+this.api.getAdmin('/boost-plans')
  .subscribe({
 
  next:(res:any)=>{
@@ -373,7 +373,7 @@ const payload = {
 };
     try {
       if (this.isEditMode && this.editingId) {
-this.api.put(
+this.api.putAdmin(
 '/boost-plans/'+this.editingId,
 payload
 )
@@ -391,7 +391,7 @@ this.fetchBoostPlans();
           createdon: new Date().toISOString(),
         };
 
-this.api.post(
+this.api.postAdmin(
 '/boost-plans',
 insertPayload
 )
@@ -420,7 +420,7 @@ this.fetchBoostPlans();
   }
 async toggleBoostStatus(item: AdminBoostPlanItem){
 
-this.api.put(
+this.api.putAdmin(
 '/boost-plans/'+item.boostid,
 {
  isActive: !item.isactive
@@ -438,7 +438,7 @@ async deleteBoostPlan(item: AdminBoostPlanItem){
 if(!confirm("Delete this boost?")) return;
 
 
-this.api.delete(
+this.api.deleteAdmin(
 '/boost-plans/'+item.boostid
 )
 .subscribe(()=>{
