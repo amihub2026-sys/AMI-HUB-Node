@@ -49,10 +49,13 @@ constructor(
   }
 
  
+  goToSubscriptionPlan(): void {
+  this.router.navigate(['/my-posts'], {
+    queryParams: { selectBoost: '1' }
+  });
+}
 
-  goToSubscriptionPlan() {
-    this.router.navigateByUrl('/subscription-plan');
-  }
+
   jobs:any[] = [];
 heroSliders: any[] = [];
 
@@ -505,21 +508,14 @@ async applyFavoriteStatus(): Promise<void> {
 get portraitFeaturedAds(): any[] {
   return this.featuredBusinesses()
     .filter((post: any) =>
-      Boolean(
-        post.image_url ||
-        post.image_urls?.[0]
-      )
+      Array.isArray(post?.images) &&
+      post.images.length > 0
     )
     .slice(0, 4);
 }
 
 getPortraitFeaturedImage(post: any): string {
-  const image =
-    post?.image_url ||
-    post?.image_urls?.[0] ||
-    '';
-
-  return image || 'assets/ads/shop1.jpg';
+  return post?.images?.[0] || '';
 }
 
 

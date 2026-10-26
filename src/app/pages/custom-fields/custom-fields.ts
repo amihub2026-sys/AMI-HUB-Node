@@ -94,6 +94,7 @@ export class CustomFields implements OnInit {
   fields: DynamicCustomField[] = [];
 
   formData: Record<string, any> = {};
+  private existingCustomFields: any[] = [];
 
 
   isLoading = false;
@@ -112,22 +113,98 @@ export class CustomFields implements OnInit {
   // INIT
   // =========================================================
 
-  ngOnInit(): void {
 
-    this.readNavigationData();
+async ngOnInit(): Promise<void> {
+  this.readNavigationData();
 
+  // Recover edit context after navigation
+  if (localStorage.getItem('edit_post_payload')) {
+    try {
+      const editData = JSON.parse(
+        localStorage.getItem('edit_post_payload') || '{}'
+      );
 
-    if (!this.subcategoryId) {
+      if (this.flowType === 'edit') {
+        this.postId = String(
+          this.postId || editData.postId || ''
+        );
 
-      this.loadError =
-        'Subcategory information is missing. Please select a subcategory again.';
+        this.categoryId = String(
+          this.categoryId ||
+          editData.payload?.categoryId ||
+          ''
+        );
 
+        this.subcategoryId = String(
+          this.subcategoryId ||
+          editData.payload?.subcategoryId ||
+          ''
+        );
+
+        this.listingType =
+          this.listingType ||
+          editData.payload?.adtype ||
+          '';
+      }
+    } catch (error) {
+      console.error('Invalid edit context:', error);
+    }
+  }
+
+  if (!this.subcategoryId) {
+    this.loadError =
+      'Subcategory information is missing. Please go back and select a subcategory.';
+    return;
+  }
+
+  if (this.flowType === 'edit') {
+    if (!this.postId) {
+      this.loadError = 'Post ID is missing.';
       return;
     }
 
+    try {
+      const response: any = await this.api
+        .get(`/posts/${this.postId}`)
+        .toPromise();
 
-    this.loadCustomFields();
+      const post = response?.data || response;
+
+      const savedFields =
+        post?.customFields ??
+        post?.custom_fields ??
+        [];
+
+      const values = typeof savedFields === 'string'
+        ? JSON.parse(savedFields)
+        : savedFields;
+
+      this.existingCustomFields = Array.isArray(values)
+        ? values
+        : [];
+
+      if (Array.isArray(values)) {
+        for (const item of values) {
+          const key = item?.fieldName || item?.name;
+
+          if (key && item.value !== undefined) {
+            this.formData[key] = item.value;
+          }
+        }
+      } else if (values && typeof values === 'object') {
+        for (const [key, value] of Object.entries(values)) {
+          this.formData[key] = value;
+        }
+      }
+    } catch (error) {
+      console.error('Unable to restore saved post details:', error);
+      this.loadError = 'Unable to load saved Additional Details.';
+      return;
+    }
   }
+
+  this.loadCustomFields();
+}
 
 
   // =========================================================
@@ -1174,17 +1251,54 @@ this.router.navigate(
     }
 
 
-    const finalPayload = {
+const fieldMap = new Map<string, any>();
 
-      ...(editData?.payload || {}),
+// Preserve previously saved fields
+for (const field of this.existingCustomFields) {
+  const key = String(
+    field.fieldName ||
+    field.customFieldId ||
+    field._id ||
+    ''
+  );
 
-      customFields:
-        customFieldValues,
+  if (key) {
+    fieldMap.set(key, field);
+  }
+}
 
-      custom_fields:
-        customFieldValues
+// Apply changed values
+for (const field of customFieldValues) {
+  const key = String(
+    field.fieldName ||
+    field.customFieldId ||
+    ''
+  );
 
-    };
+  if (key) {
+    fieldMap.set(key, {
+      ...(fieldMap.get(key) || {}),
+      ...field
+    });
+  }
+}
+
+const mergedFields = Array.from(fieldMap.values());
+
+const finalPayload = {
+  ...(editData?.payload || {}),
+  categoryId:
+    this.categoryId ||
+    editData?.payload?.categoryId,
+
+  subcategoryId:
+    this.subcategoryId ||
+    editData?.payload?.subcategoryId,
+
+  customFields: mergedFields,
+  custom_fields: mergedFields
+};
+
 
 
     this.api

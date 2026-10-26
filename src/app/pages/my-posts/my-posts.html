@@ -1,5 +1,15 @@
 <div class="my-posts-page">
-  <h2>My Posts</h2>
+  <h2>
+  {{ selectBoostMode ? 'Select a Post to Boost' : 'My Posts' }}
+</h2>
+
+<p
+  *ngIf="selectBoostMode"
+  class="boost-selection-text"
+>
+  Choose which advertisement you want to promote.
+  Click Feature on the selected post.
+</p>
 
   <div *ngIf="isLoading()" class="loading-text">
     Loading your posts...
