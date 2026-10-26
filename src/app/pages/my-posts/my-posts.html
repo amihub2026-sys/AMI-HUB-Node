@@ -20,10 +20,12 @@
 <div class="card-image">
 
 <img
-[src]="getMainImage(post)"
-[alt]="post.title"
-(error)="onImageError($event)"
->
+  [src]="getMainImage(post)"
+  [alt]="post.title || 'Post image'"
+  (error)="onImageError($event)"
+  loading="lazy"
+  decoding="async"
+/>
 
 <!-- 
 <button class="fav-btn">
@@ -36,8 +38,9 @@
 
 <div class="card-content">
 
-<div class="category">
-✦ {{post.categoryId?.categoryName || 'Service'}}
+
+  <div class="category">
+  ✦ {{ getCategoryName(post) }}
 </div>
 
 
@@ -48,9 +51,22 @@
 
 
 
-<p class="description">
-{{getDescription(post)}}
+<p
+  class="description"
+  [class.expanded]="isDescriptionExpanded(post)"
+>
+  {{ getDescription(post) }}
 </p>
+
+<button
+  *ngIf="getDescription(post).length > 100"
+  type="button"
+  class="read-more-btn"
+  (click)="toggleDescription(post, $event)"
+>
+  {{ isDescriptionExpanded(post) ? 'Read Less' : 'Read More' }}
+</button>
+
 
 
 

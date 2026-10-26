@@ -32,6 +32,7 @@ export class Login implements OnInit {
   newPassword = '';
   otp = '';
   otpSent = false;
+  isSendingOtp = false;
   showPasswordSet = false;
 
   adminUsername = '';
@@ -354,66 +355,59 @@ next: (res: any) => {
 
 }
 
-async sendMobileOtp() {
+
+sendMobileOtp(): void {
+
+  // Prevent duplicate requests
+  if (this.isSendingOtp || this.otpSent) {
+    return;
+  }
 
   const phone = this.mobile.trim();
 
-
   if (!/^[6-9]\d{9}$/.test(phone)) {
-
     this.showAlert(
       'Enter valid 10 digit mobile number',
       'error'
     );
-
     return;
-
   }
 
+  // Lock immediately before API request
+  this.isSendingOtp = true;
 
-  this.authService
-    .sendOtp(phone)
-    .subscribe({
+  this.authService.sendOtp(phone).subscribe({
 
-      next:(res:any)=>{
+    next: (res: any) => {
 
-        console.log(
-          "OTP RESPONSE:",
-          res
-        );
+      this.isSendingOtp = false;
+      this.otpSent = true;
 
+      this.showAlert(
+        'OTP sent successfully',
+        'success'
+      );
 
-        this.otpSent = true;
+      this.cdr.detectChanges();
+    },
 
+    error: (err: any) => {
 
-        this.showAlert(
-          "OTP sent successfully",
-          "success"
-        );
+      this.isSendingOtp = false;
 
+      console.error('OTP sending failed:', err);
 
-      },
+      this.showAlert(
+        err.error?.message || 'OTP sending failed',
+        'error'
+      );
 
+      this.cdr.detectChanges();
+    }
 
-      error:(err:any)=>{
-
-        console.error(
-          err
-        );
-
-
-        this.showAlert(
-          err.error?.message ||
-          "OTP sending failed",
-          "error"
-        );
-
-      }
-
-
-    });
-
+  });
 }
+
 async verifyMobileOtp(){
 
  const phone = this.mobile.trim();

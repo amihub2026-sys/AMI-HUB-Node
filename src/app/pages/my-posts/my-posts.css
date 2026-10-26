@@ -538,3 +538,278 @@
 
 
 }
+
+
+/* ==========================================
+   AMI HUB - MY POSTS ALIGNMENT FIX
+========================================== */
+
+:host {
+  display: flow-root;
+  width: 100%;
+  min-height: 100vh;
+  background: #f5f7fc;
+  padding: 170px 16px 50px;
+  box-sizing: border-box;
+}
+
+.my-posts-page {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto !important;
+  padding: 20px 0 40px;
+  box-sizing: border-box;
+}
+
+/* PAGE TITLE */
+
+.my-posts-page h2 {
+  margin: 0 0 28px !important;
+  padding: 0;
+  font-size: 28px;
+  line-height: 1.3;
+  text-align: center;
+  color: #102a59;
+}
+
+/* GRID */
+
+.my-posts-page .posts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+  align-items: stretch;
+}
+
+/* CARD */
+
+.my-posts-page .post-card {
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid #e1e8f3;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 6px 22px rgba(20, 50, 100, .07);
+}
+
+/* IMAGE */
+
+.my-posts-page .card-image {
+  width: 100%;
+  height: 220px;
+  flex-shrink: 0;
+  background: #edf2f9;
+  overflow: hidden;
+}
+
+.my-posts-page .card-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* CARD DETAILS */
+
+.my-posts-page .card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 17px;
+  min-height: 170px;
+}
+
+.my-posts-page .category {
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 9px;
+}
+
+.my-posts-page .card-content h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  line-height: 1.35;
+  color: #14213d;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.my-posts-page .description {
+  height: auto;
+  min-height: 38px;
+  max-height: 40px;
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow: hidden;
+  color: #64748b;
+}
+
+/* RATING & LOCATION */
+
+.my-posts-page .info-row {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid #edf0f6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.my-posts-page .info-row span:last-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* ACTION BUTTONS */
+
+.my-posts-page .post-actions {
+  display: flex;
+  gap: 10px;
+  padding: 13px;
+  margin-top: auto;
+  border-top: 1px solid #edf0f6;
+}
+
+.my-posts-page .post-actions button {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  height: auto;
+  padding: 10px 6px;
+  border: 0;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* TABLET */
+
+@media (max-width: 992px) {
+  .my-posts-page .posts-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+}
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+  :host {
+    padding: 155px 12px 35px;
+  }
+
+  .my-posts-page {
+    padding: 15px 0 30px;
+  }
+
+  .my-posts-page h2 {
+    font-size: 22px;
+    margin-bottom: 20px !important;
+  }
+
+  .my-posts-page .posts-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .my-posts-page .card-image {
+    height: 210px;
+  }
+
+  .my-posts-page .card-content {
+    min-height: 155px;
+    padding: 14px;
+  }
+
+  .my-posts-page .card-content h3 {
+    font-size: 16px;
+  }
+
+  .my-posts-page .post-actions button {
+    min-height: 42px;
+    font-size: 12px;
+  }
+}
+/* MY POSTS - 4 CARDS PER ROW */
+
+@media (min-width: 993px) {
+  .my-posts-page .posts-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+  }
+}
+
+
+
+/* REMOVE EXTRA SPACE BELOW DESCRIPTION */
+
+.my-posts-page .card-content {
+  flex: 0 0 auto;
+  min-height: 0;
+  padding: 14px;
+}
+
+/* DESCRIPTION */
+
+.my-posts-page .description {
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  margin: 0 0 6px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #64748b;
+  overflow: hidden;
+
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.my-posts-page .description.expanded {
+  display: block;
+  max-height: none;
+  overflow: visible;
+}
+
+/* READ MORE BUTTON */
+
+.my-posts-page .read-more-btn {
+  align-self: flex-start;
+  width: auto;
+  background: none;
+  border: none;
+  padding: 2px 0;
+  margin: 0 0 6px;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.my-posts-page .read-more-btn:hover {
+  text-decoration: underline;
+}
+
+/* KEEP LOCATION NEAR DESCRIPTION */
+
+.my-posts-page .info-row {
+  margin-top: 8px;
+}
+
+/* BUTTONS REMAIN AT BOTTOM */
+
+.my-posts-page .post-actions {
+  margin-top: auto;
+}

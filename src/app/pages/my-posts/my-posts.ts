@@ -38,36 +38,67 @@ private showAlert(message: string, type: 'success' | 'error' | 'info' = 'info'):
     }
     return false;
   }
+
+  
 getDistrict(post: any): string {
+  if (!post) return 'Location not available';
 
-  if (!post) {
-    return '';
-  }
+  const location = post.location;
 
-  if (post.district) {
-    return post.district;
-  }
+  const candidates = [
+    post.district,
+    post.city,
+    typeof location === 'object' && location !== null
+      ? location.city || location.district ||
+        location.address || location.state
+      : location,
+    post.full_address,
+    post.address
+  ];
 
-  if (post.city) {
-    return post.city;
-  }
+  const value = candidates.find(
+    item => typeof item === 'string' && item.trim()
+  );
 
-  const location =
-    post.location ||
-    post.address ||
-    '';
+  if (!value) return 'Location not available';
 
-  if (!location) {
-    return '';
-  }
-
-  const parts = location.split(',');
+  const parts = value.split(',').map(
+    (part: string) => part.trim()
+  ).filter(Boolean);
 
   return parts.length >= 2
-    ? parts[parts.length - 2].trim()
-    : parts[0].trim();
-
+    ? parts[parts.length - 2]
+    : parts[0];
 }
+
+
+
+getCategoryName(post: any): string {
+  const category = post?.categoryId;
+
+  if (category && typeof category === 'object') {
+    const name =
+      category.categoryName ||
+      category.categoryname ||
+      category.name;
+
+    if (name) return String(name);
+  }
+
+  const fallback =
+    post?.categoryname ||
+    post?.categoryName ||
+    post?.category;
+
+  if (typeof fallback === 'string' && fallback.trim()) {
+    return fallback;
+  }
+
+  return 'Uncategorized';
+}
+
+
+
   private mergePosts(...postLists: any[][]): any[] {
     const map = new Map<any, any>();
 
@@ -143,21 +174,50 @@ this.isLoading.set(false);
 
 }
 
-getMainImage(post:any):string{
 
-if(
-post?.images &&
-Array.isArray(post.images) &&
-post.images.length > 0
-){
 
-return post.images[0];
+getMainImage(post: any): string {
+  const candidates = [
+    ...(Array.isArray(post?.images) ? post.images : []),
+    ...(Array.isArray(post?.image_urls) ? post.image_urls : []),
+    post?.image_url,
+    post?.imageUrl,
+    post?.image
+  ];
 
+  for (const candidate of candidates) {
+    const url = typeof candidate === 'string'
+      ? candidate.trim()
+      : candidate?.url || candidate?.secure_url || '';
+
+    if (url) return url;
+  }
+
+  return 'assets/ads/shop1.jpg';
 }
 
 
-return 'assets/no-image.png';
+expandedPostIds = new Set<string>();
 
+toggleDescription(post: any, event: Event): void {
+  event.stopPropagation();
+
+  const id = String(post?._id || '');
+  if (!id) return;
+
+  const updated = new Set(this.expandedPostIds);
+
+  if (updated.has(id)) {
+    updated.delete(id);
+  } else {
+    updated.add(id);
+  }
+
+  this.expandedPostIds = updated;
+}
+
+isDescriptionExpanded(post: any): boolean {
+  return this.expandedPostIds.has(String(post?._id || ''));
 }
 
   getAdType(post: any): string {
@@ -173,11 +233,13 @@ return 'assets/no-image.png';
   }
 
   onImageError(event: Event): void {
-    const img = event.target as HTMLImageElement;
-    if (img) {
-      img.src = 'assets/no-image.png';
-    }
+  const img = event.target as HTMLImageElement;
+  const fallback = 'assets/ads/shop1.jpg';
+
+  if (img && !img.src.endsWith('/assets/ads/shop1.jpg')) {
+    img.src = fallback;
   }
+}
 
   openDetails(post: any): void {
     if (!post?._id){
@@ -211,7 +273,7 @@ return 'assets/no-image.png';
   private buildFeaturePostPayload(post: any): any {
     return {
       ...post,
-      postid: Number(post?._id),
+      postid: String(post?._id || ''),
       userid: post?.userid ?? null,
       title: post?.title ?? '',
       description: post?.description ?? '',
@@ -283,7 +345,7 @@ return 'assets/no-image.png';
 
       const success = await this.router.navigate(['/featured-plan'], {
         state: {
-          postId: Number(post._id),
+          postId: String(post._id),
           adType: adType,
           postDetails: featurePayload
         }
