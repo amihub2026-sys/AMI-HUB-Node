@@ -6,21 +6,23 @@
     <div class="form-group">
       <label>Create Password <span class="optional">(Optional)</span></label>
       <input
-        type="password"
-        [(ngModel)]="password"
-        name="password"
-        placeholder="Create password"
-      >
+  type="password"
+  [(ngModel)]="password"
+  name="newAccountPassword"
+  autocomplete="new-password"
+  placeholder="Create password"
+>
     </div>
 
     <div class="form-group">
       <label>Confirm Password</label>
       <input
-        type="password"
-        [(ngModel)]="confirmPassword"
-        name="confirmPassword"
-        placeholder="Confirm password"
-      >
+  type="password"
+  [(ngModel)]="confirmPassword"
+  name="confirmAccountPassword"
+  autocomplete="new-password"
+  placeholder="Confirm password"
+>
     </div>
 
     <div class="form-group">
