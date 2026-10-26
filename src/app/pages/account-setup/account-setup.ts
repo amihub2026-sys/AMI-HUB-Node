@@ -26,8 +26,8 @@ export class AccountSetup implements OnInit {
   private apiService: ApiService
 ) {}
 
-  ngOnInit() {
 
+ngOnInit(): void {
   const token = localStorage.getItem('token');
 
   if (!token) {
@@ -35,7 +35,30 @@ export class AccountSetup implements OnInit {
     return;
   }
 
+  let user: any = {};
+
+  try {
+    user = JSON.parse(localStorage.getItem('user') || '{}');
+  } catch {
+    user = {};
+  }
+
+  this.currentUser = user;
+
+  const onboardingCompleted =
+    user?.isOnboardingCompleted === true ||
+    user?.isonboardingcompleted === true;
+
+  if (onboardingCompleted) {
+    this.router.navigate(['/']);
+    return;
+  }
+
+  this.userType = this.mapUserTypeFromDb(
+    user?.usertypeid
+  );
 }
+
 
   private mapUserTypeFromDb(usertypeid: any): '' | 'buyer' | 'seller' | 'both' {
     const id = Number(usertypeid);
@@ -122,7 +145,19 @@ export class AccountSetup implements OnInit {
           'true'
         );
 
+const updatedUser = {
+  ...(this.currentUser || {}),
+  ...(res?.data?.user || {}),
+  usertypeid: payload.usertypeid,
+  isOnboardingCompleted: true
+};
 
+localStorage.setItem(
+  'user',
+  JSON.stringify(updatedUser)
+);
+
+this.currentUser = updatedUser;
         alert(
           'Account setup completed'
         );
@@ -132,23 +167,16 @@ export class AccountSetup implements OnInit {
 
       },
 
+error: (err: any) => {
+  this.isSubmitting = false;
 
-      error:(err:any)=>{
+  console.error('ONBOARDING ERROR', err);
 
-        console.error(
-          "ONBOARDING ERROR",
-          err
-        );
-
-
-        alert(
-          err.error?.message ||
-          'Failed to save account setup'
-        );
-
-
-      },
-
+  alert(
+    err.error?.message ||
+    'Failed to save account setup'
+  );
+},
 
       complete:()=>{
 
