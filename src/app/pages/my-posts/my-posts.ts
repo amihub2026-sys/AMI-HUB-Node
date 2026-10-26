@@ -1,6 +1,10 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import {
+  Router,
+  RouterModule,
+  ActivatedRoute
+} from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { SnackbarService } from '../../services/snackbar.service';
 @Component({
@@ -13,16 +17,21 @@ import { SnackbarService } from '../../services/snackbar.service';
 export class MyPosts implements OnInit {
   posts = signal<any[]>([]);
   isLoading = signal(true);
+  selectBoostMode = false;
 
  constructor(
   private router: Router,
    private api: ApiService,
+   private route: ActivatedRoute,
   private snackbar: SnackbarService   // 🔥 ADD THIS
 ) {}
 
   async ngOnInit(): Promise<void> {
-    await this.loadCurrentUserPosts();
-  }
+  this.selectBoostMode =
+    this.route.snapshot.queryParamMap.get('selectBoost') === '1';
+
+  await this.loadCurrentUserPosts();
+}
 
   private isBrowser(): boolean {
     return typeof window !== 'undefined';

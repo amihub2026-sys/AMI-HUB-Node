@@ -186,7 +186,9 @@ this.isEditMode = !!id;
 
    try {
 
-const categoriesResult:any = await this.api.get('/categories?type=service').toPromise();
+const categoriesResult: any = await this.api
+  .get('/categories')
+  .toPromise();
 
 
   this.ngZone.run(() => {
@@ -330,9 +332,20 @@ data = postResult?.data;
 
     this.mainAd.category = data.category || '';
     this.mainAd.subcategory = data.subcategory || '';
+this.mainAd.contactphone = String(
+  data.contactphone ||
+  data.contactPhone ||
+  data.sellerId?.mobile ||
+  data.sellerId?.phone ||
+  ''
+);
 
-    this.mainAd.contactphone = data.contactphone || '';
-    this.mainAd.whatsappnumber = data.whatsappnumber || '';
+this.mainAd.whatsappnumber = String(
+  data.whatsappnumber ||
+  data.whatsappNumber ||
+  data.sellerId?.whatsappnumber ||
+  ''
+);
 const savedLocation =
   data.location &&
   typeof data.location === 'object'
@@ -420,51 +433,79 @@ const dbType = String(
     }
   }
 
-  private async rebuildEditDropdowns(data: any): Promise<void> {
-const selectedCategory =
-  this.categories.find(c => c._id === data.categoryId) ||
-  this.categories.find(c => c.categoryName === this.mainAd.category);
 
-    if (selectedCategory) {
-      this.mainAd.category = selectedCategory.categoryName;
-      try {
-const result:any = await this.api.get(
-  `/subcategories?categoryId=${selectedCategory._id}&type=${this.adType}`
-).toPromise();
-const subcategories = result.data || [];
+private async rebuildEditDropdowns(data: any): Promise<void> {
 
-this.subcategoriesList = subcategories.map((s:any)=>({
-  _id: String(s._id),
-  categoryId: String(selectedCategory._id),
-  subcategoryName: s.subcategoryName,
-  slug: s.slug || '',
-  icon: s.icon || '',
-  image: s.image || '',
-  description: s.description || '',
-  sortOrder: s.sortOrder || 0,
-  isActive: s.isActive ?? true,
-  availableIn: s.availableIn || []
-}));
-      } catch (err) {
-        console.error('Error loading subcategories:', err);
-        this.subcategoriesList = [];
-      }
-    } else {
-      this.subcategoriesList = [];
-    }
+  const getId = (value: any): string =>
+    String(
+      value && typeof value === 'object'
+        ? value._id || value.id || ''
+        : value || ''
+    );
 
-const selectedSubcategory =
-  this.subcategoriesList.find(s => s._id ===data.subcategoryId) ||
-  this.subcategoriesList.find(
-    s => s.subcategoryName === this.mainAd.subcategory
+  const getName = (value: any): string =>
+    typeof value === 'string'
+      ? value
+      : String(
+          value?.categoryName ||
+          value?.subcategoryName ||
+          value?.name ||
+          ''
+        );
+
+  const savedCategoryId = getId(data.categoryId);
+  const savedCategoryName = getName(data.category);
+
+  const selectedCategory = this.categories.find((c: any) =>
+    getId(c._id) === savedCategoryId ||
+    c.categoryName === savedCategoryName
   );
 
- if (selectedSubcategory) {
-  this.mainAd.subcategory =
-    selectedSubcategory.subcategoryName;
+  if (!selectedCategory) {
+    console.warn('Saved category not found:', {
+      savedCategoryId,
+      savedCategoryName
+    });
+    this.subcategoriesList = [];
+    return;
+  }
+
+  this.mainAd.category = selectedCategory.categoryName;
+
+  try {
+    const result: any = await this.api.get(
+      `/subcategories?categoryId=${selectedCategory._id}&type=${this.adType}`
+    ).toPromise();
+
+    this.subcategoriesList = result?.data || [];
+
+    const savedSubcategoryId = getId(data.subcategoryId);
+    const savedSubcategoryName = getName(data.subcategory);
+
+    const selectedSubcategory = this.subcategoriesList.find(
+      (s: any) =>
+        getId(s._id) === savedSubcategoryId ||
+        s.subcategoryName === savedSubcategoryName
+    );
+
+    if (selectedSubcategory) {
+      this.mainAd.subcategory =
+        selectedSubcategory.subcategoryName;
+    } else {
+      console.warn('Saved subcategory not found:', {
+        savedSubcategoryId,
+        savedSubcategoryName
+      });
+    }
+
+    this.cdr.detectChanges();
+
+  } catch (error) {
+    console.error('Subcategory loading failed:', error);
+    this.subcategoriesList = [];
+  }
 }
 
-}   // <-- ADD THIS
 
 private rebuildSelectedMapLocation(): void {
     if (
@@ -936,6 +977,14 @@ const selectedSubcategory = this.subcategoriesList.find(
 );
 
 
+if (!selectedCategory || !selectedSubcategory) {
+  this.showAlert(
+    'Please select a valid category and subcategory before continuing.',
+    'error'
+  );
+  return;
+}
+
       if (this.isEditMode && this.editPostId) {
   const finalType = this.lockedAdType || this.adType;
 
@@ -1045,20 +1094,26 @@ if (this.isEditMode && this.editPostId) {
     })
   );
 
-this.router.navigate(
+
+  
+await this.router.navigate(
   ['/custom-fields'],
   {
     state: {
-      categoryId: selectedCategory?._id,
+      postId: this.editPostId,
+      categoryId: String(selectedCategory._id),
       categoryName: this.mainAd.category,
-      subcategoryId: selectedSubcategory?._id,
+      subcategoryId: String(selectedSubcategory._id),
       subcategoryName: this.mainAd.subcategory,
-      listingType: this.adType,
-      type: this.adType,
-      flow: 'advertisement'
+      listingType: this.lockedAdType || this.adType,
+      type: this.lockedAdType || this.adType,
+      flow: 'edit'
     }
   }
 );
+
+return;
+
 
   return;
 }
