@@ -36,12 +36,22 @@
           [(ngModel)]="mobile">
       </div>
 
+      
 <button
   type="button"
   class="otp-btn"
   (click)="sendMobileOtp()"
-  [disabled]="otpSent">        {{ otpSent ? 'OTP Sent' : 'Send OTP' }}
-      </button>
+  [disabled]="isSendingOtp || otpSent"
+>
+  {{
+    isSendingOtp
+      ? 'Sending OTP...'
+      : otpSent
+        ? 'OTP Sent'
+        : 'Send OTP'
+  }}
+</button>
+
 
       <div *ngIf="otpSent" class="otp-section">
         <div class="input-group">

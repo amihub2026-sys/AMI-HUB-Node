@@ -140,8 +140,9 @@ async loadHeroSliders(): Promise<void> {
         .getActiveHeroSliders()
         .toPromise();
 
-    this.heroSliders =
-      response?.data || [];
+this.heroSliders = (
+  Array.isArray(response?.data) ? response.data : []
+).slice(0, 6);
 
     this.currentSlide = 0;
 
@@ -499,6 +500,28 @@ async applyFavoriteStatus(): Promise<void> {
     const separator = post.image_url.includes('?') ? '&' : '?';
     return `${post.image_url}${separator}width=320&height=220&resize=cover&quality=70`;
   }
+
+  
+get portraitFeaturedAds(): any[] {
+  return this.featuredBusinesses()
+    .filter((post: any) =>
+      Boolean(
+        post.image_url ||
+        post.image_urls?.[0]
+      )
+    )
+    .slice(0, 4);
+}
+
+getPortraitFeaturedImage(post: any): string {
+  const image =
+    post?.image_url ||
+    post?.image_urls?.[0] ||
+    '';
+
+  return image || 'assets/ads/shop1.jpg';
+}
+
 
   getVisibleTrendingPosts() {
     const posts = this.trendingPosts();

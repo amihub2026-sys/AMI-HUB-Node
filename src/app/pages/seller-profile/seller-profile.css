@@ -601,6 +601,342 @@ input[type="file"]::file-selector-button:hover{
   }
 
 }
+
+
+/* ======================================
+   AMI HUB SELLER PROFILE - FINAL LAYOUT
+====================================== */
 :host {
-  padding-top: 160px !important;
+  display: flow-root;
+  width: 100%;
+  min-height: 100vh;
+  padding: 190px 20px 60px !important;
+  background: #f5f8fe;
+  box-sizing: border-box;
+}
+
+/* MAIN PROFILE CARD */
+
+.profile-container {
+  position: relative;
+  width: 100%;
+  max-width: 850px;
+  margin: 0 auto;
+  padding: 38px 48px 45px;
+  background: #ffffff;
+  border: 1px solid #e4eaf5;
+  border-radius: 22px;
+  box-shadow: 0 12px 40px rgba(20, 60, 130, 0.09);
+  overflow: visible;
+}
+
+/* PROFILE HEADER */
+
+.profile-header {
+  text-align: center;
+  padding: 5px 55px 20px;
+}
+
+.profile-header h2 {
+  font-size: 27px;
+  font-weight: 800;
+  color: #102b62;
+  margin: 0 0 8px;
+}
+
+.profile-header p {
+  font-size: 14px;
+  color: #718096;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* PROFILE PHOTO */
+
+.profile-image-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0 30px;
+}
+
+.image-box {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 0;
+}
+
+.profile-img {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 4px solid #087cff;
+  background: #f8fafc;
+  object-fit: cover;
+}
+
+/* FORM GRID */
+
+.profile-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  margin-bottom: 24px;
+}
+
+.form-field {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-field label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #34445d;
+}
+
+.profile-container .form-field input {
+  width: 100%;
+  margin: 0;
+  padding: 14px 15px;
+  min-height: 48px;
+  border: 1px solid #d8e1ee;
+  border-radius: 10px;
+  background: #f9fbfe;
+  font-size: 14px;
+  color: #17253b;
+}
+
+.profile-container .form-field input:focus {
+  border-color: #087cff;
+  background: #fff;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(8, 124, 255, 0.1);
+}
+
+/* DOCUMENT SECTION */
+
+.profile-container h3 {
+  color: #172b4d;
+  font-size: 16px;
+  font-weight: 750;
+  margin: 24px 0 10px;
+}
+
+.profile-container input[type="file"] {
+  width: 100%;
+  margin: 0;
+  padding: 12px;
+  border: 1px dashed #a8bfdf;
+  border-radius: 12px;
+  background: #f7faff;
+  font-size: 13px;
+}
+
+.profile-container .preview {
+  display: block;
+  width: 160px;
+  max-width: 100%;
+  height: auto;
+  margin: 14px 0;
+  border-radius: 10px;
+  border: 1px solid #e1e8f2;
+}
+
+/* TERMS */
+
+.profile-container .terms {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 26px;
+  font-size: 14px;
+  color: #34445d;
+}
+
+.profile-container .terms input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: #087cff;
+}
+
+/* SUBMIT BUTTON */
+
+.profile-container .submit-btn {
+  width: 100%;
+  min-height: 50px;
+  margin-top: 25px;
+  border: 0;
+  border-radius: 11px;
+  background: #087cff;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .2s ease;
+}
+
+.profile-container .submit-btn:hover {
+  background: #0067d8;
+}
+
+.profile-container .submit-btn:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+/* BACK ARROW */
+
+.profile-container .page-back-arrow {
+  position: absolute;
+  top: 30px;
+  left: 30px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #eff5ff;
+  color: #123d84;
+  z-index: 5;
+}
+
+/* TABLET */
+
+@media (max-width: 768px) {
+  :host {
+    padding: 18px 12px 40px;
+  }
+
+  .profile-container {
+    max-width: 100%;
+    padding: 26px 24px 30px;
+    border-radius: 18px;
+  }
+
+  .profile-header {
+    padding: 12px 45px 12px;
+  }
+
+  .profile-header h2 {
+    font-size: 23px;
+  }
+
+  .profile-fields {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .profile-container .page-back-arrow {
+    top: 20px;
+    left: 18px;
+  }
+}
+
+/* MOBILE */
+
+@media (max-width: 480px) {
+  :host {
+    padding: 12px 10px 28px;
+  }
+
+  .profile-container {
+    padding: 22px 16px 28px;
+    border-radius: 14px;
+  }
+
+  .profile-header {
+    padding: 34px 20px 10px;
+  }
+
+  .profile-header h2 {
+    font-size: 21px;
+  }
+
+  .profile-header p {
+    font-size: 12px;
+  }
+
+  .image-box,
+  .profile-img {
+    width: 105px;
+    height: 105px;
+  }
+
+  .profile-image-wrapper {
+    margin: 14px 0 25px;
+  }
+
+  .profile-container .page-back-arrow {
+    top: 14px;
+    left: 14px;
+    width: 34px;
+    height: 34px;
+  }
+
+  .profile-container .form-field input {
+    padding: 12px;
+    min-height: 46px;
+  }
+
+  .profile-container .terms {
+    font-size: 12px;
+    align-items: flex-start;
+  }
+}
+
+/* SELLER PROFILE TOP ALIGNMENT FIX */
+
+.profile-container {
+  margin: 30px auto 0 !important;
+  position: relative;
+}
+
+/* Ensure title is visible */
+.profile-header {
+  display: block;
+  padding-top: 15px;
+  margin-bottom: 15px;
+}
+
+/* Back arrow alignment */
+.profile-container .page-back-arrow {
+  top: 25px;
+  left: 25px;
+}
+
+@media (max-width: 768px) {
+  .profile-container {
+    margin-top: 15px !important;
+  }
+
+  .profile-container .page-back-arrow {
+    top: 15px;
+    left: 15px;
+  }
+}
+
+/* PROFILE PAGE TOP ALIGNMENT */
+
+.profile-container {
+  max-width: 850px;
+  margin: 0 auto !important;
+  position: relative;
+}
+
+.profile-header {
+  padding-top: 10px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  :host {
+    padding: 170px 12px 35px !important;
+  }
+
+  .profile-container {
+    margin: 0 auto !important;
+  }
 }

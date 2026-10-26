@@ -17,89 +17,112 @@
      DYNAMIC HERO SLIDER
 ========================= -->
 
-<section
-  class="top-hero"
-  *ngIf="heroSliders.length > 0"
->
-  <div class="top-banner-ad">
 
+
+<!-- JUSTDIAL STYLE HOMEPAGE AD BANNER -->
+<section
+  class="jd-hero-section"
+  *ngIf="heroSliders.length || portraitFeaturedAds.length"
+>
+  <div class="jd-hero-layout">
+
+    <!-- LEFT: LANDSCAPE SLIDER -->
     <div
-      class="slider"
+      class="jd-landscape-slider"
+      *ngIf="heroSliders.length"
       (mouseenter)="pauseSlider()"
       (mouseleave)="resumeSlider()"
     >
-
       <div
-        class="slides"
-        [style.transform]="
-          'translateX(-' +
-          (currentSlide * 100) +
-          '%)'
-        "
+        class="jd-banner-track"
+        [style.transform]="'translateX(-' + currentSlide * 100 + '%)'"
       >
-
         <picture
-          *ngFor="let slider of heroSliders"
+          class="jd-banner-slide"
+          *ngFor="let banner of heroSliders"
         >
-
           <source
             media="(max-width: 768px)"
-            [srcset]="slider.mobileImage"
-          >
+            [attr.srcset]="banner.mobileImage || null"
+          />
 
           <img
-            [src]="slider.desktopImage"
-            alt="AMI HUB Banner"
-          >
-
+            [src]="banner.desktopImage"
+            alt="AMI HUB featured banner"
+          />
         </picture>
-
       </div>
 
-
       <button
-        *ngIf="heroSliders.length > 1"
-        class="prev"
         type="button"
+        class="jd-banner-prev"
+        *ngIf="heroSliders.length > 1"
         (click)="prevSlide()"
-      >
-        ❮
-      </button>
-
+        aria-label="Previous banner"
+      >&#10094;</button>
 
       <button
-        *ngIf="heroSliders.length > 1"
-        class="next"
         type="button"
+        class="jd-banner-next"
+        *ngIf="heroSliders.length > 1"
         (click)="nextSlide()"
-      >
-        ❯
-      </button>
-
+        aria-label="Next banner"
+      >&#10095;</button>
 
       <div
-        class="dots"
+        class="jd-banner-dots"
         *ngIf="heroSliders.length > 1"
       >
-
-        <span
-          *ngFor="
-            let slider of heroSliders;
-            let i = index
-          "
-          [class.active]="
-            i === currentSlide
-          "
-          (click)="currentSlide = i"
-        >
-        </span>
-
+        <button
+          type="button"
+          *ngFor="let banner of heroSliders; let i = index"
+          [class.active]="currentSlide === i"
+          [attr.aria-label]="'Go to banner ' + (i + 1)"
+          (click)="currentSlide = i; resumeSlider()"
+        ></button>
       </div>
+    </div>
 
+    <!-- RIGHT: FOUR FEATURED AD CARDS -->
+    <div
+      class="jd-portrait-list"
+      *ngIf="portraitFeaturedAds.length"
+    >
+      <button
+        type="button"
+        class="jd-portrait-ad"
+        *ngFor="let ad of portraitFeaturedAds"
+        (click)="openDetails(ad)"
+      >
+        <img
+          [src]="getPortraitFeaturedImage(ad)"
+          [alt]="ad.title || 'Featured advertisement'"
+          loading="lazy"
+        />
+
+        <div class="jd-portrait-shade"></div>
+
+        <div class="jd-portrait-info">
+          <span class="jd-portrait-label">
+            Featured
+          </span>
+
+          <h3>{{ ad.title }}</h3>
+
+          <span class="jd-portrait-category">
+            {{ ad.category || ad.categoryname || 'Explore Now' }}
+          </span>
+        </div>
+
+        <span class="jd-portrait-arrow">&#10095;</span>
+      </button>
     </div>
 
   </div>
 </section>
+
+
+
 <section class="mini-promos">
   <div class="promo-grid">
 
