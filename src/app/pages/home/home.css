@@ -5912,3 +5912,24 @@ app-categories{
     box-sizing: border-box;
   }
 }
+@media (max-width: 768px) {
+  .whole > .jd-hero-section {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  .whole > .jd-hero-section + .mini-promos {
+    margin-top: 5px !important;
+    padding-top: 0 !important;
+  }
+
+  .whole > .mini-promos > .promo-grid {
+    padding-top: 0 !important;
+  }
+
+  /* Prevent floating cards from moving into the gap */
+  .mini-promos .promo-card {
+    animation: none !important;
+    transform: none !important;
+  }
+}
