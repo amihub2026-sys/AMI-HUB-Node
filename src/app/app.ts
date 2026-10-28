@@ -1,30 +1,55 @@
-import { Component, OnInit, ChangeDetectorRef, Inject, PLATFORM_ID } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import {
+  Component,
+  OnInit,
+  ChangeDetectorRef,
+  Inject,
+  PLATFORM_ID,
+  HostListener
+} from '@angular/core';
+
+import {
+  CommonModule,
+  isPlatformBrowser,
+  Location
+} from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
-import { Location } from '@angular/common';
-import { RouterOutlet, RouterLink, Router, NavigationEnd, NavigationStart } from '@angular/router';
-import { filter } from 'rxjs/operators';
+
+import {
+  RouterOutlet,
+  RouterLink,
+  RouterLinkActive,
+  Router,
+  NavigationEnd,
+  NavigationStart
+} from '@angular/router';
+
 import { SupabaseService } from './services/supabase.service';
 import { supabase } from '../supabaseClient';
+
 import { LocationPickerComponent } from './pages/location-picker/location-picker';
 import { AppLocationResult } from './services/location-search';
+
 import { SnackbarService } from './services/snackbar.service';
 import { SnackbarComponent } from './snackbar/snackbar';
-import { HostListener } from '@angular/core';
+
 import { Login } from './pages/login/login';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-imports: [
-  CommonModule,
-  FormsModule,
-  RouterOutlet,
-  RouterLink,
-  LocationPickerComponent,
-  SnackbarComponent ,  // ✅ ADD THIS
-  Login
-],
+
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    LocationPickerComponent,
+    SnackbarComponent,
+    Login
+  ],
+
   templateUrl: './app.html',
   styleUrls: ['./app.css']
 })
@@ -50,11 +75,13 @@ export class App implements OnInit {
   showAd = true;
   showTopAd = true;
   menuOpen = false;
-showAdvertiseLoginModal = false;
-pendingAdvertise = false;
+
+  showAdvertiseLoginModal = false;
+  pendingAdvertise = false;
 
   searchTerm = '';
   searchCategory = 'All';
+
   filterOptions = [
     'All',
     'Products',
@@ -74,72 +101,97 @@ pendingAdvertise = false;
   radiusOptions: number[] = [2, 5, 10, 15, 25, 50];
 
   currentUrl: string = '';
-isRouteLoading = false;
+  isRouteLoading = false;
+  showProfileMenu = false;
 
- constructor(
-  private location: Location,
-  public router: Router,
+  constructor(
+    private location: Location,
+    public router: Router,
+    private supabaseService: SupabaseService,
+    private cdr: ChangeDetectorRef,
+    private snackbar: SnackbarService,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {}
 
-  private supabaseService: SupabaseService,
-  private cdr: ChangeDetectorRef,
-  private snackbar: SnackbarService,
-  @Inject(PLATFORM_ID) private platformId: Object
-) {}
+  // Mobile bottom navigation visibility.
+ get showMobileCommerceNav(): boolean {
+  const url = this.currentUrl || this.router.url || '/';
+  const path = url.split(/[?#]/)[0];
 
-  openService(service: string) {
+  // Hide on search results, including homepage search queries.
+  const isSearchResults =
+    /[?&](search|filter)=/.test(url);
+
+  return (
+    (path === '/' || path === '/home') &&
+    !isSearchResults
+  );
+}
+
+  openService(service: string): void {
     this.activeService = service;
   }
 
-  closeService() {
+  closeService(): void {
     this.activeService = null;
   }
 
   async ngOnInit(): Promise<void> {
     this.currentUrl = this.router.url;
-window.addEventListener(
-  'userLoggedIn',
-  async () => {
 
-    this.isLoggedInUser =
-      await this.isLoggedIn();
+    if (this.isBrowser()) {
+      window.addEventListener('userLoggedIn', async () => {
+        this.isLoggedInUser = await this.isLoggedIn();
+        this.cdr.detectChanges();
+      });
+    }
 
-    this.cdr.detectChanges();
+    this.router.events.subscribe((event) => {
+      if (event instanceof NavigationStart) {
+        this.isRouteLoading = true;
+        this.cdr.detectChanges();
+      }
 
-  }
-);
-this.router.events.subscribe((event: any) => {
+      if (event instanceof NavigationEnd) {
+        this.showProfileMenu = false;
 
-  if (event.constructor.name === 'NavigationStart') {
-    this.isRouteLoading = true;
-    this.cdr.detectChanges();
-  }
+        this.currentUrl =
+          event.urlAfterRedirects ||
+          event.url ||
+          this.router.url;
 
-if (event instanceof NavigationEnd) {
-  this.currentUrl = event.urlAfterRedirects || event.url || this.router.url;
-  this.isLoggedIn().then(status => {
-      this.isLoggedInUser = status;
-      this.cdr.detectChanges();
+        this.isLoggedIn().then((status) => {
+          this.isLoggedInUser = status;
+          this.cdr.detectChanges();
+        });
+
+        if (this.isBrowser()) {
+          setTimeout(() => {
+            window.scrollTo(0, 0);
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+          }, 0);
+        }
+
+        setTimeout(() => {
+          this.isRouteLoading = false;
+          this.cdr.detectChanges();
+        }, 300);
+      }
     });
 
-  setTimeout(() => {
-    window.scrollTo(0, 0);
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
-  }, 0);
-
-  setTimeout(() => {
-    this.isRouteLoading = false;
-    this.cdr.detectChanges();
-  }, 300);
-}
-});
     await this.loadSavedLocation();
-    await this.loadNotificationCount();
-    await this.loadChatCount();
+
+    if (this.isBrowser()) {
+      await this.loadNotificationCount();
+      await this.loadChatCount();
+
+      setInterval(() => {
+        this.loadChatCount();
+      }, 3000);
+    }
+
     this.isLoggedInUser = await this.isLoggedIn();
-    setInterval(() => {
-  this.loadChatCount();
-}, 3000);
     this.cdr.detectChanges();
   }
 
@@ -148,45 +200,23 @@ if (event instanceof NavigationEnd) {
   }
 
   private hasLocalUserLogin(): boolean {
+    if (!this.isBrowser()) {
+      return false;
+    }
 
-  if (!this.isBrowser()) {
-    return false;
+    return !!localStorage.getItem('token');
   }
-
-
-  return !!localStorage.getItem('token');
-
-}
-
 
   private async isLoggedIn(): Promise<boolean> {
+    if (!this.isBrowser()) {
+      return false;
+    }
 
-  if (!this.isBrowser()) {
-    return false;
+    const token = localStorage.getItem('token');
+    const adminToken = localStorage.getItem('adminToken');
+
+    return !!token || !!adminToken;
   }
-
-
-  const token =
-    localStorage.getItem('token');
-
-
-  const adminToken =
-    localStorage.getItem('adminToken');
-
-
-  if (token) {
-    return true;
-  }
-
-
-  if (adminToken) {
-    return true;
-  }
-
-
-  return false;
-
-}
 
   private redirectToLogin(redirectTo: string): void {
     this.router.navigate(['/login'], {
@@ -211,40 +241,61 @@ if (event instanceof NavigationEnd) {
   }
 
   private async loadSavedLocation(): Promise<void> {
-    if (!this.isBrowser()) return;
+    if (!this.isBrowser()) {
+      return;
+    }
 
     const savedCity = localStorage.getItem('selectedCity');
+
     if (savedCity) {
       this.selectedCity = savedCity;
     }
 
     const savedRadius = localStorage.getItem('selectedRadiusKm');
+
     if (savedRadius && !isNaN(Number(savedRadius))) {
       this.selectedRadiusKm = Number(savedRadius);
     }
 
-    const savedLocation = localStorage.getItem('amh_selected_location');
-    if (savedLocation) {
-      try {
-        const parsedLocation = JSON.parse(savedLocation);
+    const savedLocation = localStorage.getItem(
+      'amh_selected_location'
+    );
 
-        this.selectedLocation = {
-          ...parsedLocation,
-          lat: parsedLocation?.lat != null ? Number(parsedLocation.lat) : null,
-          lon: parsedLocation?.lon != null ? Number(parsedLocation.lon) : null
-        } as AppLocationResult;
+    if (!savedLocation) {
+      return;
+    }
 
-        if (!this.selectedCity && this.selectedLocation?.city?.trim()) {
-          this.selectedCity = this.selectedLocation.city.trim();
-        } else if (!this.selectedCity && this.selectedLocation?.displayName?.trim()) {
-          this.selectedCity = this.selectedLocation.displayName.trim();
-        } else if (!this.selectedCity && this.selectedLocation?.name?.trim()) {
-          this.selectedCity = this.selectedLocation.name.trim();
-        }
-      } catch (error) {
-        console.error('Failed to parse saved location', error);
-        localStorage.removeItem('amh_selected_location');
+    try {
+      const parsedLocation = JSON.parse(savedLocation);
+
+      this.selectedLocation = {
+        ...parsedLocation,
+        lat:
+          parsedLocation?.lat != null
+            ? Number(parsedLocation.lat)
+            : null,
+        lon:
+          parsedLocation?.lon != null
+            ? Number(parsedLocation.lon)
+            : null
+      } as AppLocationResult;
+
+      if (!this.selectedCity && this.selectedLocation?.city?.trim()) {
+        this.selectedCity = this.selectedLocation.city.trim();
+      } else if (
+        !this.selectedCity &&
+        this.selectedLocation?.displayName?.trim()
+      ) {
+        this.selectedCity = this.selectedLocation.displayName.trim();
+      } else if (
+        !this.selectedCity &&
+        this.selectedLocation?.name?.trim()
+      ) {
+        this.selectedCity = this.selectedLocation.name.trim();
       }
+    } catch (error) {
+      console.error('Failed to parse saved location', error);
+      localStorage.removeItem('amh_selected_location');
     }
   }
 
@@ -270,55 +321,47 @@ if (event instanceof NavigationEnd) {
         .eq('isread', false);
 
       if (error) {
-
         this.notificationCount = 0;
         return;
       }
 
       this.notificationCount = count || 0;
       this.cdr.detectChanges();
-    } catch (e) {
-
+    } catch {
       this.notificationCount = 0;
     }
   }
-async loadChatCount(): Promise<void> {
 
-  try {
+  async loadChatCount(): Promise<void> {
+    try {
+      const userUuid =
+        await this.supabaseService.resolveEffectiveUserUuid();
 
-    const userUuid =
-      await this.supabaseService.resolveEffectiveUserUuid();
+      if (!userUuid) {
+        this.chatCount = 0;
+        return;
+      }
 
-    if (!userUuid) {
+      const { count, error } = await supabase
+        .from('messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('receiver_id', userUuid)
+        .eq('is_read', false);
+
+      if (error) {
+        this.chatCount = 0;
+        return;
+      }
+
+      this.chatCount = count || 0;
+      this.cdr.detectChanges();
+    } catch {
       this.chatCount = 0;
-      return;
     }
-
-    const { count, error } = await supabase
-      .from('messages')
-      .select('*', { count: 'exact', head: true })
-      .eq('receiver_id', userUuid)
-      .eq('is_read', false);
-
-    if (error) {
-      this.chatCount = 0;
-      return;
-    }
-
-    this.chatCount = count || 0;
-
-    this.cdr.detectChanges();
-
-  } catch (e) {
-
-    this.chatCount = 0;
-
   }
 
-}
   goToNotifications(): void {
-
-this.showProfileMenu = false;
+    this.showProfileMenu = false;
 
     this.isLoggedIn().then((loggedIn) => {
       if (!loggedIn) {
@@ -327,9 +370,12 @@ this.showProfileMenu = false;
       }
 
       if (this.router.url === '/notification') {
-        this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
-          this.router.navigate(['/notification']);
-        });
+        this.router
+          .navigateByUrl('/', { skipLocationChange: true })
+          .then(() => {
+            this.router.navigate(['/notification']);
+          });
+
         return;
       }
 
@@ -337,9 +383,8 @@ this.showProfileMenu = false;
     });
   }
 
-goToFavorites(): void {
-
-  this.showProfileMenu = false;
+  goToFavorites(): void {
+    this.showProfileMenu = false;
 
     this.isLoggedIn().then((loggedIn) => {
       if (!loggedIn) {
@@ -348,9 +393,12 @@ goToFavorites(): void {
       }
 
       if (this.router.url === '/favt') {
-        this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
-          this.router.navigate(['/favt']);
-        });
+        this.router
+          .navigateByUrl('/', { skipLocationChange: true })
+          .then(() => {
+            this.router.navigate(['/favt']);
+          });
+
         return;
       }
 
@@ -366,28 +414,33 @@ goToFavorites(): void {
       }
 
       if (this.router.url === '/chats') {
-        this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
-          this.router.navigate(['/chats']);
-        });
+        this.router
+          .navigateByUrl('/', { skipLocationChange: true })
+          .then(() => {
+            this.router.navigate(['/chats']);
+          });
+
         return;
       }
 
       this.router.navigate(['/chats']);
     });
   }
-goToChatFromDropdown(): void {
-  this.showProfileMenu = false;
-  this.closeMenu();
 
-  this.isLoggedIn().then((loggedIn) => {
-    if (!loggedIn) {
-      this.redirectToLogin('chats');
-      return;
-    }
+  goToChatFromDropdown(): void {
+    this.showProfileMenu = false;
+    this.closeMenu();
 
-    this.router.navigate(['/chats']);
-  });
-}
+    this.isLoggedIn().then((loggedIn) => {
+      if (!loggedIn) {
+        this.redirectToLogin('chats');
+        return;
+      }
+
+      this.router.navigate(['/chats']);
+    });
+  }
+
   goToProfile(): void {
     this.isLoggedIn().then((loggedIn) => {
       if (!loggedIn) {
@@ -396,9 +449,12 @@ goToChatFromDropdown(): void {
       }
 
       if (this.router.url === '/seller-profile') {
-        this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
-          this.router.navigate(['/seller-profile']);
-        });
+        this.router
+          .navigateByUrl('/', { skipLocationChange: true })
+          .then(() => {
+            this.router.navigate(['/seller-profile']);
+          });
+
         return;
       }
 
@@ -432,6 +488,7 @@ goToChatFromDropdown(): void {
       }
     } else {
       this.selectedLocation = null;
+
       if (this.isBrowser()) {
         localStorage.removeItem('amh_selected_location');
       }
@@ -468,6 +525,7 @@ goToChatFromDropdown(): void {
         Math.sin(dLon / 2);
 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
     return earthRadiusKm * c;
   }
 
@@ -489,12 +547,17 @@ goToChatFromDropdown(): void {
       return;
     }
 
-    const hasSelectedLocationCoords = this.hasValidCoordinates(this.selectedLocation);
+    const hasSelectedLocationCoords = this.hasValidCoordinates(
+      this.selectedLocation
+    );
 
     if (!this.selectedCity && !hasSelectedLocationCoords) {
-      this.filteredItems = this.items.filter((item: any) =>
-        !searchValue || item.title?.toLowerCase().includes(searchValue)
+      this.filteredItems = this.items.filter(
+        (item: any) =>
+          !searchValue ||
+          item.title?.toLowerCase().includes(searchValue)
       );
+
       return;
     }
 
@@ -504,7 +567,8 @@ goToChatFromDropdown(): void {
 
       this.filteredItems = this.items.filter((item: any) => {
         const titleMatch =
-          !searchValue || item.title?.toLowerCase().includes(searchValue);
+          !searchValue ||
+          item.title?.toLowerCase().includes(searchValue);
 
         const itemHasCoords =
           item?.lat != null &&
@@ -521,11 +585,16 @@ goToChatFromDropdown(): void {
           );
 
           item.distanceKm = Number(distanceKm.toFixed(1));
-          return titleMatch && distanceKm <= this.selectedRadiusKm;
+
+          return (
+            titleMatch &&
+            distanceKm <= this.selectedRadiusKm
+          );
         }
 
         const cityMatch =
-          item.city?.toLowerCase() === this.selectedCity.toLowerCase();
+          item.city?.toLowerCase() ===
+          this.selectedCity.toLowerCase();
 
         return titleMatch && cityMatch;
       });
@@ -533,6 +602,7 @@ goToChatFromDropdown(): void {
       this.filteredItems.sort((a: any, b: any) => {
         const distA = a.distanceKm ?? Number.MAX_SAFE_INTEGER;
         const distB = b.distanceKm ?? Number.MAX_SAFE_INTEGER;
+
         return distA - distB;
       });
 
@@ -541,10 +611,12 @@ goToChatFromDropdown(): void {
 
     this.filteredItems = this.items.filter((item: any) => {
       const cityMatch =
-        item.city?.toLowerCase() === this.selectedCity.toLowerCase();
+        item.city?.toLowerCase() ===
+        this.selectedCity.toLowerCase();
 
       const titleMatch =
-        !searchValue || item.title?.toLowerCase().includes(searchValue);
+        !searchValue ||
+        item.title?.toLowerCase().includes(searchValue);
 
       return cityMatch && titleMatch;
     });
@@ -552,7 +624,10 @@ goToChatFromDropdown(): void {
 
   onRadiusChange(): void {
     if (this.isBrowser()) {
-      localStorage.setItem('selectedRadiusKm', String(this.selectedRadiusKm));
+      localStorage.setItem(
+        'selectedRadiusKm',
+        String(this.selectedRadiusKm)
+      );
     }
 
     this.filterByCity();
@@ -566,20 +641,24 @@ goToChatFromDropdown(): void {
   closeMenu(): void {
     this.menuOpen = false;
   }
-showProfileMenu = false;
 
-toggleProfileMenu(event: MouseEvent): void {
-  event.stopPropagation();
-  this.showProfileMenu = !this.showProfileMenu;
-}
+  toggleProfileMenu(event: MouseEvent): void {
+    event.stopPropagation();
+    this.showProfileMenu = !this.showProfileMenu;
+  }
 
-@HostListener('document:click')
-closeProfileOutside(): void {
-  this.showProfileMenu = false;
-}
+  @HostListener('document:click')
+  closeProfileOutside(): void {
+    this.showProfileMenu = false;
+  }
+
   doSearch(): void {
     const query = this.searchTerm.trim();
-    const category = this.searchCategory === 'All' ? '' : this.searchCategory;
+
+    const category =
+      this.searchCategory === 'All'
+        ? ''
+        : this.searchCategory;
 
     this.router.navigate(['/'], {
       queryParams: {
@@ -592,11 +671,14 @@ closeProfileOutside(): void {
   }
 
   goToMyPosts(): void {
+    this.showProfileMenu = false;
+
     this.isLoggedIn().then((loggedIn) => {
       if (!loggedIn) {
         this.router.navigate(['/login'], {
           state: { redirectTo: 'my-posts' }
         });
+
         return;
       }
 
@@ -610,11 +692,14 @@ closeProfileOutside(): void {
         this.router.navigate(['/login'], {
           state: { redirectTo: 'post-ad' }
         });
+
         return;
       }
 
       const isAdmin =
-        this.isBrowser() && localStorage.getItem('adminToken') === 'loggedAdmin';
+        this.isBrowser() &&
+        localStorage.getItem('adminToken') === 'loggedAdmin';
+
       const userTypeId = this.isBrowser()
         ? Number(localStorage.getItem('userTypeId'))
         : 0;
@@ -630,24 +715,17 @@ closeProfileOutside(): void {
     });
   }
 
-async postService(): Promise<void> {
+  async postService(): Promise<void> {
+    const loggedIn = await this.isLoggedIn();
 
-  const loggedIn = await this.isLoggedIn();
+    if (!loggedIn) {
+      this.pendingAdvertise = true;
+      this.showAdvertiseLoginModal = true;
+      return;
+    }
 
-  if (!loggedIn) {
-    this.pendingAdvertise = true;
-    this.showAdvertiseLoginModal = true;
-    return;
+    this.router.navigate(['/service']);
   }
-
-  const user =
-    JSON.parse(
-      localStorage.getItem('user') || '{}'
-    );
-
-
-  this.router.navigate(['/service']);
-}
 
   toggleLocationPicker(): void {
     this.showLocationPicker = !this.showLocationPicker;
@@ -662,8 +740,14 @@ async postService(): Promise<void> {
   onLocationSelected(location: AppLocationResult): void {
     this.selectedLocation = {
       ...location,
-      lat: location?.lat != null ? Number(location.lat) : null,
-      lon: location?.lon != null ? Number(location.lon) : null
+      lat:
+        location?.lat != null
+          ? Number(location.lat)
+          : null,
+      lon:
+        location?.lon != null
+          ? Number(location.lon)
+          : null
     } as AppLocationResult;
 
     this.selectedCity =
@@ -679,37 +763,43 @@ async postService(): Promise<void> {
       );
 
       if (this.selectedCity) {
-        localStorage.setItem('selectedCity', this.selectedCity);
+        localStorage.setItem(
+          'selectedCity',
+          this.selectedCity
+        );
       } else {
         localStorage.removeItem('selectedCity');
       }
 
-      localStorage.setItem('selectedRadiusKm', String(this.selectedRadiusKm));
+      localStorage.setItem(
+        'selectedRadiusKm',
+        String(this.selectedRadiusKm)
+      );
     }
 
     this.filterByCity();
     this.showLocationPicker = false;
     this.cdr.detectChanges();
   }
-closeAdvertiseLoginModal(): void {
-  this.showAdvertiseLoginModal = false;
-  this.pendingAdvertise = false;
-}
 
-async onAdvertiseLoginSuccess(user: any): Promise<void> {
-
-  this.showAdvertiseLoginModal = false;
-
-  this.isLoggedInUser = await this.isLoggedIn();
-
-  if (!this.pendingAdvertise) {
-    return;
+  closeAdvertiseLoginModal(): void {
+    this.showAdvertiseLoginModal = false;
+    this.pendingAdvertise = false;
   }
 
-  this.pendingAdvertise = false;
+  async onAdvertiseLoginSuccess(user: any): Promise<void> {
+    this.showAdvertiseLoginModal = false;
+    this.isLoggedInUser = await this.isLoggedIn();
 
-  await this.postService();
-}
+    if (!this.pendingAdvertise) {
+      return;
+    }
+
+    this.pendingAdvertise = false;
+
+    await this.postService();
+  }
+
   clearSelectedLocation(): void {
     this.selectedLocation = null;
     this.selectedCity = '';
@@ -725,74 +815,79 @@ async onAdvertiseLoginSuccess(user: any): Promise<void> {
   }
 
   get locationLabel(): string {
-    if (this.selectedLocation?.city?.trim()) return this.selectedLocation.city.trim();
-    if (this.selectedCity?.trim()) return this.selectedCity.trim();
-    if (this.selectedLocation?.displayName?.trim()) return this.selectedLocation.displayName.trim();
-    if (this.selectedLocation?.name?.trim()) return this.selectedLocation.name.trim();
+    if (this.selectedLocation?.city?.trim()) {
+      return this.selectedLocation.city.trim();
+    }
+
+    if (this.selectedCity?.trim()) {
+      return this.selectedCity.trim();
+    }
+
+    if (this.selectedLocation?.displayName?.trim()) {
+      return this.selectedLocation.displayName.trim();
+    }
+
+    if (this.selectedLocation?.name?.trim()) {
+      return this.selectedLocation.name.trim();
+    }
+
     return 'Select Location';
   }
 
-goToLogin(): void {
-  this.showProfileMenu = false;
-
-  this.router.navigate(['/login']);
-}
-
-goToProfileMenu(): void {
-  this.showProfileMenu = false;
-
-  this.goToProfile();
-}
-
-goToOrders(): void {
-  this.showProfileMenu = false;
-
-  this.isLoggedIn().then((loggedIn) => {
-    if (!loggedIn) {
-      this.redirectToLogin('orders');
-      return;
-    }
-
-    this.router.navigate(['/orders']);
-  });
-}
-
-logoutFromDropdown(): void {
-  this.showProfileMenu = false;
-
-  this.logout();
-}
- async logout(): Promise<void> {
-
-  if (this.isBrowser()) {
-
-    localStorage.removeItem('token');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('userTypeId');
-    localStorage.removeItem('adminToken');
-
-    localStorage.clear();
-
+  goToLogin(): void {
+    this.showProfileMenu = false;
+    this.router.navigate(['/login']);
   }
 
+  goToProfileMenu(): void {
+    this.showProfileMenu = false;
+    this.goToProfile();
+  }
 
-  this.closeMenu();
+  goToOrders(): void {
+    this.showProfileMenu = false;
 
-  this.notificationCount = 0;
+    this.isLoggedIn().then((loggedIn) => {
+      if (!loggedIn) {
+        this.redirectToLogin('orders');
+        return;
+      }
 
-  this.chatCount = 0;
+      this.router.navigate(['/orders']);
+    });
+  }
 
-  this.cdr.detectChanges();
+  logoutFromDropdown(): void {
+    this.showProfileMenu = false;
+    this.logout();
+  }
 
+  async logout(): Promise<void> {
+    if (this.isBrowser()) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('userTypeId');
+      localStorage.removeItem('adminToken');
 
-  this.router.navigate(['/login']);
+      localStorage.clear();
+    }
 
-}
+    this.closeMenu();
+
+    this.isLoggedInUser = false;
+    this.notificationCount = 0;
+    this.chatCount = 0;
+
+    this.cdr.detectChanges();
+
+    this.router.navigate(['/login']);
+  }
+
   goBack(): void {
-  this.location.back();
-}
-goToJobs() {
-  this.router.navigate(['/job']);
-}
+    this.location.back();
+  }
 
+  goToJobs(): void {
+    this.router.navigate(['/job']);
+  }
 }
