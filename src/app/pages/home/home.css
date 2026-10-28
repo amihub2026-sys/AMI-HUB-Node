@@ -5875,3 +5875,40 @@ app-categories{
     height: 32px;
   }
 }
+/* HOMEPAGE — MOBILE ONLY */
+@media (max-width: 768px) {
+  :host {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+  }
+
+  .whole {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box;
+  }
+
+  /* Remove old spacing for the previously fixed navbar */
+  app-categories {
+    display: block;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box;
+  }
+
+  /* Remove outer banner spacing */
+  .jd-hero-section,
+  .top-hero {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box;
+  }
+}

@@ -50,3 +50,41 @@ app-root > .wide > .footer {
   flex-shrink: 0;
   margin-top: auto;
 }
+
+@media (max-width: 768px) {
+  html body app-root {
+    display: block;
+    width: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  html body app-root > .wide {
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    box-sizing: border-box !important;
+  }
+}
+/* Homepage only — mobile only */
+@media (max-width: 768px) {
+  html body app-root > .wide.home-full-width {
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  html body app-root > .wide.home-full-width > .topbar {
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+}

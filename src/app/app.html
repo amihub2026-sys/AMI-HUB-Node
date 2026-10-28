@@ -1,571 +1,743 @@
-<div class="wide">
-
-       <!-- NAV BAR -->
-  <!-- THIS NAV IS FOR USER ONLY NIT FOR ADMIN -->
-<nav
-  class="topbar"
-  *ngIf="
-    !currentUrl.includes('login') &&
-    !currentUrl.includes('admin') &&
-    !currentUrl.includes('admin-page') &&
-    !currentUrl.includes('search') &&
-    !currentUrl.includes('products') &&
-    !currentUrl.includes('service') &&
-    !currentUrl.includes('job')
-  "
+<div
+  class="wide"
+  [class.has-mobile-commerce-nav]="showMobileCommerceNav"
+  [class.home-full-width]="currentUrl === '/' || currentUrl === '/home'"
 >
+  <!-- TOP HEADER -->
+  <nav
+    class="topbar commerce-header"
+    *ngIf="
+      !currentUrl.includes('login') &&
+      !currentUrl.includes('admin') &&
+      !currentUrl.includes('admin-page') &&
+      !currentUrl.includes('search') &&
+      !currentUrl.includes('products') &&
+      !currentUrl.includes('service') &&
+      !currentUrl.includes('job')
+    "
+  >
     <div class="nav-container">
-
-      <!-- NAV BAR LOGO -->
+      <!-- LOGO -->
       <div class="logo-wrapper">
         <a class="logo" [routerLink]="['/']">
           <img src="assets/hub_logo.png" alt="AMI HUB Logo" />
         </a>
       </div>
 
+      <!-- DESKTOP NAVIGATION -->
+      <a routerLink="/products" class="bottom-nav-item">
+        <i class="fas fa-box"></i>
+        <span>Products</span>
+      </a>
 
-       <!-- PRODUCT SERVICE JOB  -->
-  <a routerLink="/products" class="bottom-nav-item">
-    <i class="fas fa-box"></i>
-    <span>Products</span>
-  </a>
-<a routerLink="/service-list" class="bottom-nav-item">
-  <i class="fas fa-briefcase"></i>
-  <span>Services</span>
-</a>
-  <a routerLink="/job" class="bottom-nav-item">
-  <i class="fas fa-user-tie"></i>
-  <span>Jobs</span>
-</a>   
-     <!-- ADVERTISE -->
-<a  
-  (click)="postService(); closeMenu()" 
-  class="top-nav-item advertise-link">
-  <i class="fas fa-bullhorn"></i>
-  <span>ADVERTISE</span>
-</a>
-<!-- MY POSTS -->
-<a
-  *ngIf="isLoggedInUser"
-  class="top-nav-item my-posts-link"
-  (click)="goToMyPosts(); closeMenu()">
-  <i class="fas fa-clipboard-list"></i>
-  <span>My Posts</span>
-</a>
-  
-     <div
-  *ngIf="
-    menuOpen &&
-    !currentUrl.includes('admin') &&
-    !currentUrl.includes('admin-page')
-  "
-  (click)="closeMenu()">
-  </div>  
-  
-  
-<!-- COMMANDED FOR FUTURE USE  -->
-  
-        <!-- <a [routerLink]="['/home']" class="homee" (click)="closeMenu()">Home</a> -->
-        <!-- <a [routerLink]="['/news']" (click)="closeMenu()">News</a> -->
-        <!-- <button type="button" (click)="logout(); closeMenu()">Logout</button> -->
-        <!-- <a (click)="postProduct(); closeMenu()" class="post-btn">Post Product</a> -->  
-        <!-- <a (click)="goToMyPosts(); closeMenu()" class="nav-icon-btn mobile-my-posts-btn myposts-animate" aria-label="My Posts">
-          <i class="fas fa-clipboard-list"></i>
-        </a> -->
-        <!-- <a [routerLink]="['/cart']" class="nav-icon-btn" aria-label="Cart">
-          <i class="fas fa-shopping-cart"></i>
-        </a> -->
-            <!-- <a (click)="postService(); closeMenu()" class="mobile-ad-btn" aria-label="Advertise">
-          <i class="fas fa-bullhorn"></i>
-          <span class="mobile-ad-text">ADVERTISE</span>
-        </a>  -->
+      <a routerLink="/service-list" class="bottom-nav-item">
+        <i class="fas fa-briefcase"></i>
+        <span>Services</span>
+      </a>
 
-          <!-- <div class="nav-actions">
-        <a (click)="goToFavorites(); closeMenu()" class="nav-icon-btn fav-animate" aria-label="Favorites">
-          <i class="fas fa-heart"></i>
-        </a>
-        <a (click)="goToNotifications(); closeMenu()" class="nav-icon-btn bell-animate" aria-label="Notification">
-          <i class="fas fa-bell"></i>
-          <span *ngIf="notificationCount > 0" class="badge">
-            {{ notificationCount }}
-          </span>
-        </a>
-        <a (click)="goToProfile(); closeMenu()" class="profile" aria-label="Profile">
-          <i class="fas fa-user-circle"></i>
-        </a>
-      </div> -->
+      <a routerLink="/job" class="bottom-nav-item">
+        <i class="fas fa-user-tie"></i>
+        <span>Jobs</span>
+      </a>
+
+      <!-- ADVERTISE -->
+      <a
+        class="top-nav-item advertise-link"
+        (click)="postService(); closeMenu()"
+      >
+        <i class="fas fa-bullhorn"></i>
+        <span>ADVERTISE</span>
+      </a>
+
+      <!-- MY POSTS -->
+      <a
+        *ngIf="isLoggedInUser"
+        class="top-nav-item my-posts-link"
+        (click)="goToMyPosts(); closeMenu()"
+      >
+        <i class="fas fa-clipboard-list"></i>
+        <span>My Posts</span>
+      </a>
+
+      <div
+        *ngIf="
+          menuOpen &&
+          !currentUrl.includes('admin') &&
+          !currentUrl.includes('admin-page')
+        "
+        (click)="closeMenu()"
+      ></div>
     </div>
 
-
-    <!-- SECOND NAVIGATION ROW -->
-<div class="bottom-nav">
-
-  <!-- LOCATION BUTTON -->
-   <div class="location-search-bar">
-  <div class="location-box location-clickable" (click)="toggleLocationPicker()">
-    <i class="fas fa-location-dot"></i>
-    <span class="location-text">
-      {{ locationLabel }}
-    </span>
-    <i class="fas fa-chevron-down"></i>
-  </div>
-</div>
-
-   <!-- INSIDE LOCATION VIEW -->
-  <div class="location-modal" *ngIf="showLocationPicker">
-    <div class="location-modal-backdrop" (click)="closeLocationPicker()"></div>
-
-    <div class="location-modal-card">
-      <div class="location-modal-header">
-        <h3>Select Location</h3>
-        <button type="button" class="close-location-btn" (click)="closeLocationPicker()">X</button>
-      </div>
-
-      <div class="current-location-preview" *ngIf="selectedLocation">
-        <strong>Selected:</strong>
-        <span>{{ selectedLocation.displayName || locationLabel }}</span>
-      </div>
-
-      <app-location-picker
-        [initialQuery]="selectedLocation?.displayName || locationLabel || ''"
-        [initialLat]="selectedLocation?.lat || null"
-        [initialLon]="selectedLocation?.lon || null"
-        (locationSelected)="onLocationSelected($event)">
-      </app-location-picker>
-
-      <div class="radius-section" *ngIf="selectedLocation">
-        <label for="radiusSelect">Select Radius</label>
-        <select
-          id="radiusSelect"
-          [(ngModel)]="selectedRadiusKm"
-          (change)="onRadiusChange()"
+    <!-- LOCATION AND SEARCH ROW -->
+    <div class="bottom-nav">
+      <!-- LOCATION -->
+      <div class="location-search-bar">
+        <div
+          class="location-box location-clickable"
+          (click)="toggleLocationPicker()"
         >
-          <option *ngFor="let km of radiusOptions" [ngValue]="km">
-            Within {{ km }} km
-          </option>
-        </select>
+          <i class="fas fa-location-dot"></i>
+
+          <span class="location-text" [title]="locationLabel">
+            {{ locationLabel }}
+          </span>
+
+          <i class="fas fa-chevron-down"></i>
+        </div>
       </div>
 
-      <div class="location-modal-actions">
+      <!-- LOCATION MODAL -->
+      <div class="location-modal" *ngIf="showLocationPicker">
+        <div
+          class="location-modal-backdrop"
+          (click)="closeLocationPicker()"
+        ></div>
+
+        <div class="location-modal-card">
+          <div class="location-modal-header">
+            <h3>Select Location</h3>
+
+            <button
+              type="button"
+              class="close-location-btn"
+              (click)="closeLocationPicker()"
+            >
+              X
+            </button>
+          </div>
+
+          <div
+            class="current-location-preview"
+            *ngIf="selectedLocation"
+          >
+            <strong>Selected:</strong>
+
+            <span>
+              {{ selectedLocation.displayName || locationLabel }}
+            </span>
+          </div>
+
+          <app-location-picker
+            [initialQuery]="selectedLocation?.displayName || locationLabel || ''"
+            [initialLat]="selectedLocation?.lat || null"
+            [initialLon]="selectedLocation?.lon || null"
+            (locationSelected)="onLocationSelected($event)"
+          ></app-location-picker>
+
+          <div class="radius-section" *ngIf="selectedLocation">
+            <label for="radiusSelect">Select Radius</label>
+
+            <select
+              id="radiusSelect"
+              [(ngModel)]="selectedRadiusKm"
+              (change)="onRadiusChange()"
+            >
+              <option
+                *ngFor="let km of radiusOptions"
+                [ngValue]="km"
+              >
+                Within {{ km }} km
+              </option>
+            </select>
+          </div>
+
+          <div class="location-modal-actions">
+            <button
+              type="button"
+              class="clear-location-btn"
+              *ngIf="selectedLocation || selectedCity"
+              (click)="clearSelectedLocation()"
+            >
+              Clear Location
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SEARCH -->
+      <div class="ami-search">
+        <input
+          type="text"
+          placeholder="Search AMI HUB..."
+          aria-label="Search products, services, jobs and businesses"
+          [(ngModel)]="searchTerm"
+          (keydown.enter)="doSearch()"
+        />
+
         <button
           type="button"
-          class="clear-location-btn"
-          *ngIf="selectedLocation || selectedCity"
-          (click)="clearSelectedLocation()"
+          aria-label="Search"
+          (click)="doSearch()"
         >
-          Clear Location
+          <i class="fas fa-search" aria-hidden="true"></i>
         </button>
       </div>
-    </div>
-  </div>
 
-    <!-- SEARCH BOX -->
-   <div class="ami-search">
-  <input 
-    type="text"
-    placeholder="Search for products, services, jobs, businesses..."
-  >
-  <button>
-    <i class="fas fa-search"></i>
-  </button>
-</div>
-
-<!-- PROFILE LOGIN / ACCOUNT DROPDOWN -->
-<div class="profile-menu-wrapper">
-
-  <button
-    type="button"
-    class="profile-login"
-    (click)="toggleProfileMenu($event)"
-  >
-    <i class="fa-regular fa-user"></i>
-
-    <span>
-      {{ isLoggedInUser ? 'My Account' : 'Login / Sign Up' }}
-    </span>
-
-    <i
-      class="fas fa-chevron-down profile-arrow"
-      [class.rotate]="showProfileMenu"
-    ></i>
-  </button>
-
-  <div
-    class="profile-dropdown"
-    *ngIf="showProfileMenu"
-    (click)="$event.stopPropagation()"
-  >
-
-    <!-- USER NOT LOGGED IN -->
-    <div class="login-dropdown-header" *ngIf="!isLoggedInUser">
-      <div>
-        <strong>Welcome to AMI HUB</strong>
-        <small>Login to access your account</small>
-      </div>
-
-      <button
-        type="button"
-        class="dropdown-login-btn"
-        (click)="goToLogin()"
-      >
-        Login
-      </button>
-    </div>
-
-    <!-- TWO COLUMN MENU -->
- <div
-  class="profile-menu-grid"
-  *ngIf="isLoggedInUser"
->
-
-      <button
-        type="button"
-        class="profile-dropdown-item"
-        (click)="goToProfileMenu()"
-      >
-        <span class="dropdown-icon">
+      <!-- DESKTOP ACCOUNT MENU -->
+      <div class="profile-menu-wrapper">
+        <button
+          type="button"
+          class="profile-login"
+          (click)="toggleProfileMenu($event)"
+        >
           <i class="fa-regular fa-user"></i>
-        </span>
 
-        <span class="dropdown-text">
-          <strong>My Account</strong>
-          <small>View your profile</small>
-        </span>
-      </button>
-
-      <button
-        type="button"
-        class="profile-dropdown-item"
-        (click)="goToOrders()"
-      >
-        <span class="dropdown-icon">
-          <i class="fas fa-box order-icon"></i>
-        </span>
-
-        <span class="dropdown-text">
-          <strong>Orders</strong>
-          <small>Track your orders</small>
-        </span>
-      </button>
-
-      <button
-        type="button"
-        class="profile-dropdown-item"
-        (click)="goToFavorites()"
-      >
-        <span class="dropdown-icon">
-          <i class="fa-regular fa-heart"></i>
-        </span>
-
-        <span class="dropdown-text">
-          <strong>Wishlist</strong>
-          <small>Saved products</small>
-        </span>
-      </button>
-
-      <button
-        type="button"
-        class="profile-dropdown-item"
-        (click)="goToNotifications()"
-      >
-        <span class="dropdown-icon">
-          <i class="fa-regular fa-bell"></i>
-
-          <span
-            class="dropdown-count"
-            *ngIf="notificationCount > 0"
-          >
-            {{ notificationCount }}
+          <span>
+            {{ isLoggedInUser ? 'My Account' : 'Login / Sign Up' }}
           </span>
-        </span>
 
-        <span class="dropdown-text">
-          <strong>Notifications</strong>
-          <small>View recent updates</small>
-        </span>
-      </button>
+          <i
+            class="fas fa-chevron-down profile-arrow"
+            [class.rotate]="showProfileMenu"
+          ></i>
+        </button>
 
-      <!-- CHAT INSIDE DROPDOWN -->
-      <button
-        type="button"
-        class="profile-dropdown-item"
-        (click)="goToChatFromDropdown()"
-      >
-        <span class="dropdown-icon chat-dropdown-icon">
-          <i class="fas fa-comments"></i>
-
-          <span
-            class="dropdown-count"
-            *ngIf="chatCount > 0"
+        <div
+          class="profile-dropdown"
+          *ngIf="showProfileMenu"
+          (click)="$event.stopPropagation()"
+        >
+          <div
+            class="login-dropdown-header"
+            *ngIf="!isLoggedInUser"
           >
-            {{ chatCount }}
-          </span>
-        </span>
+            <div>
+              <strong>Welcome to AMI HUB</strong>
+              <small>Login to access your account</small>
+            </div>
 
-        <span class="dropdown-text">
-          <strong>Chat</strong>
-          <small>View your messages</small>
-        </span>
-      </button>
-      <!-- MY POSTS -->
-<button
-  type="button"
-  class="profile-dropdown-item mobile-my-posts"
-  (click)="goToMyPosts()"
->
-  <span class="dropdown-icon">
-    <i class="fas fa-clipboard-list"></i>
-  </span>
+            <button
+              type="button"
+              class="dropdown-login-btn"
+              (click)="goToLogin()"
+            >
+              Login
+            </button>
+          </div>
 
-  <span class="dropdown-text">
-    <strong>My Posts</strong>
-    <small>Manage your posts</small>
-  </span>
-</button>
+          <div class="profile-menu-grid" *ngIf="isLoggedInUser">
+            <button
+              type="button"
+              class="profile-dropdown-item"
+              (click)="goToProfileMenu()"
+            >
+              <span class="dropdown-icon">
+                <i class="fa-regular fa-user"></i>
+              </span>
 
+              <span class="dropdown-text">
+                <strong>My Account</strong>
+                <small>View your profile</small>
+              </span>
+            </button>
+
+            <button
+              type="button"
+              class="profile-dropdown-item"
+              (click)="goToOrders()"
+            >
+              <span class="dropdown-icon">
+                <i class="fas fa-box order-icon"></i>
+              </span>
+
+              <span class="dropdown-text">
+                <strong>Orders</strong>
+                <small>Track your orders</small>
+              </span>
+            </button>
+
+            <button
+              type="button"
+              class="profile-dropdown-item"
+              (click)="goToFavorites()"
+            >
+              <span class="dropdown-icon">
+                <i class="fa-regular fa-heart"></i>
+              </span>
+
+              <span class="dropdown-text">
+                <strong>Wishlist</strong>
+                <small>Saved products</small>
+              </span>
+            </button>
+
+            <button
+              type="button"
+              class="profile-dropdown-item"
+              (click)="goToNotifications()"
+            >
+              <span class="dropdown-icon">
+                <i class="fa-regular fa-bell"></i>
+
+                <span
+                  class="dropdown-count"
+                  *ngIf="notificationCount > 0"
+                >
+                  {{ notificationCount }}
+                </span>
+              </span>
+
+              <span class="dropdown-text">
+                <strong>Notifications</strong>
+                <small>View recent updates</small>
+              </span>
+            </button>
+
+            <button
+              type="button"
+              class="profile-dropdown-item"
+              (click)="goToChatFromDropdown()"
+            >
+              <span class="dropdown-icon chat-dropdown-icon">
+                <i class="fas fa-comments"></i>
+
+                <span
+                  class="dropdown-count"
+                  *ngIf="chatCount > 0"
+                >
+                  {{ chatCount }}
+                </span>
+              </span>
+
+              <span class="dropdown-text">
+                <strong>Chat</strong>
+                <small>View your messages</small>
+              </span>
+            </button>
+
+            <button
+              type="button"
+              class="profile-dropdown-item mobile-my-posts"
+              (click)="goToMyPosts()"
+            >
+              <span class="dropdown-icon">
+                <i class="fas fa-clipboard-list"></i>
+              </span>
+
+              <span class="dropdown-text">
+                <strong>My Posts</strong>
+                <small>Manage your posts</small>
+              </span>
+            </button>
+          </div>
+
+          <button
+            type="button"
+            class="profile-logout"
+            *ngIf="isLoggedInUser"
+            (click)="logoutFromDropdown()"
+          >
+            <i class="fas fa-arrow-right-from-bracket"></i>
+            <span>Logout</span>
+          </button>
+        </div>
+      </div>
     </div>
-
-    <!-- LOGOUT -->
-    <button
-      type="button"
-      class="profile-logout"
-      *ngIf="isLoggedInUser"
-      (click)="logoutFromDropdown()"
-    >
-      <i class="fas fa-arrow-right-from-bracket"></i>
-      <span>Logout</span>
-    </button>
-
-  </div>
-
-</div>
-</div>
-<div>
-        
-</div>
-
   </nav>
 
-<!--   
-    <div class="menu-overlay" *ngIf="menuOpen" (click)="closeMenu()"></div>
-<div
-  class="side-menu"
-  *ngIf="
-    !currentUrl.includes('admin') &&
-    !currentUrl.includes('admin-page')
-  "
-  [class.active]="menuOpen">
-    <div class="menu-content">
-      <div class="menu-header"> -->
-        <!-- <div class="logo">AMI<span>HUB</span></div> --> 
-        <!-- <button class="close-icon" type="button" (click)="closeMenu()"></button>
-      </div>
-      <div class="links-container">
-        <a [routerLink]="['/']" (click)="closeMenu()">Home</a>
-        <a (click)=" closeMenu(); goToMyPosts()">My Posts</a> -->
-        <!-- <a (click)="postProduct(); closeMenu()" class="special-link product">
-          Post Product
-        </a> -->
-        <!-- <a (click)=" closeMenu(); postService()" class="special-link service">
-          📢 ADVERTISE
-        </a>
-        <a
-  (click)="goToJobs(); closeMenu()"
-  class="jobs-btn"
-  >
-    💼 Find My Job
-</a>
-        <a (click)=" closeMenu();goToFavorites();">
-          ❤️ Favorites
-        </a>
-       <a (click)=" closeMenu(); goToChat()" class="chat-menu-item">
-  💬 Chats
-  <span *ngIf="chatCount > 0" class="chat-menu-badge">
-    {{ chatCount }}
-  </span>
-</a>
-        <div class="menu-item notification-item" (click)="goToNotifications(); closeMenu()">
-          <i class="fas fa-bell"></i>
-          <span>Notifications</span>
-          <span *ngIf="notificationCount > 0" class="notification-badge">
-            {{ notificationCount }}
-          </span>
-        </div>
-        <div class="menu-item notification-item" (click)="toggleLocationPicker(); closeMenu()">
-          <i class="fas fa-map-marker-alt"></i>
-          <span>{{ locationLabel }}</span>
-        </div>
-        <a [routerLink]="['/news']" (click)="closeMenu()">📰 News</a>
-      <div class="menu-item" (click)=" closeMenu();goToProfile()">
-  <i class="fas fa-user-circle"></i>
-  <span>Profile</span>
-</div>
-      </div>
-      <div style="margin-top:16px; display:flex; flex-direction:column; gap:12px;">
-  <a
-    *ngIf="!isLoggedInUser"
-    [routerLink]="['/login']"
-    (click)="closeMenu()"
-    style="
-      width:100%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      min-height:46px;
-      border-radius:14px;
-      text-decoration:none;
-      font-weight:600;
-      font-size:16px;
-      border:1px solid rgba(58,119,255,0.25);
-      background:#eef4ff;
-      color:#2563eb;
+  <!-- MOBILE FIXED BOTTOM NAVIGATION -->
+  <nav
+    class="mobile-commerce-nav"
+    *ngIf="
+      showMobileCommerceNav &&
+      !showLocationPicker &&
+      !showAdvertiseLoginModal &&
+      !activeService
     "
+    aria-label="Mobile main navigation"
   >
-    Login
-  </a>
-  <button
-    *ngIf="isLoggedInUser"
-    class="logout-btn"
-    style="width:100%; min-height:46px;"
-    (click)="logout(); closeMenu()"
-  >
-    Logout
-  </button>
-</div>    
-    </div>
-  </div> -->
-<!-- FOOTER -->
+    <a
+      routerLink="/products"
+      routerLinkActive="is-active"
+      ariaCurrentWhenActive="page"
+      class="mobile-commerce-item"
+      (click)="showProfileMenu = false; closeMenu()"
+    >
+      <i class="fas fa-box" aria-hidden="true"></i>
+      <span>Products</span>
+    </a>
 
-<main class="main-content">
-  <router-outlet></router-outlet>
-  <app-snackbar></app-snackbar>
+    <a
+      routerLink="/service-list"
+      routerLinkActive="is-active"
+      ariaCurrentWhenActive="page"
+      class="mobile-commerce-item"
+      (click)="showProfileMenu = false; closeMenu()"
+    >
+      <i class="fas fa-briefcase" aria-hidden="true"></i>
+      <span>Services</span>
+    </a>
 
-  <!-- SERVICES MODAL -->
-  <div class="services-modal" *ngIf="activeService">
-    <div class="services-backdrop" (click)="closeService()"></div>
+    <a
+      routerLink="/job"
+      routerLinkActive="is-active"
+      ariaCurrentWhenActive="page"
+      class="mobile-commerce-item"
+      (click)="showProfileMenu = false; closeMenu()"
+    >
+      <i class="fas fa-user-tie" aria-hidden="true"></i>
+      <span>Jobs</span>
+    </a>
 
-    <div class="services-card">
-      <button class="close-btn" (click)="closeService()">×</button>
-
-      <!-- SIMPLE WEBSITE -->
-      <div *ngIf="activeService === 'website'">
-        <h2>🌐 Simple Website</h2>
-        <p>Create a professional website for your business.</p>
-
-        <ul>
-          <li>✔ Business website design</li>
-          <li>✔ Mobile responsive</li>
-          <li>✔ Fast & secure hosting</li>
-          <li>✔ Domain setup included</li>
-        </ul>
-
-        <div class="contact-box">
-          📞 Call: +91 9042111424<br>
-          📧 Email: amihub2026@gmail.com
-        </div>
-      </div>
-
-      <!-- WHATSAPP ORDERING -->
-      <div *ngIf="activeService === 'whatsapp'">
-        <h2>💬 WhatsApp Ordering</h2>
-        <p>Let customers order directly through WhatsApp.</p>
-
-        <ul>
-          <li>✔ One-click WhatsApp ordering</li>
-          <li>✔ Auto message setup</li>
-          <li>✔ Product catalog integration</li>
-          <li>✔ Easy customer communication</li>
-        </ul>
-
-        <div class="contact-box">
-          📞 Call: +91 9042111424<br>
-          📧 Email: amihub2026@gmail.com
-        </div>
-      </div>
-
-      <!-- GOOGLE LISTING -->
-      <div *ngIf="activeService === 'google'">
-        <h2>📍 Google Listing Setup</h2>
-        <p>Show your business on Google Maps & search.</p>
-
-        <ul>
-          <li>✔ Google My Business setup</li>
-          <li>✔ Map visibility</li>
-          <li>✔ Reviews & rating setup</li>
-          <li>✔ SEO optimization</li>
-        </ul>
-
-        <div class="contact-box">
-          📞 Call: +91 9042111424<br>
-          📧 Email: amihub2026@gmail.com
-        </div>
-      </div>
-
-    </div>
-  </div>
-  <div
-  class="advertise-login-overlay"
-  *ngIf="showAdvertiseLoginModal"
-  (click)="closeAdvertiseLoginModal()"
->
-  <div
-    class="advertise-login-modal"
-    (click)="$event.stopPropagation()"
-  >
     <button
       type="button"
-      class="advertise-login-close"
-      (click)="closeAdvertiseLoginModal()"
+      class="mobile-commerce-item"
+      [class.is-active]="showProfileMenu"
+      [attr.aria-expanded]="showProfileMenu"
+      aria-controls="mobile-account-menu"
+      (click)="toggleProfileMenu($event)"
     >
-      ×
+      <i class="fa-regular fa-user" aria-hidden="true"></i>
+      <span>Account</span>
     </button>
 
-    <app-login
-      [modalMode]="true"
-      (loginSuccess)="onAdvertiseLoginSuccess($event)">
-    </app-login>
-  </div>
-</div>
-</main>
+    <!-- MOBILE ACCOUNT MENU -->
+    <div
+      id="mobile-account-menu"
+      class="profile-dropdown mobile-commerce-account-menu"
+      *ngIf="showProfileMenu"
+      (click)="$event.stopPropagation()"
+    >
+      <div
+        class="login-dropdown-header"
+        *ngIf="!isLoggedInUser"
+      >
+        <div>
+          <strong>Welcome to AMI HUB</strong>
+          <small>Login to access your account</small>
+        </div>
 
-<footer class="footer" *ngIf="
-  !currentUrl.includes('login') &&
-  !currentUrl.includes('admin') &&
-  !currentUrl.includes('service') &&
-  !currentUrl.includes('products') &&
-  !currentUrl.includes('details') &&
-  !currentUrl.includes('chats')
-">
-      <div class="footer-glow"></div>
+        <button
+          type="button"
+          class="dropdown-login-btn"
+          (click)="goToLogin()"
+        >
+          Login
+        </button>
+      </div>
+
+      <div class="profile-menu-grid" *ngIf="isLoggedInUser">
+        <button
+          type="button"
+          class="profile-dropdown-item"
+          (click)="goToProfileMenu()"
+        >
+          <span class="dropdown-icon">
+            <i class="fa-regular fa-user"></i>
+          </span>
+
+          <span class="dropdown-text">
+            <strong>My Account</strong>
+            <small>View your profile</small>
+          </span>
+        </button>
+
+        <button
+          type="button"
+          class="profile-dropdown-item"
+          (click)="goToOrders()"
+        >
+          <span class="dropdown-icon">
+            <i class="fas fa-box order-icon"></i>
+          </span>
+
+          <span class="dropdown-text">
+            <strong>Orders</strong>
+            <small>Track your orders</small>
+          </span>
+        </button>
+
+        <button
+          type="button"
+          class="profile-dropdown-item"
+          (click)="goToFavorites()"
+        >
+          <span class="dropdown-icon">
+            <i class="fa-regular fa-heart"></i>
+          </span>
+
+          <span class="dropdown-text">
+            <strong>Wishlist</strong>
+            <small>Saved products</small>
+          </span>
+        </button>
+
+        <button
+          type="button"
+          class="profile-dropdown-item"
+          (click)="goToNotifications()"
+        >
+          <span class="dropdown-icon">
+            <i class="fa-regular fa-bell"></i>
+
+            <span
+              class="dropdown-count"
+              *ngIf="notificationCount > 0"
+            >
+              {{ notificationCount }}
+            </span>
+          </span>
+
+          <span class="dropdown-text">
+            <strong>Notifications</strong>
+            <small>View recent updates</small>
+          </span>
+        </button>
+
+        <button
+          type="button"
+          class="profile-dropdown-item"
+          (click)="goToChatFromDropdown()"
+        >
+          <span class="dropdown-icon chat-dropdown-icon">
+            <i class="fas fa-comments"></i>
+
+            <span
+              class="dropdown-count"
+              *ngIf="chatCount > 0"
+            >
+              {{ chatCount }}
+            </span>
+          </span>
+
+          <span class="dropdown-text">
+            <strong>Chat</strong>
+            <small>View your messages</small>
+          </span>
+        </button>
+
+        <button
+          type="button"
+          class="profile-dropdown-item mobile-my-posts"
+          (click)="goToMyPosts()"
+        >
+          <span class="dropdown-icon">
+            <i class="fas fa-clipboard-list"></i>
+          </span>
+
+          <span class="dropdown-text">
+            <strong>My Posts</strong>
+            <small>Manage your posts</small>
+          </span>
+        </button>
+      </div>
+
+      <button
+        type="button"
+        class="profile-logout"
+        *ngIf="isLoggedInUser"
+        (click)="logoutFromDropdown()"
+      >
+        <i class="fas fa-arrow-right-from-bracket"></i>
+        <span>Logout</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- PAGE CONTENT -->
+  <main class="main-content">
+    <router-outlet></router-outlet>
+    <app-snackbar></app-snackbar>
+
+    <!-- SERVICES MODAL -->
+    <div class="services-modal" *ngIf="activeService">
+      <div
+        class="services-backdrop"
+        (click)="closeService()"
+      ></div>
+
+      <div class="services-card">
+        <button
+          type="button"
+          class="close-btn"
+          (click)="closeService()"
+        >
+          ×
+        </button>
+
+        <div *ngIf="activeService === 'website'">
+          <h2>🌐 Simple Website</h2>
+          <p>Create a professional website for your business.</p>
+
+          <ul>
+            <li>✔ Business website design</li>
+            <li>✔ Mobile responsive</li>
+            <li>✔ Fast & secure hosting</li>
+            <li>✔ Domain setup included</li>
+          </ul>
+
+          <div class="contact-box">
+            📞 Call: +91 9042111424<br />
+            📧 Email: amihub2026@gmail.com
+          </div>
+        </div>
+
+        <div *ngIf="activeService === 'whatsapp'">
+          <h2>💬 WhatsApp Ordering</h2>
+          <p>Let customers order directly through WhatsApp.</p>
+
+          <ul>
+            <li>✔ One-click WhatsApp ordering</li>
+            <li>✔ Auto message setup</li>
+            <li>✔ Product catalog integration</li>
+            <li>✔ Easy customer communication</li>
+          </ul>
+
+          <div class="contact-box">
+            📞 Call: +91 9042111424<br />
+            📧 Email: amihub2026@gmail.com
+          </div>
+        </div>
+
+        <div *ngIf="activeService === 'google'">
+          <h2>📍 Google Listing Setup</h2>
+          <p>Show your business on Google Maps & search.</p>
+
+          <ul>
+            <li>✔ Google My Business setup</li>
+            <li>✔ Map visibility</li>
+            <li>✔ Reviews & rating setup</li>
+            <li>✔ SEO optimization</li>
+          </ul>
+
+          <div class="contact-box">
+            📞 Call: +91 9042111424<br />
+            📧 Email: amihub2026@gmail.com
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADVERTISE LOGIN MODAL -->
+    <div
+      class="advertise-login-overlay"
+      *ngIf="showAdvertiseLoginModal"
+      (click)="closeAdvertiseLoginModal()"
+    >
+      <div
+        class="advertise-login-modal"
+        (click)="$event.stopPropagation()"
+      >
+        <button
+          type="button"
+          class="advertise-login-close"
+          (click)="closeAdvertiseLoginModal()"
+        >
+          ×
+        </button>
+
+        <app-login
+          [modalMode]="true"
+          (loginSuccess)="onAdvertiseLoginSuccess($event)"
+        ></app-login>
+      </div>
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer
+    class="footer"
+    *ngIf="
+      !currentUrl.includes('login') &&
+      !currentUrl.includes('admin') &&
+      !currentUrl.includes('service') &&
+      !currentUrl.includes('products') &&
+      !currentUrl.includes('details') &&
+      !currentUrl.includes('chats')
+    "
+  >
+    <div class="footer-glow"></div>
 
     <div class="footer-container">
       <div class="footer-brand">
         <div class="footer-brand-top">
           <div class="footer-logo-wrap">
-            <img src="assets/hub_logo.png" alt="AMI HUB Logo" class="footer-logo" />
+            <img
+              src="assets/hub_logo.png"
+              alt="AMI HUB Logo"
+              class="footer-logo"
+            />
           </div>
+
           <span class="footer-badge">Trusted Marketplace</span>
         </div>
 
         <p>
-          Buy, sell and discover products or trusted services near you with a secure,
-          simple and user-friendly marketplace experience.
+          Buy, sell and discover products or trusted services near you
+          with a secure, simple and user-friendly marketplace experience.
         </p>
 
         <div class="social-icons">
-          <a href="https://facebook.com/" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-          <a href="https://instagram.com/" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-          <a href="https://twitter.com/" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-          <a href="https://youtube.com/" target="_blank" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
-          <a href="https://linkedin.com/" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-          <a href="https://threads.net/" target="_blank" aria-label="Threads"><i class="fab fa-threads"></i></a>
-          <a href="https://t.me/" target="_blank" aria-label="Telegram"><i class="fab fa-telegram-plane"></i></a>
-          <a href="https://wa.me/" target="_blank" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+          <a
+            href="https://facebook.com/"
+            target="_blank"
+            aria-label="Facebook"
+          >
+            <i class="fab fa-facebook-f"></i>
+          </a>
+
+          <a
+            href="https://instagram.com/"
+            target="_blank"
+            aria-label="Instagram"
+          >
+            <i class="fab fa-instagram"></i>
+          </a>
+
+          <a
+            href="https://twitter.com/"
+            target="_blank"
+            aria-label="Twitter"
+          >
+            <i class="fab fa-twitter"></i>
+          </a>
+
+          <a
+            href="https://youtube.com/"
+            target="_blank"
+            aria-label="YouTube"
+          >
+            <i class="fab fa-youtube"></i>
+          </a>
+
+          <a
+            href="https://linkedin.com/"
+            target="_blank"
+            aria-label="LinkedIn"
+          >
+            <i class="fab fa-linkedin-in"></i>
+          </a>
+
+          <a
+            href="https://threads.net/"
+            target="_blank"
+            aria-label="Threads"
+          >
+            <i class="fab fa-threads"></i>
+          </a>
+
+          <a
+            href="https://t.me/"
+            target="_blank"
+            aria-label="Telegram"
+          >
+            <i class="fab fa-telegram-plane"></i>
+          </a>
+
+          <a
+            href="https://wa.me/"
+            target="_blank"
+            aria-label="WhatsApp"
+          >
+            <i class="fab fa-whatsapp"></i>
+          </a>
         </div>
       </div>
 
       <div class="footer-column">
         <h3>Support</h3>
+
         <a routerLink="/help">Toll Free</a>
         <a routerLink="/about">About Us</a>
         <a routerLink="/contact">Contact Us</a>
@@ -579,47 +751,57 @@
         <h3 class="services-title">Other Services</h3>
 
         <div class="services-list">
-          <div class="service-pill" (click)="openService('website')">
+          <div
+            class="service-pill"
+            (click)="openService('website')"
+          >
             <i class="fas fa-globe"></i>
             <span>Simple Website</span>
           </div>
 
-          <div class="service-pill" (click)="openService('whatsapp')">
+          <div
+            class="service-pill"
+            (click)="openService('whatsapp')"
+          >
             <i class="fab fa-whatsapp"></i>
             <span>WhatsApp Ordering</span>
           </div>
 
-          <div class="service-pill" (click)="openService('google')">
+          <div
+            class="service-pill"
+            (click)="openService('google')"
+          >
             <i class="fas fa-map-marked-alt"></i>
             <span>Google Listing Setup</span>
           </div>
-
         </div>
+
         <div class="footer-app-mini">
+          <span class="mini-app-text">
+            Get the AMI HUB App
+          </span>
 
-  <span class="mini-app-text">
-    Get the AMI HUB App
-  </span>
-
-  <a
-    href="https://play.google.com/store/apps/details?id=com.amihub.app&pcampaignid=web_share"
-    target="_blank"
-  >
-    <img
-      src="assets/ads/google.png"
-      alt="Get it on Google Play"
-      class="google-play-mini"
-    >
-  </a>
-
-</div>
+          <a
+            href="https://play.google.com/store/apps/details?id=com.amihub.app&pcampaignid=web_share"
+            target="_blank"
+          >
+            <img
+              src="assets/ads/google.png"
+              alt="Get it on Google Play"
+              class="google-play-mini"
+            />
+          </a>
+        </div>
       </div>
 
       <div class="footer-column">
         <h3>Contact Us</h3>
 
         <p>
-          <a href="https://www.google.com/maps/search/?api=1&query=Madurai" target="_blank">
+          <a
+            href="https://www.google.com/maps/search/?api=1&query=Madurai"
+            target="_blank"
+          >
             <i class="fas fa-map-marker-alt"></i>
             Madurai, Tamil Nadu, India
           </a>
@@ -645,18 +827,12 @@
           <span>Local reach</span>
         </div>
       </div>
-
-      <!-- <div class="footer-column footer-app">
-        <h3>Download App</h3>
-        <p class="footer-app-text">Get the AMI HUB app for a faster buying and selling experience.</p>
-
-        <a href="#"><img src="assets/icons/qr for amihub.png" class="app-btn" alt="Google Play"></a>
-      </div> -->
     </div>
 
     <div class="footer-bottom">
       <div class="footer-bottom-inner">
         <p>© 2026 AMI HUB. All rights reserved.</p>
+
         <div class="footer-bottom-links">
           <a routerLink="/terms">Terms</a>
           <a routerLink="/privacy-policy">Privacy</a>
@@ -665,6 +841,4 @@
       </div>
     </div>
   </footer>
- 
-
-
+</div>
