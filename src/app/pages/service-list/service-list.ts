@@ -49,7 +49,8 @@ selectedCategory: any = null;
   isFilterOpen = false;
   services: any[] = [];
 isLoading = false;
-
+selectedLocation = '';
+selectedRadiusKm = 10;
 filteredServices: any[] = [];
 
 isLoadingServices = false;

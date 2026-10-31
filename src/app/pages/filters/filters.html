@@ -36,41 +36,45 @@
   </section>
 
   <!-- CATEGORY -->
-  <section class="filter-section">
-    <button
-      type="button"
-      class="filter-section-header"
-      (click)="toggleSection('category')"
+<!-- CATEGORY -->
+<section class="filter-section">
+  <button
+    type="button"
+    class="filter-section-header"
+    (click)="toggleSection('category')"
+    [attr.aria-expanded]="isSectionOpen('category')"
+  >
+    <span>Category</span>
+
+    <span
+      class="arrow"
+      [class.rotate]="isSectionOpen('category')"
     >
-      <span>Category</span>
+      ˅
+    </span>
+  </button>
 
-      <span
-        class="arrow"
-        [class.rotate]="isSectionOpen('category')"
-      >
-        ˅
-      </span>
-    </button>
-
-    <div
-      class="filter-section-content"
-      [class.open]="isSectionOpen('category')"
+  <div
+    class="filter-section-content"
+    [class.open]="isSectionOpen('category')"
+    [attr.inert]="isSectionOpen('category') ? null : ''"
+  >
+    <select
+      class="filter-input category-select"
+      aria-label="Category"
+      [(ngModel)]="filters.selectedCategoryId"
     >
-      <select
-        class="filter-input"
-        [(ngModel)]="filters.selectedCategoryId"
-      >
-        <option value="">All Categories</option>
+      <option value="">All Categories</option>
 
-        <option
-          *ngFor="let category of categories"
-          [value]="category.id"
-        >
-          {{ category.name }}
-        </option>
-      </select>
-    </div>
-  </section>
+      <option
+        *ngFor="let category of categories"
+        [value]="category.id"
+      >
+        {{ category.name }}
+      </option>
+    </select>
+  </div>
+</section>
 
   <!-- LOCATION -->
   <section class="filter-section">

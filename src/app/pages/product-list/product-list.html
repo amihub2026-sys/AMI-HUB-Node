@@ -304,12 +304,10 @@
   </button>
 
 
-  <div class="mobile-location">
-
-    📍 Madurai • 10 km
-
-  </div>
-
+ <div class="mobile-location">
+  📍 {{ selectedLocation || 'Select location' }}
+  • {{ selectedRadiusKm }} km
+   </div>
 
   <button (click)="toggleFilter()">
 

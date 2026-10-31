@@ -25,7 +25,7 @@ export interface FilterState {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './filters.html',
-  styleUrl: './filters.css'
+styleUrl: './filters.css'
 })
 export class Filters implements OnInit {
 

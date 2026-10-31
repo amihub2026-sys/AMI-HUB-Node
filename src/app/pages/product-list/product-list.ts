@@ -194,8 +194,8 @@ filteredResults: ProductCardItem[] = [];
   private page = 0;
   private readonly pageSize = 20;
 
-  private selectedLocation: any = null;
-  selectedRadiusKm = 50;
+   selectedLocation: any = null;
+  selectedRadiusKm = 10;
   locationText = '';
 
   searchText = '';
@@ -639,8 +639,8 @@ openDetails(item: ProductCardItem): void {
     const savedRadius = localStorage.getItem('selectedRadiusKm');
     if (savedRadius && !isNaN(Number(savedRadius))) {
       this.selectedRadiusKm = Number(savedRadius);
-    }else {
-  this.selectedRadiusKm = 50;
+    } else {
+  this.selectedRadiusKm = 10;
 }
 
     const savedLocation = localStorage.getItem('amh_selected_location');
@@ -1358,7 +1358,7 @@ this.cdr.detectChanges();
     this.minPrice = null;
     this.maxPrice = null;
     this.sortBy = 'Newest';
-    this.selectedRadiusKm = 50;
+  this.selectedRadiusKm = 10;
     this.subcategories.set([]);
 
     if (typeof window !== 'undefined') {
