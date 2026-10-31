@@ -298,11 +298,11 @@ export class LocationPickerComponent implements AfterViewInit {
       lon: Number(result.lon)
     };
 
-    setTimeout(() => {
+    
       this.query = cleanDisplay;
       this.currentResult = updatedResult;
       this.cdr.detectChanges();
-    }, 0);
+  
   }
 
   private async updateAddressFromCoordinates(
