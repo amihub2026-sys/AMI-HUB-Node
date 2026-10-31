@@ -1207,7 +1207,15 @@ video_urls: videoUrls,
         category: this.mainAd.category || '',
         subcategory: this.mainAd.subcategory || '',
 
-        location: this.mainAd.full_address,
+    location: {
+  address: this.mainAd.full_address?.trim() || '',
+  city: this.mainAd.district?.trim() || '',
+  state: this.mainAd.state?.trim() || '',
+  country: this.mainAd.country || 'India',
+  pincode: this.selectedMapLocation?.postalCode || '',
+  latitude: this.mainAd.latitude,
+  longitude: this.mainAd.longitude
+},
         address: this.mainAd.full_address,
         latitude: this.mainAd.latitude,
         longitude: this.mainAd.longitude,

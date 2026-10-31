@@ -22,38 +22,53 @@ export class LocationSearchService {
   private placesService: any;
   private geocoder: any;
 
-  constructor() {
-    if (typeof window !== 'undefined' && (window as any).google?.maps) {
-      this.autocompleteService = new google.maps.places.AutocompleteService();
-      this.geocoder = new google.maps.Geocoder();
 
-      const div = document.createElement('div');
-      this.placesService = new google.maps.places.PlacesService(div);
-    }
+private googleReadyPromise: Promise<void> | null = null;
+
+private async ensureGoogleReady(): Promise<void> {
+  if (typeof window === 'undefined') {
+    throw new Error('Google Maps requires a browser');
   }
 
-  private ensureGoogleReady(): void {
-    if (!(window as any).google?.maps) {
-      throw new Error('Google Maps API not loaded');
-    }
-
-    if (!this.autocompleteService) {
-      this.autocompleteService = new google.maps.places.AutocompleteService();
-    }
-
-    if (!this.geocoder) {
-      this.geocoder = new google.maps.Geocoder();
-    }
-
-    if (!this.placesService) {
-      const div = document.createElement('div');
-      this.placesService = new google.maps.places.PlacesService(div);
-    }
+  if (!this.googleReadyPromise) {
+    this.googleReadyPromise = this.initializeGoogle().catch((error) => {
+      this.googleReadyPromise = null;
+      throw error;
+    });
   }
+
+  await this.googleReadyPromise;
+}
+
+private async initializeGoogle(): Promise<void> {
+  // Wait up to 10 seconds for the Google Maps script.
+  const deadline = Date.now() + 10000;
+
+  while (!(window as any).google?.maps?.importLibrary) {
+    if (Date.now() >= deadline) {
+      throw new Error('Google Maps script failed to load');
+    }
+
+    await new Promise<void>((resolve) => setTimeout(resolve, 100));
+  }
+
+  const maps = (window as any).google.maps;
+
+  const [places, geocoding] = await Promise.all([
+    maps.importLibrary('places'),
+    maps.importLibrary('geocoding')
+  ]);
+
+  this.autocompleteService = new places.AutocompleteService();
+  this.geocoder = new geocoding.Geocoder();
+
+  this.placesService = new places.PlacesService(
+    document.createElement('div')
+  );
+}
 
   async searchLocations(query: string): Promise<AppLocationResult[]> {
-    this.ensureGoogleReady();
-
+  await this.ensureGoogleReady();
     return new Promise((resolve) => {
       this.autocompleteService.getPlacePredictions(
         {
@@ -85,7 +100,7 @@ export class LocationSearchService {
     placeId: string,
     fallbackText: string
   ): Promise<AppLocationResult | null> {
-    this.ensureGoogleReady();
+ await this.ensureGoogleReady();
 
     return new Promise((resolve) => {
       this.placesService.getDetails(
@@ -130,13 +145,14 @@ export class LocationSearchService {
     lat: number,
     lon: number
   ): Promise<AppLocationResult | null> {
-    this.ensureGoogleReady();
+ await this.ensureGoogleReady();
 
     return new Promise((resolve) => {
       this.geocoder.geocode(
         { location: { lat, lng: lon } },
         (results: any[] | null, status: string) => {
           if (status !== 'OK' || !results?.length) {
+              console.error('Google reverse geocoding failed:', status);
             resolve(null);
             return;
           }
