@@ -5933,3 +5933,28 @@ app-categories{
     transform: none !important;
   }
 }
+/* MOBILE: slightly wider Service and Product cards */
+@media (max-width: 768px) {
+  .whole > .trending,
+  .whole > .featured-deals {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .trending .trending-row,
+  .featured-deals .deals-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    width: 100%;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .trending-row > .featured-card,
+  .deals-grid > .featured-card {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+}
