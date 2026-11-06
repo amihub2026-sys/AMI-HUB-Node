@@ -254,30 +254,21 @@ export class LocationPickerComponent implements AfterViewInit {
     );
   }
 
-  async confirmLocation(): Promise<void> {
-    if (this.currentLat == null || this.currentLon == null) {
-      alert('Please move or select a location on the map');
-      return;
-    }
+   confirmLocation(): void {
+  const selected = this.currentResult;
 
-    await this.updateAddressFromCoordinates(this.currentLat, this.currentLon);
-
-    if (!this.currentResult) {
-      this.currentResult = {
-        placeId: '',
-        displayName: this.query?.trim() || 'Selected Location',
-        lat: Number(this.currentLat),
-        lon: Number(this.currentLon),
-        name: this.query?.trim() || 'Selected Location',
-        city: '',
-        state: '',
-        country: '',
-        postalCode: ''
-      };
-    }
-
-    this.locationSelected.emit(this.currentResult);
+  if (
+    !selected ||
+    this.query.trim() !== selected.displayName.trim() ||
+    selected.lat !== this.currentLat ||
+    selected.lon !== this.currentLon
+  ) {
+    alert('Choose an address from the suggestions or move the map pin before confirming.');
+    return;
   }
+
+  this.locationSelected.emit(selected);
+}
 
   private setDisplayState(result: AppLocationResult): void {
     const cleanDisplay =

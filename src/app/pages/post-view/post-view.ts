@@ -408,9 +408,13 @@ customDetails:
   ),
 
 latitude:
+  this.toNumberOrNull(data.location?.latitude) ??
+  this.toNumberOrNull(data.latitude) ??
   this.toNumberOrNull(data.customFields?.latitude),
 
 longitude:
+  this.toNumberOrNull(data.location?.longitude) ??
+  this.toNumberOrNull(data.longitude) ??
   this.toNumberOrNull(data.customFields?.longitude)
     };
 
@@ -483,30 +487,25 @@ private async countPostView(): Promise<void> {
     console.error('View count error:', error);
   }
 }
-buildLocation(data:any): string {
-
-  const custom = data?.customFields || {};
-
-  return (
-    custom.district ||
-    custom.state ||
-    custom.country ||
-    'Location not available'
-  );
-
+buildLocation(data: any): string {
+  return data?.location?.city ||
+    data?.district ||
+    data?.customFields?.district ||
+    data?.location?.state ||
+    data?.customFields?.state ||
+    data?.location?.country ||
+    data?.customFields?.country ||
+    'Location not available';
 }
 
 buildDisplayAddress(data: any): string {
-
-  const custom = data?.customFields || {};
-
-  return (
-    custom.full_address ||
-    custom.area ||
-    custom.place_name ||
-    'Location not available'
-  );
-
+  return data?.location?.address ||
+    data?.full_address ||
+    data?.address ||
+    data?.customFields?.full_address ||
+    data?.customFields?.area ||
+    data?.customFields?.place_name ||
+    'Location not available';
 }
   buildCategoryText(data: any): string {
     const category = String(data?.category || '').trim();
@@ -876,11 +875,18 @@ prevMedia() {
 
 
 
-
-  toNumberOrNull(value: any): number | null {
-    const num = Number(value);
-    return Number.isFinite(num) ? num : null;
+toNumberOrNull(value: unknown): number | null {
+  if (typeof value !== 'number' && typeof value !== 'string') {
+    return null;
   }
+
+  if (typeof value === 'string' && !value.trim()) {
+    return null;
+  }
+
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
 
   hasCoordinates(): boolean {
     const post = this.postData();
