@@ -1,13 +1,12 @@
 import { TestBed } from '@angular/core/testing';
+import { LocationSearchService } from './location-search';
 
-import { LocationSearch } from './location-search';
-
-describe('LocationSearch', () => {
-  let service: LocationSearch;
+describe('LocationSearchService', () => {
+  let service: LocationSearchService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(LocationSearch);
+    service = TestBed.inject(LocationSearchService);
   });
 
   it('should be created', () => {

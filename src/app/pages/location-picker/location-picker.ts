@@ -40,7 +40,8 @@ export class LocationPickerComponent implements AfterViewInit {
   loading = false;
   suggestions: AppLocationResult[] = [];
   isBrowser = false;
-
+private searchRequestId = 0;
+searchMessage = '';
   private map: any;
   private marker: any;
 
@@ -168,42 +169,57 @@ export class LocationPickerComponent implements AfterViewInit {
     }
   }
 
-  async onSearchInput(): Promise<void> {
-    const q = this.query.trim();
+async onSearchInput(): Promise<void> {
+  const requestId = ++this.searchRequestId;
+  const query = this.query.trim();
 
-    if (q.length < 3) {
-      this.suggestions = [];
+  this.suggestions = [];
+  this.searchMessage = '';
+  this.loading = query.length >= 3;
+
+  if (!this.loading) return;
+
+  try {
+    const results = await this.locationSearchService.searchLocations(query);
+
+    if (requestId !== this.searchRequestId || this.query.trim() !== query) {
       return;
     }
 
-    this.loading = true;
+    this.suggestions = results;
+    if (!results.length) {
+      this.searchMessage = 'No locations found. Try a shorter address.';
+    }
+  } catch (error) {
+    if (requestId !== this.searchRequestId || this.query.trim() !== query) {
+      return;
+    }
 
-    try {
-      this.suggestions = await this.locationSearchService.searchLocations(q);
-    } catch (error) {
-      console.error('Location search failed:', error);
-      this.suggestions = [];
-    } finally {
+    console.error('Location search failed:', error);
+    this.searchMessage = 'Location search failed. Please try again.';
+  } finally {
+    if (requestId === this.searchRequestId) {
       this.loading = false;
+      this.cdr.markForCheck();
     }
   }
+}
 
-  async chooseLocation(item: AppLocationResult): Promise<void> {
-    const lat = Number(item.lat);
-    const lon = Number(item.lon);
+ chooseLocation(item: AppLocationResult): void {
+  const { lat, lon } = item;
 
-    if (Number.isNaN(lat) || Number.isNaN(lon)) {
-      console.error('Invalid coordinates from selected location:', item);
-      return;
-    }
-
-    this.suggestions = [];
-    this.currentLat = lat;
-    this.currentLon = lon;
-
-    this.syncMapToPosition(lat, lon, 18);
-    await this.updateAddressFromCoordinates(lat, lon);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+    console.error('Invalid coordinates from selected location:', item);
+    return;
   }
+
+  this.suggestions = [];
+  this.currentLat = lat;
+  this.currentLon = lon;
+
+  this.syncMapToPosition(lat, lon, 18);
+  this.setDisplayState(item);
+}
 
   useCurrentLocation(): void {
     if (!this.isBrowser) {
