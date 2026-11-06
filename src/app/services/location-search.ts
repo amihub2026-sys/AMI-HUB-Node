@@ -67,34 +67,61 @@ private async initializeGoogle(): Promise<void> {
   );
 }
 
-  async searchLocations(query: string): Promise<AppLocationResult[]> {
-  await this.ensureGoogleReady();
-    return new Promise((resolve) => {
+ async searchLocations(query: string): Promise<AppLocationResult[]> {
+const input = query.trim().replace(
+  /^([A-Z0-9]+\+[A-Z0-9]+)\s*,\s*\1\b/i,
+  '$1'
+);
+  if (input.length < 3) return [];
+
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+
+  const lookup = async (): Promise<AppLocationResult[]> => {
+    await this.ensureGoogleReady();
+
+    const predictions = await new Promise<any[]>((resolve, reject) => {
       this.autocompleteService.getPlacePredictions(
         {
-          input: query,
+          input,
           componentRestrictions: { country: 'in' }
         },
-        async (predictions: any[] | null, status: string) => {
-          if (
-            status !== google.maps.places.PlacesServiceStatus.OK ||
-            !predictions?.length
-          ) {
+        (results: any[] | null, status: string) => {
+          if (status === 'ZERO_RESULTS') {
             resolve([]);
-            return;
+          } else if (status === 'OK') {
+            resolve(results ?? []);
+          } else {
+            reject(new Error(`Google autocomplete failed: ${status}`));
           }
-
-          const results = await Promise.all(
-            predictions.slice(0, 5).map((prediction) =>
-              this.getPlaceDetails(prediction.place_id, prediction.description)
-            )
-          );
-
-          resolve(results.filter((item): item is AppLocationResult => item !== null));
         }
       );
     });
+
+    const results = await Promise.allSettled(
+      predictions.slice(0, 5).map(prediction =>
+        this.getPlaceDetails(prediction.place_id, prediction.description)
+      )
+    );
+const matches = results.flatMap(result =>
+  result.status === 'fulfilled' && result.value ? [result.value] : []
+);
+
+return matches.length ? matches : this.geocodeAddress(input);
+  };
+
+  try {
+    return await Promise.race([
+      lookup(),
+      new Promise<never>((_, reject) => {
+        timeout = setTimeout(() => {
+          reject(new Error('Location search timed out'));
+        }, 12000);
+      })
+    ]);
+  } finally {
+    clearTimeout(timeout);
   }
+}
 
   private async getPlaceDetails(
     placeId: string,
@@ -140,6 +167,34 @@ private async initializeGoogle(): Promise<void> {
       );
     });
   }
+  private async geocodeAddress(address: string): Promise<AppLocationResult[]> {
+  const { results } = await this.geocoder.geocode({
+    address,
+    componentRestrictions: { country: 'IN' }
+  }).catch((error: unknown) => {
+    if (error === 'ZERO_RESULTS' || (error as { code?: string })?.code === 'ZERO_RESULTS') {
+      return { results: [] };
+    }
+    throw error;
+  });
+
+  const match = results[0];
+  const point = match?.geometry?.location;
+
+  if (!point) return [];
+
+  const displayName = match.formatted_address || address;
+  const parsed = this.parseAddressComponents(match.address_components || []);
+
+  return [{
+    placeId: match.place_id || '',
+    displayName,
+    lat: point.lat(),
+    lon: point.lng(),
+    name: displayName,
+    ...parsed
+  }];
+}
 
   async reverseGeocode(
     lat: number,

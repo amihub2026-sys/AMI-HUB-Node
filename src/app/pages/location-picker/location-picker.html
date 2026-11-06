@@ -19,7 +19,7 @@
   <div
     class="selected-location"
     *ngIf="currentResult && currentResult.displayName"
-  >
+  > <div *ngIf="searchMessage" role="status">{{ searchMessage }}</div>
     <strong>Selected:</strong> {{ currentResult.displayName }}
   </div>
 
