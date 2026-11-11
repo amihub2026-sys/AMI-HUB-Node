@@ -506,18 +506,17 @@ async applyFavoriteStatus(): Promise<void> {
 
   
 get portraitFeaturedAds(): any[] {
-  return this.featuredBusinesses()
-    .filter((post: any) =>
-      Array.isArray(post?.images) &&
-      post.images.length > 0
-    )
-    .slice(0, 4);
+  return this.featuredBusinesses().slice(0, 4);
 }
 
 getPortraitFeaturedImage(post: any): string {
-  return post?.images?.[0] || '';
+  return (
+    post?.image_url ||
+    post?.image_urls?.[0] ||
+    post?.images?.[0] ||
+    'assets/ads/shop1.jpg'
+  );
 }
-
 
   getVisibleTrendingPosts() {
     const posts = this.trendingPosts();
