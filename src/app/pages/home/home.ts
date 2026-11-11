@@ -39,7 +39,10 @@ constructor(
   private cdr: ChangeDetectorRef,
   private ngZone: NgZone
 ) {}
+private featuredCardOffset = signal(0);
 
+private featuredCardsInterval:
+  ReturnType<typeof setInterval> | null = null;
   goToAllCategories() {
     this.router.navigate(['/all-categories']);
   }
@@ -330,11 +333,8 @@ async loadFeaturedBusinesses(): Promise<void> {
       .get('/posts?isFeatured=true')
       .toPromise();
 
-    const posts = (response?.data || [])
-      .slice(0, 8)
-      .map((post: any) => ({
-        ...post,
-
+   const posts = (response?.data || [])
+  .map((post: any) => ({
         postid: String(post._id || post.id || ''),
 
         image_url:
@@ -361,8 +361,10 @@ async loadFeaturedBusinesses(): Promise<void> {
           ''
       }));
 
-    this.featuredBusinesses.set(posts);
+   this.featuredBusinesses.set(posts);
 
+this.featuredCardOffset.set(0);
+this.startFeaturedCardsRotation();
   } catch (error) {
 
     console.error('Error loading featured businesses:', error);
@@ -504,9 +506,20 @@ async applyFavoriteStatus(): Promise<void> {
     return `${post.image_url}${separator}width=320&height=220&resize=cover&quality=70`;
   }
 
-  
 get portraitFeaturedAds(): any[] {
-  return this.featuredBusinesses().slice(0, 4);
+  const posts = this.featuredBusinesses();
+  const visibleCount = 4;
+
+  if (posts.length <= visibleCount) {
+    return posts;
+  }
+
+  const start = this.featuredCardOffset() % posts.length;
+
+  return Array.from(
+    { length: visibleCount },
+    (_, index) => posts[(start + index) % posts.length]
+  );
 }
 
 getPortraitFeaturedImage(post: any): string {
@@ -551,6 +564,34 @@ getPortraitFeaturedImage(post: any): string {
       this.trendingInterval = null;
     }
   }
+  startFeaturedCardsRotation(): void {
+  this.stopFeaturedCardsRotation();
+
+  if (this.featuredBusinesses().length <= 4) {
+    return;
+  }
+
+  this.featuredCardsInterval = setInterval(() => {
+    const total = this.featuredBusinesses().length;
+
+    if (total <= 4) {
+      this.stopFeaturedCardsRotation();
+      this.featuredCardOffset.set(0);
+      return;
+    }
+
+    this.featuredCardOffset.update(
+      offset => (offset + 1) % total
+    );
+  }, 3000);
+}
+
+stopFeaturedCardsRotation(): void {
+  if (this.featuredCardsInterval !== null) {
+    clearInterval(this.featuredCardsInterval);
+    this.featuredCardsInterval = null;
+  }
+}
 
   getTrendingImage(post: any): string {
     const fallback = 'assets/ads/shop1.jpg';
@@ -1007,6 +1048,7 @@ goToServices() {
     clearInterval(this.autoSlideInterval);
     clearInterval(this.counterInterval);
     this.stopTrendingAutoScroll();
+    this.stopFeaturedCardsRotation();
   }
   isMyPost(post: any): boolean {
   return String(post?.userid || '') === String(this.currentUserId() || '');
