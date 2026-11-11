@@ -1,160 +1,298 @@
-<div
-  class="login-bg"
-  [class.modal-mode]="modalMode">
-  <div class="login-card">
-    <h1 class="logo">AMI HUB</h1>
-    <p class="tagline">Buy • Sell • Discover – All in One Hub.</p>
+<div class="login-bg" [class.modal-mode]="modalMode">
 
+  <div class="login-card">
+
+    <h1 class="logo">AMI HUB</h1>
+
+    <p class="tagline">
+      Buy • Sell • Discover — All in One Hub.
+    </p>
+
+    <!-- LOGIN METHODS -->
     <div
-  class="user-login-options"
-  *ngIf="!modalMode">
+      class="user-login-options"
+      *ngIf="!modalMode"
+      role="group"
+      aria-label="Choose login method"
+    >
       <button
+        type="button"
         (click)="selectUserLogin('mobileOtp')"
-        [class.active]="userLoginMethod === 'mobileOtp'">
+        [class.active]="userLoginMethod === 'mobileOtp'"
+        [attr.aria-pressed]="userLoginMethod === 'mobileOtp'"
+      >
         Mobile OTP
       </button>
 
       <button
+        type="button"
         (click)="selectUserLogin('username')"
-        [class.active]="userLoginMethod === 'username'">
+        [class.active]="userLoginMethod === 'username'"
+        [attr.aria-pressed]="userLoginMethod === 'username'"
+      >
         Email/Password
       </button>
 
       <button
+        type="button"
         (click)="selectUserLogin('admin')"
-        [class.active]="userLoginMethod === 'admin'">
+        [class.active]="userLoginMethod === 'admin'"
+        [attr.aria-pressed]="userLoginMethod === 'admin'"
+      >
         Admin Login
       </button>
     </div>
 
+    <!-- MOBILE OTP LOGIN -->
     <div *ngIf="userLoginMethod === 'mobileOtp'">
+
       <div class="input-group">
         <input
           type="tel"
-          placeholder="Enter Mobile Number"
+          inputmode="numeric"
+          autocomplete="tel-national"
+          aria-label="Mobile number"
+          placeholder="Enter 10-digit mobile number"
           maxlength="10"
-          [(ngModel)]="mobile">
+          [(ngModel)]="mobile"
+        >
       </div>
 
-      
-<button
-  type="button"
-  class="otp-btn"
-  (click)="sendMobileOtp()"
-  [disabled]="isSendingOtp || otpSent"
->
-  {{
-    isSendingOtp
-      ? 'Sending OTP...'
-      : otpSent
-        ? 'OTP Sent'
-        : 'Send OTP'
-  }}
-</button>
-
+      <button
+        type="button"
+        class="otp-btn"
+        (click)="sendMobileOtp()"
+        [disabled]="isSendingOtp || otpSent"
+      >
+        {{
+          isSendingOtp
+            ? 'Sending OTP...'
+            : otpSent
+              ? 'OTP Sent'
+              : 'Send OTP'
+        }}
+      </button>
 
       <div *ngIf="otpSent" class="otp-section">
+
         <div class="input-group">
           <input
             type="text"
-            placeholder="Enter OTP"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            aria-label="Verification code"
+            placeholder="Enter 6-digit OTP"
             maxlength="6"
-            [(ngModel)]="otp">
+            [(ngModel)]="otp"
+          >
         </div>
 
-<button
-  type="button"
-  class="submit-btn"
-  (click)="verifyMobileOtp()">          Verify OTP
+        <button
+          type="button"
+          class="submit-btn"
+          (click)="verifyMobileOtp()"
+        >
+          Verify &amp; Sign In
         </button>
+
       </div>
     </div>
 
+    <!-- EMAIL / PASSWORD LOGIN -->
     <div *ngIf="userLoginMethod === 'username'">
+
       <div class="input-group">
-        <input type="text" placeholder="Email or Username" [(ngModel)]="email">
+        <input
+          type="text"
+          autocomplete="username"
+          aria-label="Email or username"
+          placeholder="Email or username"
+          [(ngModel)]="email"
+        >
       </div>
 
       <div class="input-group password-group">
+
         <input
           [type]="showPassword ? 'text' : 'password'"
-          placeholder="Password"
-          [(ngModel)]="password">
-        <span class="eye-icon" (click)="togglePassword()">
-          {{ showPassword ? '🙈' : '👁️' }}
-        </span>
+          autocomplete="current-password"
+          aria-label="Password"
+          placeholder="Enter your password"
+          [(ngModel)]="password"
+        >
+
+        <button
+          type="button"
+          class="eye-icon"
+          (click)="togglePassword()"
+          [attr.aria-label]="
+            showPassword ? 'Hide password' : 'Show password'
+          "
+          [attr.aria-pressed]="showPassword"
+          style="border: 0; background: transparent; padding: 4px; font-size: 11px;"
+        >
+          {{ showPassword ? 'Hide' : 'Show' }}
+        </button>
+
       </div>
 
-<button
-  type="button"
-  class="submit-btn"
-  (click)="loginWithEmailPassword()">
-  Login
-</button>    </div>
+      <button
+        type="button"
+        class="submit-btn"
+        (click)="loginWithEmailPassword()"
+      >
+        Sign In
+      </button>
 
+    </div>
+
+    <!-- ADMIN LOGIN -->
     <div *ngIf="userLoginMethod === 'admin'">
+
       <div class="input-group">
-        <input type="text" placeholder="Admin Username" [(ngModel)]="adminUsername">
+        <input
+          type="text"
+          autocomplete="username"
+          aria-label="Admin username"
+          placeholder="Admin username"
+          [(ngModel)]="adminUsername"
+        >
       </div>
 
       <div class="input-group password-group">
+
         <input
           [type]="showAdminPassword ? 'text' : 'password'"
-          placeholder="Admin Password"
-          [(ngModel)]="adminPassword">
-        <span class="eye-icon" (click)="toggleAdminPassword()">
-          {{ showAdminPassword ? '🙈' : '👁️' }}
-        </span>
+          autocomplete="current-password"
+          aria-label="Admin password"
+          placeholder="Admin password"
+          [(ngModel)]="adminPassword"
+        >
+
+        <button
+          type="button"
+          class="eye-icon"
+          (click)="toggleAdminPassword()"
+          [attr.aria-label]="
+            showAdminPassword ? 'Hide password' : 'Show password'
+          "
+          [attr.aria-pressed]="showAdminPassword"
+          style="border: 0; background: transparent; padding: 4px; font-size: 11px;"
+        >
+          {{ showAdminPassword ? 'Hide' : 'Show' }}
+        </button>
+
       </div>
 
-<button
-  type="button"
-  class="submit-btn"
-  (click)="loginAdmin()">
-  Admin Login
-</button>    </div>
+      <button
+        type="button"
+        class="submit-btn"
+        (click)="loginAdmin()"
+      >
+        Admin Sign In
+      </button>
 
+    </div>
+
+    <!-- GOOGLE LOGIN -->
     <div
-  class="divider"
-  *ngIf="userLoginMethod !== 'admin' && !modalMode">
-  OR
-</div>
+      class="divider"
+      *ngIf="userLoginMethod !== 'admin' && !modalMode"
+    >
+      OR
+    </div>
 
-<button
-  class="social google"
-  (click)="googleLogin()"
-  *ngIf="userLoginMethod !== 'admin' && !modalMode">
-      <img src="assets/icons/google.png" alt="Google">
-      Continue with Google
+    <button
+      type="button"
+      class="social google"
+      (click)="googleLogin()"
+      *ngIf="userLoginMethod !== 'admin' && !modalMode"
+    >
+      <img
+        src="assets/icons/google.png"
+        alt=""
+        width="20"
+        height="20"
+        style="width: 20px; height: 20px; object-fit: contain;"
+      >
+
+      <span>Continue with Google</span>
     </button>
+
   </div>
 
-<div
-  class="side-wrapper right"
-  *ngIf="showRightAd && !modalMode">
+  <!-- BUSINESS PROMOTION -->
+  <div
+    class="side-wrapper right"
+    *ngIf="showRightAd && !modalMode"
+  >
     <div class="side-ad">
-      <span class="ad-close" (click)="closeAd('right')">×</span>
-      <div class="side-poster right-poster"></div>
+
+      <span
+        class="ad-close"
+        role="button"
+        tabindex="0"
+        aria-label="Close business promotion"
+        (click)="closeAd('right')"
+        (keydown.enter)="closeAd('right')"
+        (keydown.space)="$event.preventDefault(); closeAd('right')"
+      >
+        ×
+      </span>
+
+      <div
+        class="side-poster right-poster"
+        aria-hidden="true"
+      ></div>
 
       <div class="ad-content">
-        <h4>🔥 Grow Your Business</h4>
-        <p>Get your website, promote services, and reach more customers.</p>
-        <button>Get Started</button>
+        <h4>Grow Your Business</h4>
+
+        <p>
+          Get your website, promote services, and reach more customers.
+        </p>
+
+        <button type="button">Get Started</button>
       </div>
+
     </div>
   </div>
-<div
-  class="side-wrapper left"
-  *ngIf="showLeftAd && !modalMode">
+
+  <!-- POST PROMOTION -->
+  <div
+    class="side-wrapper left"
+    *ngIf="showLeftAd && !modalMode"
+  >
     <div class="side-ad green-ad">
-      <span class="ad-close" (click)="closeAd('left')">×</span>
-      <div class="side-poster left-poster"></div>
+
+      <span
+        class="ad-close"
+        role="button"
+        tabindex="0"
+        aria-label="Close post promotion"
+        (click)="closeAd('left')"
+        (keydown.enter)="closeAd('left')"
+        (keydown.space)="$event.preventDefault(); closeAd('left')"
+      >
+        ×
+      </span>
+
+      <div
+        class="side-poster left-poster"
+        aria-hidden="true"
+      ></div>
 
       <div class="ad-content">
-        <h4>🚀 Boost Your Post</h4>
-        <p>Get more views and reach more buyers instantly!</p>
-        <button>Promote Now</button>
+        <h4>Boost Your Post</h4>
+
+        <p>
+          Get more views and reach more buyers instantly.
+        </p>
+
+        <button type="button">Promote Now</button>
       </div>
+
     </div>
   </div>
+
 </div>

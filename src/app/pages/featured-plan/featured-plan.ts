@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+
 import { Router } from '@angular/router';
 import { ApiService } from '../../services/api.service';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 
 @Component({
   selector: 'app-featured-plan',
@@ -23,7 +24,8 @@ export class FeaturedPlan implements OnInit {
 
   constructor(
     private router: Router,
-    private api: ApiService
+    private api: ApiService,
+    private cdr: ChangeDetectorRef
   ) {
     const nav = this.router.getCurrentNavigation();
     const navState = nav?.extras?.state || {};
@@ -110,29 +112,36 @@ conditiontype: this.adType
     this.loadBoostPlans();
   }
 
-  loadBoostPlans(): void {
-    this.isLoading = true;
+ loadBoostPlans(): void {
+  this.isLoading = true;
+  this.cdr.markForCheck();
 
-    this.api.get('/boost-plans').subscribe({
-      next: (response: any) => {
-        this.boostPlans = (response?.data || [])
-          .filter((plan: any) => plan.isActive === true)
-          .sort(
-            (a: any, b: any) =>
-              Number(a.price || 0) - Number(b.price || 0)
-          );
+  this.api.get('/boost-plans').subscribe({
+    next: (response: any) => {
+      const plans = Array.isArray(response?.data)
+        ? response.data
+        : [];
 
-        this.isLoading = false;
-      },
+      this.boostPlans = plans
+        .filter((plan: any) => plan.isActive === true)
+        .sort(
+          (a: any, b: any) =>
+            Number(a.price || 0) - Number(b.price || 0)
+        );
 
-      error: (error: any) => {
-        console.error('Boost plans load error:', error);
+      this.isLoading = false;
+      this.cdr.markForCheck();
+    },
 
-        this.boostPlans = [];
-        this.isLoading = false;
-      }
-    });
-  }
+    error: (error: any) => {
+      console.error('Boost plans load error:', error);
+
+      this.boostPlans = [];
+      this.isLoading = false;
+      this.cdr.markForCheck();
+    }
+  });
+}
 
   private getStoredPendingPost(): any {
     if (typeof window === 'undefined') {
@@ -207,7 +216,7 @@ conditiontype: this.adType
     }
   }
 
-  choosePlan(plan: any): void {
+async choosePlan(plan: any): Promise<void> {
     if (this.isSaving) {
       return;
     }
@@ -285,21 +294,26 @@ if (typeof window !== 'undefined') {
   localStorage.removeItem('verified_payment_payload');
 }
 
-      this.router.navigate(['/payment'], {
-        state: {
-          postId: this.postId,
-          adType: this.adType,
-          postDetails: this.postDetails,
-          selectedPlan
-        }
-      });
+     const navigated = await this.router.navigate(['/payment'], {
+  state: {
+    postId: this.postId,
+    adType: this.adType,
+    postDetails: this.postDetails,
+    selectedPlan
+  }
+});
+
+if (!navigated) {
+  alert('Unable to open payment. Please try again.');
+}
 
     } catch (error) {
       console.error('choosePlan error:', error);
       alert('Something went wrong');
 
     } finally {
-      this.isSaving = false;
-    }
+  this.isSaving = false;
+  this.cdr.markForCheck();
+}
   }
 }

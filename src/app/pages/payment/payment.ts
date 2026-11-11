@@ -2111,16 +2111,11 @@ if (!data?.order?.id) {
         description: this.planName,
 
         order_id: data.order.id,
-
-        prefill: {
-
-          name: this.sellerName,
-
-          email: this.sellerEmail,
-
-          contact: this.sellerPhone
-
-        },
+prefill: {
+  name: this.sellerName,
+  email: this.sellerEmail,
+  contact: this.sellerPhone
+},
 
         notes: {
 
