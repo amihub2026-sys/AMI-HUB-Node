@@ -408,5 +408,14 @@ deleteAdmin<T = any>(url: string) {
   );
 }
 
+// LIVE SEARCH SUGGESTIONS
+getSearchSuggestions(searchText: string) {
+  const keyword = encodeURIComponent(searchText.trim());
+
+  return this.get<any>(
+    `/posts?keyword=${keyword}`
+  );
+}
+
 }
 

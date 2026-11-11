@@ -156,23 +156,87 @@
       </div>
 
       <!-- SEARCH -->
-      <div class="ami-search">
-        <input
-          type="text"
-          placeholder="Search AMI HUB..."
-          aria-label="Search products, services, jobs and businesses"
-          [(ngModel)]="searchTerm"
-          (keydown.enter)="doSearch()"
-        />
+    <!-- SEARCH -->
+<div class="ami-search" id="ami-header-search">
 
-        <button
-          type="button"
-          aria-label="Search"
-          (click)="doSearch()"
-        >
-          <i class="fas fa-search" aria-hidden="true"></i>
-        </button>
-      </div>
+  <input
+    type="text"
+    placeholder="Search AMI HUB..."
+    aria-label="Search products, services and jobs"
+    autocomplete="off"
+    [ngModel]="searchTerm"
+    (ngModelChange)="onSearchInput($event)"
+    (focus)="onSearchInput(searchTerm)"
+    (keydown.enter)="doSearch()"
+    (keydown.escape)="closeSearchSuggestions()"
+  />
+
+  <button
+    type="button"
+    aria-label="Search"
+    (click)="doSearch()"
+  >
+    <i class="fas fa-search" aria-hidden="true"></i>
+  </button>
+
+  <!-- LIVE SUGGESTIONS -->
+  <div
+    class="ami-search-dropdown"
+    *ngIf="showSearchSuggestions"
+  >
+
+    <p
+      class="ami-search-status"
+      role="status"
+      *ngIf="isSearchSuggestionsLoading"
+    >
+      Searching...
+    </p>
+
+    <p
+      class="ami-search-status"
+      role="status"
+      *ngIf="
+        !isSearchSuggestionsLoading &&
+        searchSuggestionsError
+      "
+    >
+      {{ searchSuggestionsError }}
+    </p>
+
+    <p
+      class="ami-search-status"
+      role="status"
+      *ngIf="
+        !isSearchSuggestionsLoading &&
+        !searchSuggestionsError &&
+        searchSuggestions.length === 0
+      "
+    >
+      No matching ads found.
+    </p>
+
+    <ng-container *ngIf="!isSearchSuggestionsLoading">
+
+      <button
+        type="button"
+        class="ami-search-suggestion"
+        *ngFor="let post of searchSuggestions"
+        (click)="openSearchSuggestion(post)"
+      >
+        <span class="ami-search-suggestion-title">
+          {{ post.title }}
+        </span>
+
+        <span class="ami-search-suggestion-category">
+          {{ getSearchSuggestionCategory(post) }}
+        </span>
+      </button>
+
+    </ng-container>
+
+  </div>
+</div>
 
       <!-- DESKTOP ACCOUNT MENU -->
       <div class="profile-menu-wrapper">

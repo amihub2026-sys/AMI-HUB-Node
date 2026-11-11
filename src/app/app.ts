@@ -6,7 +6,8 @@ import {
   PLATFORM_ID,
   HostListener
 } from '@angular/core';
-
+import { ApiService } from './services/api.service';
+import { Subscription, timer, switchMap } from 'rxjs';
 import {
   CommonModule,
   isPlatformBrowser,
@@ -110,9 +111,15 @@ export class App implements OnInit {
     private supabaseService: SupabaseService,
     private cdr: ChangeDetectorRef,
     private snackbar: SnackbarService,
+    private api: ApiService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
+searchSuggestions: any[] = [];
+showSearchSuggestions = false;
+isSearchSuggestionsLoading = false;
+searchSuggestionsError = '';
 
+private searchSuggestionsRequest?: Subscription;
   // Mobile bottom navigation visibility.
  get showMobileCommerceNav(): boolean {
   const url = this.currentUrl || this.router.url || '/';
@@ -647,28 +654,108 @@ export class App implements OnInit {
     this.showProfileMenu = !this.showProfileMenu;
   }
 
-  @HostListener('document:click')
-  closeProfileOutside(): void {
-    this.showProfileMenu = false;
+  @HostListener('document:click', ['$event'])
+closeProfileOutside(event: MouseEvent): void {
+  this.showProfileMenu = false;
+
+  const target = event.target as HTMLElement | null;
+
+  if (!target?.closest('.ami-search')) {
+    this.closeSearchSuggestions();
+  }
+}
+
+doSearch(): void {
+  const query = this.searchTerm.trim();
+
+  this.closeSearchSuggestions();
+
+  if (!query) {
+    this.snackbar.show('Enter something to search.', 'error');
+    return;
   }
 
-  doSearch(): void {
-    const query = this.searchTerm.trim();
+  this.showProfileMenu = false;
+  this.closeMenu();
 
-    const category =
-      this.searchCategory === 'All'
-        ? ''
-        : this.searchCategory;
+  this.router.navigate(['/search'], {
+    queryParams: {
+      q: query,
+      type: 'all'
+    }
+  });
+}
+onSearchInput(value: string): void {
+  this.searchTerm = value;
+  this.searchSuggestionsRequest?.unsubscribe();
 
-    this.router.navigate(['/'], {
-      queryParams: {
-        search: query || null,
-        filter: category || null
+  this.searchSuggestions = [];
+  this.searchSuggestionsError = '';
+
+  const query = value.trim();
+
+  if (!query) {
+    this.closeSearchSuggestions();
+    return;
+  }
+
+  this.showSearchSuggestions = true;
+  this.isSearchSuggestionsLoading = true;
+
+  this.searchSuggestionsRequest = timer(300)
+    .pipe(
+      switchMap(() =>
+        this.api.getSearchSuggestions(query)
+      )
+    )
+    .subscribe({
+      next: (response: any) => {
+        this.searchSuggestions = Array.isArray(response?.data)
+          ? response.data.slice(0, 6)
+          : [];
+
+        this.isSearchSuggestionsLoading = false;
+        this.cdr.markForCheck();
+      },
+
+      error: () => {
+        this.searchSuggestions = [];
+        this.isSearchSuggestionsLoading = false;
+        this.searchSuggestionsError =
+          'Unable to load suggestions. Try again.';
+
+        this.cdr.markForCheck();
       }
     });
+}
 
-    this.closeMenu();
-  }
+closeSearchSuggestions(): void {
+  this.searchSuggestionsRequest?.unsubscribe();
+  this.showSearchSuggestions = false;
+  this.isSearchSuggestionsLoading = false;
+}
+
+openSearchSuggestion(post: any): void {
+  const postId = String(
+    post?._id || post?.postid || post?.id || ''
+  );
+
+  if (!postId) return;
+
+  this.searchTerm = post.title || this.searchTerm;
+  this.closeSearchSuggestions();
+
+  this.router.navigate(['/details', postId]);
+}
+
+getSearchSuggestionCategory(post: any): string {
+  return (
+    post?.categoryId?.categoryName ||
+    post?.categoryname ||
+    post?.listingType ||
+    'Advertisement'
+  );
+}
 
   goToMyPosts(): void {
     this.showProfileMenu = false;
@@ -891,3 +978,15 @@ export class App implements OnInit {
     this.router.navigate(['/job']);
   }
 }
+const dropdown = document.querySelector('.ami-search-dropdown');
+
+console.log(
+  dropdown
+    ? {
+        position: getComputedStyle(dropdown).position,
+        display: getComputedStyle(dropdown).display,
+        top: getComputedStyle(dropdown).top,
+        width: getComputedStyle(dropdown).width
+      }
+    : 'Dropdown element not found'
+);
