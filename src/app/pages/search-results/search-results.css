@@ -2868,3 +2868,42 @@ color:#2874f0;
 .filters-panel details > .filter-content {
   overflow: visible;
 }
+@media (max-width: 768px) {
+  .service-navbar .main-nav {
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: 70px minmax(0, 1fr) 42px;
+  }
+
+  .service-navbar .main-nav > .nav-links {
+    grid-column: 1 / -1;
+    grid-row: 2;
+
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+
+    width: 100%;
+    min-width: 0;
+  }
+
+  .service-navbar .nav-links > .nav-link-btn,
+  .service-navbar .nav-links > .nav-link-btn.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 8px 3px !important;
+    gap: 4px !important;
+
+    font-size: 11px !important;
+    white-space: nowrap;
+  }
+
+  .service-navbar .search-box {
+    min-width: 0;
+  }
+}
