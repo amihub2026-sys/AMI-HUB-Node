@@ -5958,3 +5958,34 @@ app-categories{
     max-width: 100% !important;
   }
 }
+/* MOBILE BANNER: display the full image */
+@media (max-width: 768px) {
+  .jd-hero-section .jd-landscape-slider {
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 16 / 9 !important;
+    flex: none !important;
+    background: #f1f4fa;
+  }
+
+  .jd-landscape-slider .jd-banner-track {
+    height: 100% !important;
+  }
+
+  .jd-banner-track .jd-banner-slide {
+    flex: 0 0 100% !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 100% !important;
+  }
+
+  .jd-banner-track .jd-banner-slide img {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+
+    object-fit: contain !important;
+    object-position: center !important;
+    transform: none !important;
+  }
+}
