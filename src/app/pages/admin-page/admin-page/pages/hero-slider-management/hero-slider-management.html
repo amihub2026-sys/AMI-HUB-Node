@@ -46,7 +46,20 @@
       </div>
 
     </div>
+   <div class="form-group click-url-group">
+  <label for="bannerClickUrl">Banner Click URL (optional)</label>
 
+  <input
+    id="bannerClickUrl"
+    type="url"
+    [(ngModel)]="clickUrl"
+    placeholder="https://example.com/page"
+  >
+
+  <small>
+    Enter the full website address. Leave empty for a banner without a link.
+  </small>
+</div>
 
     <div class="form-row">
 
@@ -78,11 +91,13 @@
 
 
     <button
-      class="upload-btn"
-      (click)="uploadSlider()"
-    >
-      Upload Banner
-    </button>
+  type="button"
+  class="upload-btn"
+  [disabled]="loading"
+  (click)="uploadSlider()"
+>
+  {{ loading ? 'Uploading...' : 'Upload Banner' }}
+</button>
 
   </div>
 
@@ -132,7 +147,16 @@
             {{ slider.active ? 'Active' : 'Inactive' }}
           </strong>
         </p>
-
+        <p *ngIf="slider.clickUrl">
+  Click URL:
+  <a
+    [href]="getSafeClickUrl(slider.clickUrl)"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    {{ slider.clickUrl }}
+  </a>
+</p>
         <button
           class="delete-btn"
           (click)="deleteSlider(slider._id)"

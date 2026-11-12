@@ -1,7 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../../../services/api.service';
+import {
+  ChangeDetectorRef,
+  Component,
+  OnInit
+} from '@angular/core';
 
 @Component({
   selector: 'app-hero-slider-management',
@@ -23,15 +28,32 @@ export class HeroSliderManagement implements OnInit {
 
   displayOrder = 0;
   active = true;
+  clickUrl = '';
 
+getSafeClickUrl(value: unknown): string | null {
+  if (typeof value !== 'string' || !value.trim()) {
+    return null;
+  }
+
+  try {
+    const url = new URL(value.trim());
+
+    return url.protocol === 'https:' || url.protocol === 'http:'
+      ? url.href
+      : null;
+  } catch {
+    return null;
+  }
+}
   heroSliders: any[] = [];
 
   loading = false;
   errorMessage = '';
 
-  constructor(
-    private apiService: ApiService
-  ) {}
+constructor(
+  private apiService: ApiService,
+  private cdr: ChangeDetectorRef
+) {}
 
   ngOnInit(): void {
     this.loadHeroSliders();
@@ -42,34 +64,30 @@ export class HeroSliderManagement implements OnInit {
   // LOAD HERO SLIDERS
   // =========================
 
-  loadHeroSliders(): void {
+loadHeroSliders(): void {
+  this.errorMessage = '';
 
-    this.apiService
-      .getAdminHeroSliders()
-      .subscribe({
+  this.apiService
+    .getAdminHeroSliders()
+    .subscribe({
+      next: (response) => {
+        this.heroSliders = response?.data || [];
 
-        next: (response) => {
+        // Refresh the view immediately after receiving banners.
+        this.cdr.markForCheck();
+      },
 
-          this.heroSliders =
-            response?.data || [];
+      error: (error) => {
+        console.error('Load hero sliders error:', error);
 
-        },
+        this.errorMessage =
+          error?.error?.message ||
+          'Failed to load hero banners';
 
-        error: (error) => {
-
-          console.error(
-            'Load hero sliders error:',
-            error
-          );
-
-          this.errorMessage =
-            'Failed to load hero banners';
-
-        }
-
-      });
-
-  }
+        this.cdr.markForCheck();
+      }
+    });
+}
 
 
   // =========================
@@ -152,89 +170,65 @@ export class HeroSliderManagement implements OnInit {
   // UPLOAD HERO SLIDER
   // =========================
 
-  uploadSlider(): void {
-
-    if (!this.desktopImage) {
-
-      alert(
-        'Please select desktop banner'
-      );
-
-      return;
-
-    }
-
-    if (!this.mobileImage) {
-
-      alert(
-        'Please select mobile banner'
-      );
-
-      return;
-
-    }
-
-
-    this.loading = true;
-
-    this.errorMessage = '';
-
-
-    this.apiService
-      .uploadHeroSlider(
-        this.desktopImage,
-        this.mobileImage,
-        this.displayOrder,
-        this.active
-      )
-      .subscribe({
-
-        next: (response) => {
-
-          console.log(
-            'Hero slider upload response:',
-            response
-          );
-
-
-          alert(
-            'Hero banner uploaded successfully'
-          );
-
-
-          this.resetForm();
-
-          this.loadHeroSliders();
-
-          this.loading = false;
-
-        },
-
-        error: (error) => {
-
-          console.error(
-            'Hero slider upload error:',
-            error
-          );
-
-
-          this.errorMessage =
-            error?.error?.message ||
-            'Failed to upload hero banner';
-
-
-          alert(
-            this.errorMessage
-          );
-
-
-          this.loading = false;
-
-        }
-
-      });
-
+ uploadSlider(): void {
+  if (this.loading) {
+    return;
   }
+
+  this.errorMessage = '';
+
+  if (!this.desktopImage) {
+    alert('Please select desktop banner');
+    return;
+  }
+
+  if (!this.mobileImage) {
+    alert('Please select mobile banner');
+    return;
+  }
+
+  const enteredUrl = this.clickUrl.trim();
+  const safeUrl = this.getSafeClickUrl(enteredUrl);
+
+  if (enteredUrl && !safeUrl) {
+    this.errorMessage =
+      'Please enter a valid URL beginning with https:// or http://';
+
+    alert(this.errorMessage);
+    return;
+  }
+
+  this.loading = true;
+
+  this.apiService
+    .uploadHeroSlider(
+      this.desktopImage,
+      this.mobileImage,
+      this.displayOrder,
+      this.active,
+      safeUrl || ''
+    )
+    .subscribe({
+      next: () => {
+        this.loading = false;
+
+        alert('Hero banner uploaded successfully');
+
+        this.resetForm();
+        this.loadHeroSliders();
+      },
+
+      error: (error) => {
+        this.loading = false;
+
+        this.errorMessage =
+          error?.error?.message ||
+          'Failed to upload hero banner';
+
+        alert(this.errorMessage);
+      }
+    });
+}
 
 
   // =========================
@@ -293,7 +287,7 @@ export class HeroSliderManagement implements OnInit {
   // =========================
 
   resetForm(): void {
-
+    this.clickUrl = '';
     this.desktopImage = null;
 
     this.mobileImage = null;
