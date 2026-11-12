@@ -302,7 +302,8 @@ uploadHeroSlider(
   desktopImage: File,
   mobileImage: File,
   displayOrder: number,
-  active: boolean
+  active: boolean,
+  clickUrl: string = ''
 ) {
 
   const formData = new FormData();

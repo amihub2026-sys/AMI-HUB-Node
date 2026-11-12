@@ -4569,3 +4569,280 @@ body app-root {
     box-sizing: border-box !important;
   }
 }
+/* ALLOW SEARCH SUGGESTIONS TO EXTEND BELOW THE BAR */
+.topbar.commerce-header,
+.topbar.commerce-header > .bottom-nav {
+  overflow: visible !important;
+}
+
+.topbar.commerce-header .ami-search {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+/* Keep rounded corners after removing overflow clipping */
+.topbar.commerce-header .ami-search > input {
+  border-radius: 10px 0 0 10px !important;
+}
+
+.topbar.commerce-header .ami-search > button {
+  border-radius: 0 10px 10px 0 !important;
+}
+
+/* DROPDOWN */
+.topbar.commerce-header .ami-search .ami-search-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 100;
+
+  max-height: min(420px, 55vh);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  background: #fff;
+  border: 1px solid #e1e6ef;
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba(20, 38, 75, 0.16);
+
+  color: #17243d;
+  text-align: left;
+}
+
+/* Override the existing yellow search-button styles */
+.topbar.commerce-header .ami-search button.ami-search-suggestion {
+  position: static !important;
+  inset: auto !important;
+  transform: none !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  gap: 5px !important;
+
+  flex: none !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  height: auto !important;
+  min-height: 64px !important;
+
+  margin: 0 !important;
+  padding: 13px 18px !important;
+
+  border: 0 !important;
+  border-bottom: 1px solid #e8ebf1 !important;
+  border-radius: 0 !important;
+
+  background: #fff !important;
+  color: #17243d !important;
+  box-shadow: none !important;
+
+  font-family: inherit;
+  font-size: 14px !important;
+  line-height: 1.4;
+  text-align: left !important;
+  cursor: pointer;
+}
+
+.topbar.commerce-header .ami-search button.ami-search-suggestion:last-child {
+  border-bottom: 0 !important;
+}
+
+.topbar.commerce-header .ami-search button.ami-search-suggestion:hover,
+.topbar.commerce-header .ami-search button.ami-search-suggestion:focus-visible {
+  background: #eef4ff !important;
+  outline-offset: -3px;
+}
+
+/* TITLE */
+.ami-search-dropdown .ami-search-suggestion-title {
+  display: block;
+  max-width: 100%;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* CATEGORY */
+.ami-search-dropdown .ami-search-suggestion-category {
+  display: block;
+  max-width: 100%;
+  color: #808998;
+  font-size: 11px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* LOADING / EMPTY / ERROR MESSAGE */
+.ami-search-dropdown .ami-search-status {
+  margin: 0;
+  padding: 18px;
+  color: #6d7a90;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .topbar.commerce-header .ami-search .ami-search-dropdown {
+    top: calc(100% + 6px);
+    max-height: 50vh;
+    border-radius: 10px;
+  }
+
+  .topbar.commerce-header .ami-search button.ami-search-suggestion {
+    padding: 12px 14px !important;
+    min-height: 60px !important;
+  }
+}
+/* Search bar */
+.topbar.commerce-header .ami-search {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+/* Suggestions must float BELOW the search bar */
+.topbar.commerce-header .ami-search > .ami-search-dropdown {
+  position: absolute !important;
+  top: calc(100% + 8px) !important;
+  left: 0 !important;
+  right: 0 !important;
+
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-height: 380px;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+  z-index: 100;
+
+  background: #fff !important;
+  border: 1px solid #e1e6ef;
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba(20, 38, 75, 0.16);
+}
+
+/* Suggestion rows must not inherit the yellow button style */
+.topbar.commerce-header .ami-search .ami-search-suggestion {
+  position: static !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+
+  flex: none !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 64px !important;
+
+  margin: 0 !important;
+  padding: 13px 18px !important;
+  gap: 5px !important;
+
+  background: #fff !important;
+  color: #17243d !important;
+  border: 0 !important;
+  border-bottom: 1px solid #e8ebf1 !important;
+  border-radius: 0 !important;
+
+  text-align: left !important;
+  font-size: 14px !important;
+  transform: none !important;
+}
+
+.topbar.commerce-header .ami-search .ami-search-suggestion:hover {
+  background: #eef4ff !important;
+}
+
+.ami-search-suggestion-title {
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.ami-search-suggestion-category {
+  color: #808998;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.ami-search-status {
+  margin: 0;
+  padding: 16px;
+  color: #6d7a90;
+  font-size: 13px;
+}
+/* Search dropdown placement */
+.ami-search {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+.ami-search > .ami-search-dropdown {
+  position: absolute !important;
+  top: calc(100% + 8px) !important;
+  left: 0 !important;
+  right: 0 !important;
+
+  width: 100% !important;
+  min-width: 0 !important;
+  height: auto !important;
+  max-height: 380px !important;
+  flex: none !important;
+
+  display: block !important;
+  overflow-y: auto !important;
+
+  background: #fff !important;
+  border: 1px solid #e1e6ef !important;
+  border-radius: 12px !important;
+  box-shadow: 0 12px 30px #14264b26 !important;
+  z-index: 100 !important;
+}
+
+/* Separate suggestion rows from the yellow search button */
+.topbar.commerce-header .ami-search
+.ami-search-dropdown button.ami-search-suggestion {
+  position: static !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+
+  width: 100% !important;
+  height: auto !important;
+  min-height: 64px !important;
+  flex: none !important;
+  gap: 5px !important;
+  padding: 13px 18px !important;
+  margin: 0 !important;
+
+  border: 0 !important;
+  border-bottom: 1px solid #e8ebf1 !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+  color: #17243d !important;
+
+  font-size: 14px !important;
+  text-align: left !important;
+  transform: none !important;
+}
+
+.ami-search-dropdown .ami-search-suggestion-title {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.ami-search-dropdown .ami-search-suggestion-category {
+  color: #808998;
+  font-size: 11px;
+  text-transform: uppercase;
+}
