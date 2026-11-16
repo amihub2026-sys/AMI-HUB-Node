@@ -124,11 +124,17 @@ export const routes: Routes = [
 },
 
 {
-  path:'admin',
+  path: 'admin',
   component: AdminPage,
-  canActivate:[adminGuard]
+  canActivate: [adminGuard],
+  canActivateChild: [adminGuard],
+  children: [
+    {
+      path: 'post-custom-fields',
+      component: CustomFields
+    }
+  ]
 },
-
 {
   path: '**',
   redirectTo: ''

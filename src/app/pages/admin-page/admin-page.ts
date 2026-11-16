@@ -23,7 +23,7 @@ import { AdminCustomFieldAssignment } from './admin-page/pages/admin-custom-fiel
 import { AdminSellersComponent } from './admin-page/pages/admin-sellers/admin-sellers';
 import { AdminPostViewComponent } from './admin-page/pages/admin-post-view/admin-post-view';
 import { HeroSliderManagement } from './admin-page/pages/hero-slider-management/hero-slider-management';
-import { Router } from '@angular/router';
+import { Router, RouterOutlet } from '@angular/router';
 type AdminMenuKey =
   SidebarAdminMenuKey |
   'advertise' |
@@ -39,6 +39,7 @@ type AdminMenuKey =
  imports: [
   CommonModule,
   FormsModule,
+    RouterOutlet,
  HeroSliderManagement,
   Service,   
   AdminSidebar,
@@ -94,11 +95,15 @@ viewingPostId: string | null = null;
     replaceUrl: true
   });
 }
-  setActiveMenu(menu: AdminMenuKey): void {
-    this.sidebarOpen = false;
-    this.searchQuery = '';
-    this.activeMenu = menu;
+ setActiveMenu(menu: AdminMenuKey): void {
+  this.sidebarOpen = false;
+  this.searchQuery = '';
+  this.activeMenu = menu;
+
+  if (this.router.url.split('?')[0] !== '/admin') {
+    this.router.navigate(['/admin']);
   }
+}
 openAdminEditPost(postId: string): void {
   this.editingPostId = postId;
   this.activeMenu = 'edit-post';

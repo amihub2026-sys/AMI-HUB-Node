@@ -198,28 +198,22 @@ getHeaders(isAdmin: boolean = false) {
   // ======================
   // UPLOAD
   // ======================
+uploadImage(
+  file: File,
+  folder: string,
+  isAdmin: boolean = false
+) {
+  const formData = new FormData();
 
-  uploadImage(file: File, folder: string) {
+  formData.append('file', file);
+  formData.append('folder', folder);
 
-    const formData = new FormData();
-
-    formData.append(
-      "file",
-      file
-    );
-
-    formData.append(
-      "folder",
-      folder
-    );
-
-
-    return this.http.post<any>(
-      `${this.baseUrl}/uploads/r2`,
-      formData
-    );
-
-  }
+  return this.http.post<any>(
+    `${this.baseUrl}/uploads/r2`,
+    formData,
+    this.getHeaders(isAdmin)
+  );
+}
   // ======================
 // CUSTOM FIELD ASSIGNMENT
 // ======================

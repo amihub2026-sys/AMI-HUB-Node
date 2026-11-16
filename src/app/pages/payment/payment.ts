@@ -68,7 +68,8 @@ private api = inject(ApiService);
 
   postData: any = null;
 
-
+isAdminPosting = false;
+selectedUser: any = null;
 
   private readonly razorpayKey = 'rzp_live_S7g9JgHJea4xYt';
 
@@ -83,7 +84,20 @@ private api = inject(ApiService);
   async ngOnInit(): Promise<void> {
 
     if (!this.isBrowser) return;
+const state = {
+  ...(history.state || {}),
+  ...(this.router.getCurrentNavigation()?.extras?.state || {})
+};
 
+this.isAdminPosting = state['isAdminPosting'] === true;
+this.selectedUser = state['selectedUser'] || null;
+
+if (this.isAdminPosting && !this.selectedUser?._id) {
+  this.errorMessage.set(
+    'Selected user details are missing. Please reopen the post form.'
+  );
+  return;
+}
     await this.loadStoredData();
 
     this.loadRazorpayScript();
@@ -611,17 +625,10 @@ get sellerPhone(): string {
   }
 
 private async getAccessToken(): Promise<string | null> {
-
-  return (
-
-    localStorage.getItem('adminToken') ||
-
-    localStorage.getItem('token')
-
-  );
-
+  return localStorage.getItem(
+    this.isAdminPosting ? 'adminToken' : 'token'
+  );
 }
-
   private parseJsonArray<T = any>(value: any): T[] {
 
     if (Array.isArray(value)) {
@@ -730,6 +737,7 @@ private async getAccessToken(): Promise<string | null> {
 
     uploadedFiles: { bucket: string; url: string }[]
 
+
   ): Promise<string> {
 
     const file = this.postDraftService.getMainPhoto();
@@ -748,8 +756,8 @@ private async getAccessToken(): Promise<string | null> {
 
 await this.api
 
-.uploadImage(file,'main-images')
 
+.uploadImage(file, 'main-images', this.isAdminPosting)
 .toPromise();
 
 
@@ -810,13 +818,7 @@ for (const file of files) {
 
   const response:any = await this.api
 
-    .uploadImage(
-
-      file,
-
-      'additional-images'
-
-    )
+    .uploadImage(file, 'additional-images', this.isAdminPosting)
 
     .toPromise();
 
@@ -898,13 +900,7 @@ for (const file of files) {
 
      const response:any = await this.api
 
-.uploadImage(
-
- file,
-
- 'videos'
-
-)
+.uploadImage(file, 'videos', this.isAdminPosting)
 
 .toPromise();
 
@@ -974,13 +970,7 @@ if (this.isValidFile(block.image)) {
 
   const response:any = await this.api
 
-    .uploadImage(
-
-      block.image,
-
-      'service-images'
-
-    )
+  .uploadImage(block.image, 'service-images', this.isAdminPosting)
 
     .toPromise();
 

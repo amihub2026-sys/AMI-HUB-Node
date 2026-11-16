@@ -103,7 +103,8 @@ export class CustomFields implements OnInit {
 
   submitted = false;
 
-
+  isAdminPosting = false;
+  selectedUser: any = null;
   loadError = '';
 
   submitError = '';
@@ -228,7 +229,8 @@ async ngOnInit(): Promise<void> {
       ...navigationState
 
     };
-
+this.isAdminPosting = state['isAdminPosting'] === true;
+this.selectedUser = state['selectedUser'] || null;
 
     this.flowType =
       state['flow'] || '';
@@ -327,13 +329,16 @@ async ngOnInit(): Promise<void> {
     this.fields = [];
 
 
-    this.api
+const url =
+  `/custom-field-assignment?categoryId=${this.categoryId}` +
+  `&subcategoryId=${this.subcategoryId}` +
+  `&type=${this.listingType}`;
 
-      .get(
-        `/custom-field-assignment?categoryId=${this.categoryId}&subcategoryId=${this.subcategoryId}&type=${this.listingType}`
-      )
+const request = this.isAdminPosting
+  ? this.api.getAdmin(url)
+  : this.api.get(url);
 
-      .subscribe({
+request.subscribe({
 
         next: (response: any) => {
 
@@ -888,16 +893,13 @@ async ngOnInit(): Promise<void> {
   // LOGIN CHECK
   // =========================================================
 
-  isLoggedIn(): boolean {
+ isLoggedIn(): boolean {
+  const tokenKey = this.isAdminPosting
+    ? 'adminToken'
+    : 'token';
 
-    return Boolean(
-      localStorage.getItem(
-        'token'
-      )
-    );
-
-  }
-
+  return !!localStorage.getItem(tokenKey);
+}
 
   // =========================================================
   // SUBMIT CUSTOM FIELDS
@@ -965,205 +967,161 @@ async ngOnInit(): Promise<void> {
   // THEN GO TO ACCOUNT DETAILS
   // =========================================================
 
-  private saveCustomFieldsAndContinue(
-    customFieldValues: any[]
-  ): void {
+private saveCustomFieldsAndContinue(
+  customFieldValues: any[]
+): void {
+  let pendingPost: any;
 
+  try {
     const savedPayload =
-
-      localStorage.getItem(
-        'pending_post_payload'
-      );
-
+      localStorage.getItem('pending_post_payload');
 
     if (!savedPayload) {
+      throw new Error('Post details are missing. Please reopen the form.');
+    }
 
-      this.isSubmitting =
-        false;
+    pendingPost = JSON.parse(savedPayload);
 
+    if (!pendingPost || typeof pendingPost !== 'object') {
+      throw new Error('Invalid post details.');
+    }
+  } catch (error: any) {
+    this.isSubmitting = false;
+    this.submitError =
+      error?.message || 'Unable to read post details.';
+    return;
+  }
 
-      this.submitError =
-        'Post information was not found. Please go back and try again.';
+  const finalPayload = {
+    ...pendingPost,
+    categoryId: this.categoryId || pendingPost.categoryId,
+    subcategoryId:
+      this.subcategoryId || pendingPost.subcategoryId || null,
+    listingType:
+      this.listingType ||
+      pendingPost.listingType ||
+      pendingPost.adtype ||
+      'service',
+    customFields: customFieldValues,
+    custom_fields: customFieldValues
+  };
 
+  // ADMIN: save directly without profile, subscription or payment.
+  if (this.isAdminPosting) {
+    const sellerId = String(this.selectedUser?._id || '');
 
+    if (!sellerId) {
+      this.isSubmitting = false;
+      this.submitError = 'Selected user is missing. Reopen the post form.';
       return;
-
     }
 
-
-    let pendingPost: any;
-
-
-    try {
-
-      pendingPost =
-        JSON.parse(
-          savedPayload
-        );
-
-    }
-
-    catch (error) {
-
-      console.error(
-        'INVALID PENDING POST PAYLOAD:',
-        error
-      );
-
-
-      this.isSubmitting =
-        false;
-
-
-      this.submitError =
-        'Unable to read the post information.';
-
-
-      return;
-
-    }
-
-
-    const finalPendingPayload = {
-
-      ...pendingPost,
-
-
-      categoryId:
-
-        this.categoryId ||
-
-        pendingPost?.categoryId ||
-
-        null,
-
-
-      subcategoryId:
-
-        this.subcategoryId ||
-
-        pendingPost?.subcategoryId ||
-
-        null,
-
-
-      listingType:
-
-        this.listingType ||
-
-        pendingPost?.listingType ||
-
-        pendingPost?.adtype ||
-
-        'service',
-
-
-      customFields:
-        customFieldValues,
-
-
-      custom_fields:
-        customFieldValues
-
+    const payload = {
+      ...finalPayload,
+      sellerId,
+      images: [
+        pendingPost.image_url,
+        ...(Array.isArray(pendingPost.image_urls)
+          ? pendingPost.image_urls
+          : [])
+      ].filter(Boolean),
+      videos: Array.isArray(pendingPost.video_urls)
+        ? pendingPost.video_urls
+        : [],
+      catalog: Array.isArray(pendingPost.catalog)
+        ? pendingPost.catalog
+        : [],
+      isFeatured: false,
+      isfeatured: false,
+      is_featured: false,
+      status: 'pending'
     };
 
+    this.api.postAdmin<any>('/posts', payload).subscribe({
+      next: (response: any) => {
+        this.isSubmitting = false;
 
-    // ===============================================
-    // STORE UPDATED POST DRAFT
-    // DO NOT CREATE POST HERE
-    // ===============================================
+        if (response?.success !== true) {
+          this.submitError =
+            response?.message || 'Unable to save the post.';
+          return;
+        }
 
-    localStorage.setItem(
+        [
+          'pending_post_payload',
+          'pending_custom_fields',
+          'pending_service_catalog_payload',
+          'pending_post_flow',
+          'pending_post_type',
+          'pending_post_userid'
+        ].forEach(key => localStorage.removeItem(key));
 
-      'pending_post_payload',
+        this.router.navigate(['/admin']);
+      },
+      error: (error: any) => {
+        this.isSubmitting = false;
+        this.submitError =
+          error?.error?.message || 'Unable to save the post.';
+      }
+    });
 
-      JSON.stringify(
-        finalPendingPayload
-      )
+    return;
+  }
 
+  // NORMAL USER: continue the existing subscription flow.
+  localStorage.setItem(
+    'pending_post_payload',
+    JSON.stringify(finalPayload)
+  );
+
+  localStorage.setItem(
+    'pending_custom_fields',
+    JSON.stringify(customFieldValues)
+  );
+
+  localStorage.setItem('advertisement_flow', 'true');
+
+  let user: any;
+
+  try {
+    user = JSON.parse(localStorage.getItem('user') || '{}');
+  } catch {
+    user = null;
+  }
+
+  this.isSubmitting = false;
+
+  if (!user?._id) {
+    this.submitError = 'User details are missing. Please log in again.';
+    return;
+  }
+
+  if (
+    user.isSeller === true &&
+    user.isOnboardingCompleted === true
+  ) {
+    this.router.navigate(
+      ['/subscription-plan'],
+      { queryParams: { flow: 'normal' } }
     );
-
-
-    // ===============================================
-    // STORE CUSTOM FIELD DATA
-    // PAYMENT PAGE WILL USE THIS LATER
-    // ===============================================
-
-    localStorage.setItem(
-
-      'pending_custom_fields',
-
-      JSON.stringify(
-        customFieldValues
-      )
-
-    );
-
-
-    // ===============================================
-    // MARK THIS AS ADVERTISEMENT FLOW
-    // ===============================================
-
-    localStorage.setItem(
-      'advertisement_flow',
-      'true'
-    );
-
-
-    this.isSubmitting =
-      false;
-
-
-    // ===============================================
-    // NEXT STEP = ACCOUNT DETAILS
-    // ===============================================
-
-  const user = JSON.parse(
-  localStorage.getItem('user') || '{}'
-);
-
-const accountAlreadyCompleted =
-  user?.isSeller === true &&
-  user?.isOnboardingCompleted === true;
-
-
-// IF PROFILE ALREADY SAVED
-if (accountAlreadyCompleted) {
+    return;
+  }
 
   this.router.navigate(
-    ['/subscription-plan'],
+    ['/seller-profile'],
     {
-      queryParams: {
-        flow: 'normal'
+      state: {
+        next: 'plan-selection',
+        flow: 'advertisement',
+        categoryId: this.categoryId,
+        categoryName: this.categoryName,
+        subcategoryId: this.subcategoryId,
+        subcategoryName: this.subcategoryName,
+        listingType: this.listingType
       }
     }
   );
-
-  return;
 }
-
-
-// FIRST TIME ONLY
-this.router.navigate(
-  ['/seller-profile'],
-  {
-    state: {
-      next: 'plan-selection',
-      flow: 'advertisement',
-
-      categoryId: this.categoryId,
-      categoryName: this.categoryName,
-
-      subcategoryId: this.subcategoryId,
-      subcategoryName: this.subcategoryName,
-
-      listingType: this.listingType
-    }
-  }
-);
-
-  }
-
 
   // =========================================================
   // UPDATE EXISTING POST
