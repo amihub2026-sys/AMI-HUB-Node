@@ -40,6 +40,8 @@ interface SubscriptionPlanItem {
 })
 export class SubscriptionPlan implements OnInit {
   customFieldValues:any[] = [];
+  isAdminPosting = false;
+selectedUser: any = null;
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
 
@@ -81,7 +83,8 @@ ngOnInit(): void {
 
     const state = history.state;
 
-
+this.isAdminPosting = state?.isAdminPosting === true;
+this.selectedUser = state?.selectedUser || null;
     if(state?.customFieldValues){
 
       this.customFieldValues =
@@ -298,7 +301,15 @@ const planPayload = {
         this.cd.detectChanges();
       });
 
-      this.router.navigate(['/payment']);
+  this.router.navigate(
+  ['/payment'],
+  {
+    state: {
+      isAdminPosting: this.isAdminPosting,
+      selectedUser: this.selectedUser
+    }
+  }
+);
     } catch (err) {
       console.error('PLAN SELECT ERROR:', err);
 

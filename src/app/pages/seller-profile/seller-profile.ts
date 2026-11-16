@@ -42,6 +42,8 @@ import {
 export class SellerProfileComponent implements OnInit, OnDestroy {
 
   private platformId = inject(PLATFORM_ID);
+  isAdminPosting = false;
+selectedUser: any = null;
 
  seller: any = {
   name: '',
@@ -105,6 +107,21 @@ export class SellerProfileComponent implements OnInit, OnDestroy {
 
 
     this.loadSellerProfile();
+    const postingState = {
+  ...(history.state || {}),
+  ...(nav?.extras?.state || {})
+};
+
+this.isAdminPosting =
+  postingState['isAdminPosting'] === true;
+
+this.selectedUser =
+  postingState['selectedUser'] || null;
+
+if (this.isAdminPosting && !this.selectedUser?._id) {
+  this.showMessage('Selected user details are missing', 'error');
+  return;
+}
 
   }
 
@@ -150,10 +167,13 @@ export class SellerProfileComponent implements OnInit, OnDestroy {
 
     this.isLoading = true;
 
+const request = this.isAdminPosting
+  ? this.apiService.getAdmin(
+      `/profile/admin/${this.selectedUser._id}`
+    )
+  : this.apiService.get('/profile/me');
 
-    this.apiService
-      .get('/profile/me')
-      .subscribe({
+request.subscribe({
 
         next: (res: any) => {
 
@@ -189,7 +209,9 @@ export class SellerProfileComponent implements OnInit, OnDestroy {
           };
 
 
-          this.isEditMode = true;
+     this.isEditMode = this.isAdminPosting
+  ? res.profileExists === true
+  : true;
 
           this.isLoading = false;
 
@@ -380,7 +402,8 @@ export class SellerProfileComponent implements OnInit, OnDestroy {
         this.apiService
           .uploadImage(
             file,
-            folder
+            folder,
+              this.isAdminPosting
           )
           .subscribe({
 
@@ -564,20 +587,14 @@ export class SellerProfileComponent implements OnInit, OnDestroy {
       // ======================================
       // 6. CREATE / UPDATE PROFILE
       // ======================================
-
-      const request =
-        this.isEditMode
-
-          ? this.apiService.put(
-              '/profile/me',
-              payload
-            )
-
-          : this.apiService.post(
-              '/profile',
-              payload
-            );
-
+const request = this.isAdminPosting
+  ? this.apiService.putAdmin(
+      `/profile/admin/${this.selectedUser._id}`,
+      payload
+    )
+  : this.isEditMode
+    ? this.apiService.put('/profile/me', payload)
+    : this.apiService.post('/profile', payload);
 
       request.subscribe({
 
@@ -612,36 +629,31 @@ export class SellerProfileComponent implements OnInit, OnDestroy {
           this.qrCodeImageFile =
             null;
 
+if (this.isAdminPosting) {
+  this.selectedUser = {
+    ...this.selectedUser,
+    isSeller: true,
+    isOnboardingCompleted: true,
+    fullName: this.seller.name,
+    mobile: this.seller.phone,
+    email: this.seller.email
+  };
+} else {
+  const user = JSON.parse(
+    localStorage.getItem('user') || '{}'
+  );
 
-          const user =
-            JSON.parse(
-              localStorage.getItem(
-                'user'
-              ) || '{}'
-            );
+  user.isSeller = true;
+  user.isOnboardingCompleted = true;
+  user.fullName = this.seller.name;
+  user.mobile = this.seller.phone;
+  user.email = this.seller.email;
+
+  localStorage.setItem('user', JSON.stringify(user));
+}
 
 
-          user.isSeller =
-            true;
-
-          user.isOnboardingCompleted =
-            true;
-
-          user.fullName =
-            this.seller.name;
-
-          user.mobile =
-            this.seller.phone;
-
-          user.email =
-            this.seller.email;
-
-
-          localStorage.setItem(
-            'user',
-            JSON.stringify(user)
-          );
-
+        
 
           this.isLoading =
             false;
@@ -656,11 +668,18 @@ export class SellerProfileComponent implements OnInit, OnDestroy {
           );
 
 if (this.redirectTo === 'plan-selection') {
-
-  this.router.navigate([
-    '/subscription-plan'
-  ]);
-
+  this.router.navigate(
+    ['/subscription-plan'],
+    {
+      queryParams: {
+        flow: 'normal'
+      },
+      state: {
+        isAdminPosting: this.isAdminPosting,
+        selectedUser: this.selectedUser
+      }
+    }
+  );
 }
 else if (this.redirectTo === 'post-product') {
 
