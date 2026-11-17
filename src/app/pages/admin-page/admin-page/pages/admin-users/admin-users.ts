@@ -4,6 +4,8 @@ import {
   Component,
   Input,
   OnInit,
+  Output,
+  EventEmitter,
   inject
 } from '@angular/core';
 
@@ -42,7 +44,7 @@ interface AdminUserItem {
   selector: 'app-admin-users',
 
   standalone: true,
-
+  
   imports: [
     CommonModule,
     Service
@@ -63,7 +65,8 @@ export class AdminUsers implements OnInit {
   @Input()
   searchQuery = '';
 
-
+@Output()
+postForUser = new EventEmitter<AdminUserItem>();
   users: AdminUserItem[] = [];
 
   isLoading = false;
@@ -626,17 +629,10 @@ this.api
   }
 
 
-  createPostForUser(
-    user: AdminUserItem
-  ): void {
-
-    this.selectedUser = user;
-
-    this.showPostModal = true;
-
-  }
-
-
+createPostForUser(user: AdminUserItem): void {
+  this.postForUser.emit(user);
+}
+   
   closePostModal(): void {
 
     this.showPostModal = false;

@@ -276,10 +276,12 @@ export class Service implements OnInit {
       let error: any = null;
 
       try {
-        const postResult: any = await this.api
-          .get(`/posts/${id}`)
-          .toPromise();
+       const postRequest =
+  this.adminUser || this.adminEditPostId
+    ? this.api.getAdmin(`/posts/${id}`)
+    : this.api.get(`/posts/${id}`);
 
+const postResult: any = await postRequest.toPromise();
         data = postResult?.data;
       } catch (err) {
         console.error(
@@ -717,27 +719,36 @@ export class Service implements OnInit {
     this.serviceBlocks.splice(index, 1);
   }
 
-  onMainPhotoChange(event: Event): void {
-    const input =
-      event.target as HTMLInputElement;
+onMainPhotoChange(event: Event): void {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0] || null;
 
-    this.mainAd.mainPhoto =
-      input.files && input.files.length
-        ? input.files[0]
-        : null;
+  this.mainAd.mainPhoto = file;
+  this.mainPhotoPreview = null;
 
-    if (this.mainAd.mainPhoto) {
-      const reader = new FileReader();
-
-      reader.onload = () => {
-        this.mainPhotoPreview =
-          reader.result as string;
-      };
-
-      reader.readAsDataURL(this.mainAd.mainPhoto);
-    }
+  if (!file) {
+    this.cdr.detectChanges();
+    return;
   }
 
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    this.ngZone.run(() => {
+      this.mainPhotoPreview = reader.result as string;
+      this.cdr.detectChanges();
+    });
+  };
+
+  reader.onerror = () => {
+    this.ngZone.run(() => {
+      this.showAlert('Unable to preview this image', 'error');
+      this.cdr.detectChanges();
+    });
+  };
+
+  reader.readAsDataURL(file);
+}
   onOtherImagesChange(event: Event): void {
     const input =
       event.target as HTMLInputElement;
@@ -804,29 +815,28 @@ export class Service implements OnInit {
     ];
   }
 
-  private async uploadToR2(
-    file: File,
-    folder: string
-  ): Promise<string | null> {
-    try {
-      const response: any = await this.api
-        .uploadImage(
-          file,
-          folder,
-          !!this.adminUser || !!this.adminEditPostId
-        )
-        .toPromise();
+ private async uploadToR2(
+  file: File,
+  folder: string
+): Promise<string> {
+  const response: any = await this.api
+    .uploadImage(
+      file,
+      folder,
+      !!this.adminUser || !!this.adminEditPostId
+    )
+    .toPromise();
 
-      return response?.url || null;
-    } catch (error) {
-      console.error(
-        'R2 Upload Error:',
-        error
-      );
+  const url = response?.publicUrl || response?.url;
 
-      return null;
-    }
+  if (!url) {
+    throw new Error(
+      response?.message || 'Image upload failed'
+    );
   }
+
+  return url;
+}
 
   private async uploadMultipleToR2(
     files: File[],
@@ -1085,47 +1095,47 @@ export class Service implements OnInit {
     this.isSubmitting = true;
 
     try {
-      const isAdminPosting = !!this.adminUser;
+     const isAdminEditing = !!this.adminEditPostId;
 
-      const token = localStorage.getItem(
-        isAdminPosting ? 'adminToken' : 'token'
-      );
+const isAdminPosting =
+  !!this.adminUser || isAdminEditing;
 
-      const user = isAdminPosting
-        ? this.adminUser.rawUser || this.adminUser
-        : JSON.parse(
-            localStorage.getItem('user') || '{}'
-          );
+const token = localStorage.getItem(
+  isAdminPosting ? 'adminToken' : 'token'
+);
 
-      const effectiveUserId = String(
-        isAdminPosting
-          ? this.adminUser._id || this.adminUser.id || ''
-          : user._id || ''
-      );
+const user = this.adminUser
+  ? this.adminUser.rawUser || this.adminUser
+  : isAdminEditing
+    ? {}
+    : JSON.parse(localStorage.getItem('user') || '{}');
 
-      if (!token) {
-        this.showAlert(
-          isAdminPosting
-            ? 'Admin session expired. Please log in again as admin.'
-            : 'Please login first',
-          'error'
-        );
+const effectiveUserId = String(
+  this.adminUser
+    ? this.adminUser._id || this.adminUser.id || ''
+    : user._id || ''
+);
 
-        if (!isAdminPosting) {
-          this.router.navigate(['/login']);
-        }
+if (!token) {
+  this.showAlert(
+    isAdminPosting
+      ? 'Admin session expired. Please log in again.'
+      : 'Please login first',
+    'error'
+  );
 
-        return;
-      }
+  if (!isAdminPosting) {
+    this.router.navigate(['/login']);
+  }
 
-      if (!effectiveUserId) {
-        this.showAlert(
-          'Selected user id not found',
-          'error'
-        );
+  return;
+}
 
-        return;
-      }
+if (!this.isEditMode && !effectiveUserId) {
+  this.showAlert('Selected user id not found', 'error');
+  return;
+}
+      
 
       const selectedCategory = this.categories.find(
         category =>
@@ -1243,10 +1253,21 @@ export class Service implements OnInit {
           district: this.mainAd.district,
           area: this.mainAd.area,
 
-          image_url: updatedMainImageUrl || '',
-          image_urls: updatedOtherImageUrls,
-          video_url: updatedVideoUrls[0] || '',
-          video_urls: updatedVideoUrls,
+       image_url: updatedMainImageUrl || '',
+image_urls: updatedOtherImageUrls,
+
+images: Array.from(
+  new Set(
+    [
+      updatedMainImageUrl,
+      ...updatedOtherImageUrls
+    ].filter(Boolean)
+  )
+),
+
+video_url: updatedVideoUrls[0] || '',
+video_urls: updatedVideoUrls,
+videos: updatedVideoUrls,
 
           catalog:
             finalType === 'service'
@@ -1301,8 +1322,13 @@ export class Service implements OnInit {
 
               type:
                 this.lockedAdType || this.adType,
-
-              flow: 'edit'
+flow: 'edit',
+isAdminPosting,
+selectedUser:
+  this.adminUser?.rawUser ||
+  this.adminUser ||
+  null
+              
             }
           }
         );
@@ -1511,7 +1537,12 @@ export class Service implements OnInit {
         error
       );
 
-      this.showAlert('Error preparing post');
+this.showAlert(
+  (error as any)?.error?.message ||
+  (error as any)?.message ||
+  'Error preparing post',
+  'error'
+);
     } finally {
       this.isSubmitting = false;
 

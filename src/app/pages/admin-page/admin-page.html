@@ -32,11 +32,11 @@
     </div>
 
     <app-admin-dashboard *ngIf="activeMenu === 'dashboard'"></app-admin-dashboard>
-
-    <app-admin-users
-      *ngIf="activeMenu === 'users'"
-      [searchQuery]="searchQuery"
-    ></app-admin-users>
+<app-admin-users
+  *ngIf="activeMenu === 'users'"
+  [searchQuery]="searchQuery"
+  (postForUser)="openPostForUser($event)"
+></app-admin-users>
     
 <app-admin-sellers
   *ngIf="activeMenu === 'sellers'"
@@ -53,10 +53,11 @@
       (adminEditPost)="openAdminEditPost($event)"
     ></app-admin-posts>
 
-    <app-service
-      *ngIf="activeMenu === 'advertise'"
-      [adminEditPostId]="null"
-    ></app-service>
+ <app-service
+  *ngIf="activeMenu === 'advertise'"
+  [adminEditPostId]="null"
+  [adminUser]="selectedPostingUser"
+></app-service>
 
     <app-service
       *ngIf="activeMenu === 'edit-post'"
