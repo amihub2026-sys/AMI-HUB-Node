@@ -95,6 +95,12 @@ viewingPostId: string | null = null;
     replaceUrl: true
   });
 }
+selectedPostingUser: any = null;
+
+openPostForUser(user: any): void {
+  this.setActiveMenu('advertise');
+  this.selectedPostingUser = user;
+}
  setActiveMenu(menu: AdminMenuKey): void {
   this.sidebarOpen = false;
   this.searchQuery = '';

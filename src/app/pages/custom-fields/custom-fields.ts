@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import {
   Component,
   OnInit,
-  inject
+  inject,
+  ChangeDetectorRef
 } from '@angular/core';
 
 import {
@@ -79,7 +80,7 @@ export class CustomFields implements OnInit {
 
   private api = inject(ApiService);
 
-
+ private cdr = inject(ChangeDetectorRef);
   categoryId = '';
 
   categoryName = '';
@@ -165,9 +166,11 @@ async ngOnInit(): Promise<void> {
     }
 
     try {
-      const response: any = await this.api
-        .get(`/posts/${this.postId}`)
-        .toPromise();
+const postRequest = this.isAdminPosting
+  ? this.api.getAdmin(`/posts/${this.postId}`)
+  : this.api.get(`/posts/${this.postId}`);
+
+const response: any = await postRequest.toPromise();
 
       const post = response?.data || response;
 
@@ -462,6 +465,7 @@ request.subscribe({
 
 
           this.isLoading = false;
+          this.cdr.detectChanges();
 
         },
 
@@ -1258,15 +1262,11 @@ const finalPayload = {
 };
 
 
+const request = this.isAdminPosting
+  ? this.api.putAdmin(`/posts/${postId}`, finalPayload)
+  : this.api.put(`/posts/${postId}`, finalPayload);
 
-    this.api
-
-      .put(
-        `/posts/${postId}`,
-        finalPayload
-      )
-
-      .subscribe({
+request.subscribe({
 
         next: (
           response: any
@@ -1287,9 +1287,9 @@ const finalPayload = {
             false;
 
 
-          this.router.navigate(
-            ['/my-posts']
-          );
+       this.router.navigate([
+  this.isAdminPosting ? '/admin' : '/my-posts'
+]);
 
         },
 
