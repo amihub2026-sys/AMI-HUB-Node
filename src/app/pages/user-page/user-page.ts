@@ -24,7 +24,7 @@ styleUrls:[
 
 export class UserPage implements OnInit {
 
-
+showLoginPopup = false;
 userId='';
 
 
@@ -102,10 +102,7 @@ firstPost.sellerId?.email ||
 '',
 
 
-address:
-firstPost.customFields?.full_address ||
-'Location not available',
-
+address: this.getPostLocation(firstPost),
 
 image:
 firstPost.sellerId?.image ||
@@ -220,7 +217,93 @@ id
 ]);
 
 }
+get isLoggedIn(): boolean {
+  return !!localStorage.getItem('token');
+}
+
+onWhatsAppClick(): void {
+  if (!this.isLoggedIn) {
+    this.router.navigate(['/login']);
+    return;
+  }
+
+  this.whatsapp();
+}
 
 
+getDistrict(post: any): string {
+  const district =
+    post?.customFields?.district ||
+    post?.location?.district ||
+    post?.district;
 
+  if (typeof district === 'string' && district.trim()) {
+    return district.trim();
+  }
+
+  const address = this.getPostLocation(post);
+
+  if (address === 'Location not available') {
+    return address;
+  }
+
+  // Fallback for addresses formatted as:
+  // Area, District, Tamil Nadu, India
+  const parts = address.split(',').map((p: string) => p.trim());
+
+  if (parts.length >= 3) {
+    return parts[parts.length - 3].replace(/\s+\d{6}$/, '');
+  }
+
+  return 'Location not available';
+}
+
+getPostLocation(post: any): string {
+
+  const fields = post?.customFields || {};
+
+  const fullAddress =
+    fields.full_address ||
+    post?.full_address ||
+    post?.location?.address ||
+    post?.location?.full_address ||
+    post?.address;
+
+  if (typeof fullAddress === 'string' && fullAddress.trim()) {
+    return fullAddress.trim();
+  }
+
+  const city =
+    fields.city ||
+    post?.location?.city ||
+    post?.city;
+
+  const state =
+    fields.state ||
+    post?.location?.state ||
+    post?.state;
+
+  const location = [city, state]
+    .filter((value) => typeof value === 'string' && value.trim())
+    .join(', ');
+
+  return location || 'Location not available';
+}
+onContactClick(type: 'call' | 'whatsapp'): void {
+
+  if (!this.isLoggedIn) {
+    this.showLoginPopup = true;
+    return;
+  }
+
+  if (!this.user()?.phone) {
+    return;
+  }
+
+  if (type === 'call') {
+    this.callUser();
+  } else {
+    this.whatsapp();
+  }
+}
 }

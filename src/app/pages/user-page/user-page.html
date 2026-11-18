@@ -54,29 +54,27 @@ Trusted Seller
 <div class="action-buttons">
 
 
-<button
-(click)="callUser()"
-class="call-btn"
->
+<div class="action-buttons">
 
-<i class="fas fa-phone"></i>
+  <button
+    type="button"
+    class="call-btn"
+    (click)="onContactClick('call')"
+  >
+    <i class="fas fa-phone"></i>
+    Call
+  </button>
 
-Call
+  <button
+    type="button"
+    class="whatsapp-btn"
+    (click)="onContactClick('whatsapp')"
+  >
+    <i class="fab fa-whatsapp"></i>
+    {{ isLoggedIn ? (user()?.phone || 'Number unavailable') : 'WhatsApp' }}
+  </button>
 
-</button>
-
-
-
-<button
-(click)="whatsapp()"
-class="whatsapp-btn"
->
-
-<i class="fab fa-whatsapp"></i>
-
-WhatsApp
-
-</button>
+</div>
 
 
 </div>
@@ -149,8 +147,9 @@ item.images?.[0]||
 
 
 
-<p>
-{{item.customFields?.full_address || 'Location not available'}}
+<p class="post-location">
+  <i class="fas fa-map-marker-alt"></i>
+  {{ getDistrict(item) }}
 </p>
 
 
